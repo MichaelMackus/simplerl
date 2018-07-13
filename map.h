@@ -30,9 +30,11 @@ Level *create_level(int depth);
 
 // change current depth to next level deep
 // if there is no next level, create one
-void increase_depth(Dungeon dungeon);
+// return 0 on error
+int increase_depth(Dungeon *dungeon);
 
 // change current depth to previous level
-void decrease_depth(Dungeon dungeon);
+// return 0 on error
+int decrease_depth(Dungeon *dungeon);
 
 #endif

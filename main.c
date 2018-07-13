@@ -23,11 +23,7 @@ int main()
     if (messages == NULL)
         return ERROR_OOM;
 
-    // insert current level message
-    const char *message = create_message("Current level: %d", dungeon->level->depth);
-    if (message == NULL)
-        return ERROR_OOM;
-    insert_message(message, messages);
+    init_game(dungeon, messages);
 
     int result = GAME_PLAYING;
     while (result == GAME_PLAYING)

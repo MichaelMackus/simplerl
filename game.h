@@ -11,6 +11,9 @@
 #include "map.h"
 #include <stdint.h>
 
+// initialize dungeon defaults
+int init_game(Dungeon *dungeon, const char **messages);
+
 // return GAME or ERROR constant
 // divide by 4 (or bitshift twice) to get program error code
 uint8_t gameloop(Dungeon *dungeon, const char **messages);

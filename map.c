@@ -21,8 +21,6 @@ Dungeon *create_dungeon()
     }
 
     // initialize player
-    player->x = 40;
-    player->y = 15;
     player->type = MOB_PLAYER;
     player->symbol = '@';
 
@@ -63,10 +61,32 @@ Level *create_level(int depth)
     return level;
 }
 
-void increase_depth(Dungeon dungeon)
+int increase_depth(Dungeon *dungeon)
 {
+    if (dungeon->level->depth == MAX_LEVEL)
+        return 0;
+
+    // initialize next level
+    Level *level;
+    level = create_level(dungeon->level->depth + 1);
+
+    // set our link relationship to next level
+    dungeon->level->next = level;
+    level->prev = dungeon->level;
+
+    // now we can update the current level
+    dungeon->level = level;
+
+    return 1;
 }
 
-void decrease_depth(Dungeon dungeon)
+int decrease_depth(Dungeon *dungeon)
 {
+    if (dungeon->level->prev == NULL)
+        return 0;
+
+    // set level to previous level
+    dungeon->level = dungeon->level->prev;
+
+    return 1;
 }
