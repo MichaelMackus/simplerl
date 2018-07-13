@@ -4,6 +4,9 @@
 #define MAX_MESSAGE_LENGTH 80
 #define MAX_MESSAGES 5
 
+// TODO debug (printf) macro
+// #ifdef DEBUG printf ???
+
 // insert message to beginning, dropping older messages
 void insert_message(const char *message, const char **messages);
 

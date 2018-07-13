@@ -22,6 +22,7 @@ void insert_message(const char *message, const char **messages)
     messages[0] = message;
 }
 
+int vsnprintf(char *str, size_t size, const char *format, va_list ap); // FIXME this shouldn't be necessary...
 const char *create_message(const char *fmt, ...)
 {
     va_list args;
