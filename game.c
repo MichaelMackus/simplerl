@@ -24,6 +24,12 @@ int gameloop(Dungeon *dungeon, const char **messages)
         case 'k':
             --player->y;
             break;
+        case 'D':
+            return GAME_DEATH;
+        case 'W':
+            return GAME_WON;
+        case 'E':
+            return ERROR_OOM;
     }
 
     return GAME_PLAYING;
