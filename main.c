@@ -48,10 +48,11 @@ int main()
         printf("You quit.\n");
     else if (result == GAME_DEATH)
         printf("Oh no, you died :(\n");
-    else if (result >= 100)
+    else if (result >= 10)
         printf("There was an error triggered from game loop!\n");
     else
         printf("Undefined game loop result...\n");
 
-    return result;
+    // divide result by 4 to get error code
+    return (result >> 2);
 }

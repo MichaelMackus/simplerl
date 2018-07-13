@@ -2,7 +2,7 @@
 
 #include <ncurses.h>
 
-int gameloop(Dungeon *dungeon, const char **messages)
+uint8_t gameloop(Dungeon *dungeon, const char **messages)
 {
     Mob *player = dungeon->player;
 
