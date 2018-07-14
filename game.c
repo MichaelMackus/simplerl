@@ -21,19 +21,6 @@ int init_level(Level *level, Mob *player)
     // randomly generate map
     randomly_fill_tiles(level);
 
-    // put player on upstair
-    for (int y = 0; y < MAX_HEIGHT; ++y)
-    {
-        for (int x = 0; x < MAX_WIDTH; ++x)
-        {
-            if (level->tiles[y][x].type == TILE_STAIR_UP)
-            {
-                player->x = x;
-                player->y = y;
-            }
-        }
-    }
-
     // TODO randomly populate *new* levels with mobs
 
     return 1;
@@ -203,6 +190,9 @@ int increase_depth(Dungeon *dungeon)
     // now we can update the current level
     dungeon->level = dungeon->level->next;
 
+    // place player on upstair
+    place_on_tile(dungeon->player, TILE_STAIR_UP, dungeon->level);
+
     return 1;
 }
 
@@ -216,6 +206,9 @@ int decrease_depth(Dungeon *dungeon)
 
     // set level to previous level
     dungeon->level = dungeon->level->prev;
+
+    // place player on downstair
+    place_on_tile(dungeon->player, TILE_STAIR_DOWN, dungeon->level);
 
     return 1;
 }

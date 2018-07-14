@@ -36,6 +36,9 @@ int main()
     if (!init_level(dungeon->level, dungeon->player))
         return ERROR_OOM;
 
+    // place player on upstair
+    place_on_tile(dungeon->player, TILE_STAIR_UP, dungeon->level);
+
     // alert level depth on game start
     alert_depth(dungeon->level, messages);
 

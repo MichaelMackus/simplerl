@@ -133,3 +133,22 @@ Mob *get_mob(const Level *level, unsigned int y, unsigned int x)
 
     return NULL;
 }
+
+int place_on_tile(Mob *mob, int tileType, const Level *level)
+{
+    for (int y = 0; y < MAX_HEIGHT; ++y)
+    {
+        for (int x = 0; x < MAX_WIDTH; ++x)
+        {
+            if (level->tiles[y][x].type == tileType)
+            {
+                mob->x = x;
+                mob->y = y;
+
+                return 1;
+            }
+        }
+    }
+
+    return 0;
+}
