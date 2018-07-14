@@ -49,7 +49,7 @@ int possibleCellDimensions[][2] = {
 };
 
 const int *random_dimension();
-Box random_cell(Level *level, int w, int h)
+Box random_cell(Level *level)
 {
     Coords coords;
     int impassable;

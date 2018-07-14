@@ -23,6 +23,6 @@ Coords random_coords(Level *level);
 Coords random_passable_coords(Level *level);
 
 // get random passable box with dimensions w x h
-Box random_cell(Level *level, int w, int h);
+Box random_cell(Level *level);
 
 #endif
