@@ -1,5 +1,6 @@
 #include "game.h"
 #include "message.h"
+#include "random.h"
 #include <ncurses.h>
 #include <stdlib.h>
 #include <memory.h>
@@ -14,8 +15,18 @@ int init_game(Dungeon *dungeon, const char **messages)
         return 1;
     }
 
-    dungeon->player->x = 40;
-    dungeon->player->y = 15;
+    // do this otherwise initial seed will always be the same
+    seed_random();
+
+    // TODO randomly populate *new* levels with:
+    //          - tiles
+    //          - mobs
+    //          - stairs
+    // TODO set x, y to upstair every new level
+
+    Coords playerCoords = random_passable_coords(dungeon->level);
+    dungeon->player->x = playerCoords.x;
+    dungeon->player->y = playerCoords.y;
 
     // alert level depth on game start
     alert_depth(dungeon, messages);
