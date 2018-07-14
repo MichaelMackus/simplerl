@@ -7,6 +7,9 @@
 #include <stdlib.h>
 #include <memory.h>
 
+#define ERROR_OOM 1
+#define ERROR_INIT 2
+
 int main()
 {
     // initialize curses
@@ -46,11 +49,10 @@ int main()
         printf("You quit.\n");
     else if (result == GAME_DEATH)
         printf("Oh no, you died :(\n");
-    else if (result >= 10)
-        printf("There was an error triggered from game loop!\n");
+    else if (result == GAME_OOM)
+        return ERROR_OOM;
     else
         printf("Undefined game loop result...\n");
 
-    // divide result by 4 to get error code
-    return (result >> 2);
+    return 0;
 }

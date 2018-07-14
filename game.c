@@ -22,7 +22,7 @@ int init_game(Dungeon *dungeon, const char **messages)
     return 0;
 }
 
-uint8_t gameloop(Dungeon *dungeon, const char **messages)
+int gameloop(Dungeon *dungeon, const char **messages)
 {
     Mob *player = dungeon->player;
 
@@ -45,15 +45,17 @@ uint8_t gameloop(Dungeon *dungeon, const char **messages)
             --player->y;
             break;
         case '>':
-            if (!increase_depth(dungeon))
-                // if error, assume we won
+            if (dungeon->level->depth == MAX_LEVEL)
                 return GAME_WON;
+            if (!increase_depth(dungeon))
+                return GAME_OOM;
             alert_depth(dungeon, messages);
             break;
         case '<':
-            if (!decrease_depth(dungeon))
-                // if error, assume we escaped
+            if (dungeon->level->depth == 1)
                 return GAME_QUIT;
+            if (!decrease_depth(dungeon))
+                return GAME_OOM;
             alert_depth(dungeon, messages);
             break;
         case 'D':
@@ -61,7 +63,7 @@ uint8_t gameloop(Dungeon *dungeon, const char **messages)
         case 'W':
             return GAME_WON;
         case 'E':
-            return ERROR_OOM;
+            return GAME_OOM;
     }
 
     return GAME_PLAYING;
