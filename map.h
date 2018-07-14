@@ -4,10 +4,13 @@
 #define MAX_LEVEL 10
 #define MAX_MOBS  20
 
+#include "item.h"
 #include "mob.h"
+#include "tile.h"
 
 typedef struct Level_t {
     Mob *mobs;
+    Tile **tiles; // 2d array of tiles
     struct Level_t *prev;
     struct Level_t *next;
     int depth;
@@ -16,6 +19,9 @@ typedef struct Level_t {
 typedef struct {
     Mob *player;
     Level *level;
+    const char **unknownItems; // randomized item names, indexed by ID
+    const char **knownItems; // known item names, indexed by ID
+    Mob *killed; // killed monsters (for scorekeeping)
 } Dungeon;
 
 // create a new dungeon (once per game)

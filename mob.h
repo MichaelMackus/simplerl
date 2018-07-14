@@ -5,10 +5,13 @@
 #define MOB_ENEMY  2
 #define MOB_NPC    3
 
+#include "item.h"
+
 typedef struct {
     int x, y;
     int type;
     char symbol;
+    Item *items;
 } Mob;
 
 #endif
