@@ -10,8 +10,9 @@ void seed_random()
 }
 
 Box *random_cell(Level *level);
-void fill_cell(Box *cell, Level *level);
+void fill_cell(Box *cell, Level *level, int fill);
 void randomly_fill_corridors(Level *level, const Box **cells, int startIndex, int cellCount);
+int branches(const Box *cell, const Level *level);
 void randomly_fill_tiles(Level *level)
 {
     int maxCells = (rand() % MAX_CELLS) + MIN_CELLS;
@@ -26,7 +27,7 @@ void randomly_fill_tiles(Level *level)
         Box *cell = random_cell(level);
         if (cell != NULL)
         {
-            fill_cell(cell, level);
+            fill_cell(cell, level, 1);
             cells[cellCount] = cell;
             ++cellCount;
         }
@@ -36,18 +37,17 @@ void randomly_fill_tiles(Level *level)
     // fill corridors between cells
     randomly_fill_corridors(level, (const Box**) cells, 0, cellCount);
 
-    // TODO prune none-connecting cells
-
-    // free cells
+    // free cells & prune non-connecting cells
     for (i = 0; i < cellCount; ++i)
     {
+        if (branches(cells[i], level) == 0)
+            fill_cell(cells[i], level, 0);
         free(cells[i]);
     }
     free(cells);
 }
 
 int is_neighbor(const Box *start, const Box *target, const Box **cells, int cellCount);
-int branches(const Box *cell, const Level *level);
 void draw_line(const Box *start, const Box *target, Level *level);
 void randomly_fill_corridors(Level *level, const Box **cells, int startIndex, int cellCount)
 {
@@ -84,6 +84,7 @@ void randomly_fill_corridors(Level *level, const Box **cells, int startIndex, in
     for (int i = startIndex + 1; i < cellCount; ++i) // check cells other than start cell
     {
         // check for clear line from center of start to center of neighbor
+        // TODO we should probably do this from a wall, and pick the wall here
         if (is_neighbor(cells[startIndex], cells[i], cells, cellCount))
         {
             // neighbor can have at most 1 branch
@@ -122,33 +123,83 @@ void draw_line(const Box *start, const Box *target, Level *level)
     const Coords a = find_wall_for_branch(start, (const Level*) level);
     const Coords b = find_wall_for_branch(target, (const Level*) level);
 
+    // handle NULL case (i.e. there was some error in find_wall_for_branch)
     if (a.x == b.x && a.y == b.y)
         return;
 
     // make cavern in start tile
     level->tiles[a.y][a.x].type = TILE_CAVERN;
 
-    // TODO pick direction based on which wall
-    // TODO then, start drawing
+    // x & y direction
+    int dy = 0, dx = 0;
+
+    // pick direction based on which wall
     if (a.y == start->coords.y)
-    {
-        // TODO direction *up*
-        level->tiles[a.y - 1][a.x].type = TILE_CAVERN;
-    }
+        // direction *up*
+        dy = -1;
     else if (a.y == start->coords.y + start->dimensions.h - 1)
-    {
-        // TODO direction *down*
-        level->tiles[a.y + 1][a.x].type = TILE_CAVERN;
-    }
+        // direction *down*
+        dy = 1;
     else if (a.x == start->coords.x)
-    {
-        // TODO direction *left*
-        level->tiles[a.y][a.x - 1].type = TILE_CAVERN;
-    }
+        // direction *left*
+        dx = -1;
     else if (a.x == start->coords.x + start->dimensions.w - 1)
+        // direction *right*
+        dx = 1;
+
+    // draw caverns in direction of b
+    Coords current;
+    current.x = a.x;
+    current.y = a.y;
+    while (current.x != b.x || current.y != b.y)
     {
-        // TODO direction *right*
-        level->tiles[a.y][a.x + 1].type = TILE_CAVERN;
+        current.y += dy;
+        current.x += dx;
+
+        if (level->tiles[current.y][current.x].type != TILE_FLOOR)
+            level->tiles[current.y][current.x].type = TILE_CAVERN;
+
+        // switch direction based on current spot
+        if (dy < 0 && current.y + dy < b.y)
+        {
+            dy = 0;
+            if (current.x < b.x)
+                dx = 1;
+            else if (current.x > b.x)
+                dx = -1;
+            else
+                dy = 1;
+        }
+        else if (dy > 0 && current.y + dy > b.y)
+        {
+            dy = 0;
+            if (current.x < b.x)
+                dx = 1;
+            else if (current.x > b.x)
+                dx = -1;
+            else
+                dy = -1;
+        }
+        else if (dx < 0 && current.x + dx < b.x)
+        {
+            dx = 0;
+            if (current.y < b.y)
+                dy = 1;
+            else if (current.y > b.y)
+                dy = -1;
+            else
+                dx = 1;
+        }
+        else if (dx > 0 && current.x + dx > b.x)
+        {
+            dx = 0;
+            if (current.y < b.y)
+                dy = 1;
+            else if (current.y > b.y)
+                dy = -1;
+            else
+                dx = -1;
+        }
     }
 }
 
@@ -251,7 +302,8 @@ Box *random_cell(Level *level)
 }
 
 // fill cell with empty space, surrounding with walls
-void fill_cell(Box *cell, Level *level)
+// flip fill flag to 0 to blank the cell
+void fill_cell(Box *cell, Level *level, int fill)
 {
     for (int y = cell->coords.y; y < cell->coords.y + cell->dimensions.h; ++y)
     {
@@ -260,12 +312,15 @@ void fill_cell(Box *cell, Level *level)
             // fill with empty space surrounded by walls
 
             Tile t;
-            if (y == cell->coords.y || y == cell->coords.y + cell->dimensions.h - 1)
-                t = create_tile(TILE_WALL);
-            else if (x == cell->coords.x || x == cell->coords.x + cell->dimensions.w - 1)
-                t = create_tile(TILE_WALL_SIDE);
+            if (fill)
+                if (y == cell->coords.y || y == cell->coords.y + cell->dimensions.h - 1)
+                    t = create_tile(TILE_WALL);
+                else if (x == cell->coords.x || x == cell->coords.x + cell->dimensions.w - 1)
+                    t = create_tile(TILE_WALL_SIDE);
+                else
+                    t = create_tile(TILE_FLOOR);
             else
-                t = create_tile(TILE_FLOOR);
+                t = create_tile(TILE_NONE);
 
             level->tiles[y][x] = t;
         }
@@ -358,7 +413,7 @@ int branches(const Box *cell, const Level *level)
             {
                 // increment branches count if this is *not* a wall
                 const Tile *t = get_tile(level, y, x);
-                if (t != NULL && t->type != TILE_WALL && t->type != TILE_WALL_SIDE)
+                if (t != NULL && t->type != TILE_NONE && t->type != TILE_WALL && t->type != TILE_WALL_SIDE)
                     ++count;
             }
         }
@@ -422,6 +477,8 @@ const Coords find_wall_for_branch(const Box *cell, const Level *level)
             // check start & end rows, if walls increment xcount
             if (y == cell->coords.y || y == cell->coords.y + cell->dimensions.h - 1)
             {
+                // TODO check wall closest to neighbor *first*
+
                 // guard against being next to world edge
                 if (y > 0 && y < MAX_HEIGHT - 1)
                 {
