@@ -11,7 +11,12 @@ int init()
     noecho();             /* Don't echo() while we do getch */
     curs_set(0);          /* hide cursor */
 
-    return 0;
+    int mx, my;
+    getmaxyx(stdscr, my, mx);
+    if (mx < MAX_WIDTH || my < MAX_HEIGHT)
+        return 0;
+
+    return 1;
 }
 
 void deinit()

@@ -7,6 +7,7 @@
 #define GAME_DEATH 3
 // errors are divisible by 4
 #define ERROR_OOM 4
+#define ERROR_INIT 8
 
 #include "map.h"
 #include <stdint.h>
