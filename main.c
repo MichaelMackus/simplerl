@@ -28,6 +28,7 @@ int main()
     if (messages == NULL)
         return ERROR_OOM;
 
+    // initialize curses
     init_game(dungeon, messages);
 
     int result = GAME_PLAYING;
