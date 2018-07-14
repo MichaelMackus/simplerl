@@ -12,7 +12,7 @@
 #include <stdint.h>
 
 // initialize random dungeon
-int init_level(Level *level, const char **messages);
+int init_level(Level *level, Mob *player);
 
 // return GAME constant
 int gameloop(Dungeon *dungeon, const char **messages);

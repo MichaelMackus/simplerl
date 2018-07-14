@@ -12,6 +12,9 @@
 #define ERROR_INIT 2 // curses initialization error
 #define ERROR_GAME 3 // internal game error
 
+// TODO put this somewhere public
+int alert_depth(Level *level, const char **messages);
+
 int main()
 {
     // initialize curses
@@ -30,13 +33,11 @@ int main()
         return ERROR_OOM;
 
     // randomize initial level
-    if (!init_level(dungeon->level, messages))
+    if (!init_level(dungeon->level, dungeon->player))
         return ERROR_OOM;
 
-    // randomize player start, TODO set to upstair every new level
-    Coords playerCoords = random_passable_coords(dungeon->level);
-    dungeon->player->x = playerCoords.x;
-    dungeon->player->y = playerCoords.y;
+    // alert level depth on game start
+    alert_depth(dungeon->level, messages);
 
     int result = GAME_PLAYING;
     while (result == GAME_PLAYING)

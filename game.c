@@ -7,9 +7,9 @@
 
 int alert_depth(Level *level, const char **messages);
 
-int init_level(Level *level, const char **messages)
+int init_level(Level *level, Mob *player)
 {
-    if (level == NULL || messages == NULL)
+    if (level == NULL)
     {
         // simple error case
         return 0;
@@ -18,22 +18,31 @@ int init_level(Level *level, const char **messages)
     // do this otherwise initial seed will always be the same
     seed_random();
 
-    // TODO randomly populate *new* levels with:
-    //          - tiles
-    //          - mobs
-    //          - stairs
-
     // randomly generate map
     randomly_fill_tiles(level);
 
-    // alert level depth on game start
-    alert_depth(level, messages);
+    // put player on upstair
+    for (int y = 0; y < MAX_HEIGHT; ++y)
+    {
+        for (int x = 0; x < MAX_WIDTH; ++x)
+        {
+            if (level->tiles[y][x].type == TILE_STAIR_UP)
+            {
+                player->x = x;
+                player->y = y;
+            }
+        }
+    }
+
+    // TODO randomly populate *new* levels with mobs
 
     return 1;
 }
 
 int move_mob(Mob *mob, int y, int x, Level *level);
 void attack(Mob *attacker, Mob *target);
+int increase_depth(Dungeon *dungeon);
+int decrease_depth(Dungeon *dungeon);
 int gameloop(Dungeon *dungeon, const char **messages)
 {
     Level *level = dungeon->level;
@@ -166,4 +175,47 @@ int alert_depth(Level *level, const char **messages)
     insert_message(message, messages);
 
     return 0;
+}
+
+// change current depth to next level deep
+// if there is no next level, create one
+// return 0 on error
+int increase_depth(Dungeon *dungeon)
+{
+    if (dungeon->level->depth == MAX_LEVEL)
+        return 0;
+
+    if (dungeon->level->next == NULL)
+    {
+        // initialize next level
+        Level *level;
+        level = create_level(dungeon->level->depth + 1);
+
+        // set our link relationship to next level
+        dungeon->level->next = level;
+        level->prev = dungeon->level;
+
+        // randomly fill dungeon
+        if (!init_level(level, dungeon->player))
+            return 0;
+    }
+
+    // now we can update the current level
+    dungeon->level = dungeon->level->next;
+
+    return 1;
+}
+
+
+// change current depth to previous level
+// return 0 on error
+int decrease_depth(Dungeon *dungeon)
+{
+    if (dungeon->level->prev == NULL)
+        return 0;
+
+    // set level to previous level
+    dungeon->level = dungeon->level->prev;
+
+    return 1;
 }

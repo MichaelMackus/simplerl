@@ -42,13 +42,4 @@ const Tile *get_tile(const Level *level, unsigned int y, unsigned int x);
 // get mob from square, or NULL on error
 Mob *get_mob(const Level *level, unsigned int y, unsigned int x);
 
-// change current depth to next level deep
-// if there is no next level, create one
-// return 0 on error
-int increase_depth(Dungeon *dungeon);
-
-// change current depth to previous level
-// return 0 on error
-int decrease_depth(Dungeon *dungeon);
-
 #endif
