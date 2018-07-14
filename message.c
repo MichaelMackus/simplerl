@@ -32,9 +32,9 @@ const char *create_message(const char *fmt, ...)
     message = malloc(MAX_MESSAGE_LENGTH + 1);
     memset((char*) message, 0, MAX_MESSAGE_LENGTH + 1);
 
-    int bytes = vsnprintf(message, MAX_MESSAGE_LENGTH, fmt, args);
+    int bytes = vsnprintf(message, MAX_MESSAGE_LENGTH + 1, fmt, args);
 
-    if (bytes > MAX_MESSAGE_LENGTH)
+    if (bytes > MAX_MESSAGE_LENGTH + 1)
     {
         // error! can't reserve more than max message length
         free(message);

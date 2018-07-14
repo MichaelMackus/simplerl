@@ -25,7 +25,7 @@ int main()
 
     // allocate messages array
     const char **messages;
-    messages = malloc(sizeof(char) * MAX_MESSAGE_LENGTH * MAX_MESSAGES);
+    messages = malloc(sizeof(char*) * MAX_MESSAGE_LENGTH * MAX_MESSAGES);
     if (messages == NULL)
         return ERROR_OOM;
 
