@@ -7,6 +7,10 @@ Dungeon *create_dungeon()
     Dungeon *dungeon;
     dungeon = malloc(sizeof(Dungeon));
 
+    // handle out of memory case
+    if (dungeon == NULL)
+        return NULL;
+
     // allocate player
     Mob *player;
     player = malloc(sizeof(Mob));
@@ -45,9 +49,14 @@ Level *create_level(int depth)
     Level *level;
     level = malloc(sizeof(Level));
 
+    // check for OOM
+    if (level == NULL)
+        return NULL;
+
     // initialize mobs array
     level->mobs = malloc(sizeof(Mob) * MAX_MOBS);
 
+    // check for OOM
     if (level->mobs == NULL)
     {
         free(level);
@@ -62,9 +71,30 @@ Level *create_level(int depth)
     // NOTE: initializing [y][x] since that is how C allocates
     // *row* would be first allocation, and *cols* second
     level->tiles = malloc(sizeof(Tile*) * MAX_HEIGHT);
+
+    // check for OOM
+    if (level->tiles == NULL)
+    {
+        free(level->mobs);
+        free(level);
+
+        return NULL;
+    }
+
     for (int y = 0; y < MAX_HEIGHT; ++y)
     {
         level->tiles[y] = malloc(sizeof(Tile) * MAX_WIDTH);
+
+        // check for OOM
+        if (level->tiles[y] == NULL)
+        {
+            free(level->tiles[y]);
+            free(level->mobs);
+            //free(level); // TODO free rest of tiles
+
+            return NULL;
+        }
+
         for (int x = 0; x < MAX_WIDTH; ++x)
         {
             Tile t;
