@@ -36,6 +36,7 @@ void randomly_fill_tiles(Level *level)
     // randomly fill cells
     Box **cells;
     cells = malloc(sizeof(Box*) * maxCells);
+    memset(cells, 0, sizeof(Box*) * maxCells);
     while (cellCount < maxCells && i < MAX_RANDOM_RECURSION)
     {
         Box *cell = random_cell(level);
@@ -85,8 +86,6 @@ int is_neighbor(const Box *start, const Box *target, const Box **cells, int cell
 void draw_line(const Box *start, const Box *target, Level *level);
 void randomly_fill_corridors(Level *level, const Box **cells, int startIndex, int cellCount)
 {
-    // TODO check for segmentation fault... only seems to happen when increasing depth...
-
     /**
      *
      * RANDOM CORRIDOR GENERATION PSEUDO-CODE
@@ -160,7 +159,7 @@ void draw_line(const Box *start, const Box *target, Level *level)
     const Coords b = find_wall_for_branch(target, (const Level*) level);
 
     // handle NULL case (i.e. there was some error in find_wall_for_branch)
-    if (a.x == b.x && a.y == b.y)
+    if (a.x == b.x && a.y == b.y || is_empty(a) || is_empty(b))
         return;
 
     // make cavern in start tile
@@ -473,8 +472,8 @@ int branches(const Box *cell, const Level *level)
 const Coords **get_line(const Coords a, const Coords b)
 {
     Coords **line;
-    line = malloc(sizeof(Coords*)*MAX_WIDTH*MAX_HEIGHT);
-    memset(line, 0, sizeof(Coords*)*MAX_WIDTH*MAX_HEIGHT);
+    line = malloc(sizeof(Coords*)*MAX_WIDTH+MAX_HEIGHT);
+    memset(line, 0, sizeof(Coords*)*MAX_WIDTH+MAX_HEIGHT);
 
     Coords currentCoords = a;
     for (int i = 0; i < MAX_WIDTH + MAX_HEIGHT; ++i)
@@ -506,8 +505,10 @@ const Coords **get_line(const Coords a, const Coords b)
 void free_line(const Coords **line)
 {
     int i = 0;
-    while (line[i] != NULL)
+    for (int i = 0; i < MAX_WIDTH + MAX_HEIGHT; ++i)
     {
+        if (line[i] == NULL)
+            break;
         free((Coords*) line[i]);
         ++i;
     }
@@ -575,4 +576,6 @@ const Coords find_wall_for_branch(const Box *cell, const Level *level)
             }
         }
     }
+
+    return empty_coords();
 }

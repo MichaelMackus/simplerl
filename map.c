@@ -1,5 +1,6 @@
 #include "map.h"
 #include <stdlib.h>
+#include <memory.h>
 
 Dungeon *create_dungeon()
 {
@@ -55,6 +56,7 @@ Level *create_level(int depth)
 
     // initialize mobs array
     level->mobs = malloc(sizeof(Mob) * MAX_MOBS);
+    memset(level->mobs, 0, sizeof(Mob) * MAX_MOBS);
 
     // check for OOM
     if (level->mobs == NULL)
@@ -66,6 +68,10 @@ Level *create_level(int depth)
 
     // initialize depth
     level->depth = depth;
+
+    // initialize our NEXT & PREV pointers to NULL
+    level->next = NULL;
+    level->prev = NULL;
 
     // initialize basic tiles array
     // NOTE: initializing [y][x] since that is how C allocates
