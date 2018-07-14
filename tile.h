@@ -22,4 +22,8 @@ char tile_symbol(Tile tile);
 // return 0 if impassable
 int is_passable(Tile tile);
 
+// empty tile constructor
+// argument tileType should be one of TILE consts
+Tile create_tile(int tileType);
+
 #endif

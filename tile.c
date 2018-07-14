@@ -28,3 +28,11 @@ int is_passable(Tile tile)
     else
         return 1; //passable
 }
+
+Tile create_tile(int tileType)
+{
+    Tile t;
+    t.type = tileType;
+
+    return t;
+}

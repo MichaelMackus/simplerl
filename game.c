@@ -23,6 +23,9 @@ int init_level(Level *level, const char **messages)
     //          - mobs
     //          - stairs
 
+    // randomly generate map
+    randomly_fill_tiles(level);
+
     // alert level depth on game start
     alert_depth(level, messages);
 
