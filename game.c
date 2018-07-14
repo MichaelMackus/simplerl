@@ -5,11 +5,11 @@
 #include <stdlib.h>
 #include <memory.h>
 
-int alert_depth(Dungeon *dungeon, const char **messages);
+int alert_depth(Level *level, const char **messages);
 
-int init_game(Dungeon *dungeon, const char **messages)
+int init_level(Level *level, const char **messages)
 {
-    if (dungeon->player == NULL || dungeon->level == NULL || messages == NULL)
+    if (level == NULL || messages == NULL)
     {
         // simple error case
         return 1;
@@ -22,14 +22,9 @@ int init_game(Dungeon *dungeon, const char **messages)
     //          - tiles
     //          - mobs
     //          - stairs
-    // TODO set x, y to upstair every new level
-
-    Coords playerCoords = random_passable_coords(dungeon->level);
-    dungeon->player->x = playerCoords.x;
-    dungeon->player->y = playerCoords.y;
 
     // alert level depth on game start
-    alert_depth(dungeon, messages);
+    alert_depth(level, messages);
 
     return 0;
 }
@@ -83,7 +78,7 @@ int gameloop(Dungeon *dungeon, const char **messages)
                 if (!increase_depth(dungeon))
                     return GAME_OOM;
 
-                alert_depth(dungeon, messages);
+                alert_depth(dungeon->level, messages);
             }
 
             break;
@@ -101,7 +96,7 @@ int gameloop(Dungeon *dungeon, const char **messages)
                 if (!decrease_depth(dungeon))
                     return GAME_OOM;
 
-                alert_depth(dungeon, messages);
+                alert_depth(dungeon->level, messages);
             }
 
             break;
@@ -157,10 +152,10 @@ void attack(Mob *attacker, Mob *target)
 }
 
 // insert the current dungeon depth to messages array
-int alert_depth(Dungeon *dungeon, const char **messages)
+int alert_depth(Level *level, const char **messages)
 {
     // allocate memory for message
-    const char *message = create_message("Current level: %d", dungeon->level->depth);
+    const char *message = create_message("Current level: %d", level->depth);
     if (message == NULL)
         return 1;
 

@@ -11,8 +11,8 @@
 #include "map.h"
 #include <stdint.h>
 
-// initialize dungeon defaults
-int init_game(Dungeon *dungeon, const char **messages);
+// initialize random dungeon
+int init_level(Level *level, const char **messages);
 
 // return GAME constant
 int gameloop(Dungeon *dungeon, const char **messages);

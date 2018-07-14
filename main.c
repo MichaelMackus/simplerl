@@ -2,6 +2,7 @@
 #include "game.h"
 #include "map.h"
 #include "message.h"
+#include "random.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -28,8 +29,13 @@ int main()
     if (messages == NULL)
         return ERROR_OOM;
 
-    // initialize curses
-    init_game(dungeon, messages);
+    // randomize initial level
+    init_level(dungeon->level, messages);
+
+    // randomize player start, TODO set to upstair every new level
+    Coords playerCoords = random_passable_coords(dungeon->level);
+    dungeon->player->x = playerCoords.x;
+    dungeon->player->y = playerCoords.y;
 
     int result = GAME_PLAYING;
     while (result == GAME_PLAYING)
