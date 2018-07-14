@@ -10,6 +10,7 @@ void seed_random()
 
 Box *random_cell(Level *level);
 void fill_cell(Box *cell, Level *level);
+void randomly_fill_corridors(Level *level, Box **cells);
 void randomly_fill_tiles(Level *level)
 {
     int maxCells = (rand() % MAX_CELLS) + MIN_CELLS;
@@ -17,20 +18,55 @@ void randomly_fill_tiles(Level *level)
     int i = 0;
 
     // randomly fill cells
+    Box **cells;
+    cells = malloc(sizeof(Box*) * maxCells);
     while (cellCount < maxCells && i < MAX_RANDOM_RECURSION)
     {
         Box *cell = random_cell(level);
         if (cell != NULL)
         {
             fill_cell(cell, level);
-            free(cell);
+            cells[cellCount] = cell;
             ++cellCount;
         }
         ++i;
     }
 
-    // TODO prune touching cells
-    // TODO randomly fill corridors
+    // fill corridors between cells
+    randomly_fill_corridors(level, cells);
+
+    // TODO prune none-connecting cells
+
+    // free cells
+    for (i = 0; i < cellCount; ++i)
+    {
+        free(cells[i]);
+    }
+    free(cells);
+}
+
+void randomly_fill_corridors(Level *level, Box **cells)
+{
+    /**
+     *
+     * RANDOM CORRIDOR GENERATION PSEUDO-CODE
+     *
+     * neighbor:
+     *  cell where the a* line from centers does not pass through
+     *  another cell
+     * branch:
+     *  space in wall of cell, connecting to another cell
+     *
+     * LOOP:
+     *  Pick cell with no branches
+     *  Pick neighbor (with at most 1 branch) at random
+     *  Draw corridor to neighbor
+     *  Start loop over with neighbor as cell
+     *
+     * DONE:
+     *  Remove non-connected cells
+     *
+     */
 }
 
 /*************/
