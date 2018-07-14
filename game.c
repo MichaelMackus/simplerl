@@ -153,10 +153,7 @@ void attack(Mob *attacker, Mob *target)
 
     // TODO basic RNG, attack, health, etc.
     // for now, just free & remove the target
-    // TODO want to reduce health to 0 and *not* free target until cleanup phase
-
-    free(target);
-    target = NULL;
+    // TODO want to reduce health to 0
 }
 
 // insert the current dungeon depth to messages array
