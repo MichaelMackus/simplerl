@@ -9,6 +9,20 @@ void seed_random()
     srand(time(0));
 }
 
+// FIXME these two functions are a quick fix
+Coords empty_coords()
+{
+    Coords coords;
+    coords.x = -1;
+    coords.y = -1;
+
+    return coords;
+}
+int is_empty(Coords coords)
+{
+    return coords.x == -1 && coords.y == -1;
+}
+
 Box *random_cell(Level *level);
 void fill_cell(Box *cell, Level *level, int fill);
 void randomly_fill_corridors(Level *level, const Box **cells, int startIndex, int cellCount);
@@ -57,6 +71,7 @@ void randomly_fill_tiles(Level *level)
     level->tiles[y][x].type = TILE_STAIR_DOWN;
 
     // free cells & prune non-connecting cells
+    // TODO all dungeon cells should connect, currently only checking for branch
     for (i = 0; i < cellCount; ++i)
     {
         if (branches(cells[i], level) == 0)
@@ -70,7 +85,6 @@ int is_neighbor(const Box *start, const Box *target, const Box **cells, int cell
 void draw_line(const Box *start, const Box *target, Level *level);
 void randomly_fill_corridors(Level *level, const Box **cells, int startIndex, int cellCount)
 {
-    // TODO check for MAX_RANDOM_RECURSION
     // TODO check for segmentation fault... only seems to happen when increasing depth...
 
     /**
@@ -237,45 +251,34 @@ Coords random_coords(Level *level)
 Coords random_open_coords(Level *level)
 {
     // do simple brute force attempt to get an open coord
-    while (1)
+    int i = 0;
+    while (i < MAX_RANDOM_RECURSION)
     {
         Coords coords = random_coords(level);
         const Tile *t = get_tile(level, coords.y, coords.x);
         if (t != NULL && t->type == TILE_NONE)
             return coords;
+        ++i;
     }
+
+    return empty_coords();
 }
 
 Coords random_passable_coords(Level *level)
 {
     // do simple brute force attempt to get a passable coord
-    while (1)
+    int i = 0;
+    while (i < MAX_RANDOM_RECURSION)
     {
         Coords coords = random_coords(level);
         const Tile *t = get_tile(level, coords.y, coords.x);
         if (t != NULL && is_passable(*t))
             return coords;
+        ++i;
     }
-}
 
-// list of possible cell dimensions (w x h)
-int possibleCellDimensions[15][2] = {
-    { 5, 5 },
-    { 5, 6 },
-    { 5, 7 },
-    { 5, 8 },
-    { 6, 4 },
-    { 6, 5 },
-    { 6, 6 },
-    { 6, 8 },
-    { 7, 4 },
-    { 7, 5 },
-    { 7, 6 },
-    { 7, 8 },
-    { 8, 5 },
-    { 8, 6 },
-    { 8, 7 },
-};
+    return empty_coords();
+}
 
 Dimensions random_dimensions();
 Box *random_cell(Level *level)
@@ -287,6 +290,10 @@ Box *random_cell(Level *level)
     do
     {
         coords = random_open_coords(level);
+
+        if (is_empty(coords))
+            return NULL;
+
         dimensions = random_dimensions();
 
         // check all tiles if passable from coords -> dimension
@@ -351,6 +358,25 @@ void fill_cell(Box *cell, Level *level, int fill)
 
 Dimensions random_dimensions()
 {
+    // list of possible cell dimensions (w x h)
+    int possibleCellDimensions[15][2] = {
+        { 5, 5 },
+        { 5, 6 },
+        { 5, 7 },
+        { 5, 8 },
+        { 6, 4 },
+        { 6, 5 },
+        { 6, 6 },
+        { 6, 8 },
+        { 7, 4 },
+        { 7, 5 },
+        { 7, 6 },
+        { 7, 8 },
+        { 8, 5 },
+        { 8, 6 },
+        { 8, 7 },
+    };
+
     int i = rand() % 15;
 
     Dimensions dimensions;
