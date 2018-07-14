@@ -7,8 +7,9 @@
 #include <stdlib.h>
 #include <memory.h>
 
-#define ERROR_OOM 1
-#define ERROR_INIT 2
+#define ERROR_OOM 1  // out of memory error
+#define ERROR_INIT 2 // curses initialization error
+#define ERROR_GAME 3 // internal game error
 
 int main()
 {
@@ -50,6 +51,8 @@ int main()
         printf("Oh no, you died :(\n");
     else if (result == GAME_OOM)
         return ERROR_OOM;
+    else if (result == GAME_ERROR)
+        return ERROR_GAME;
     else
         printf("Undefined game loop result...\n");
 

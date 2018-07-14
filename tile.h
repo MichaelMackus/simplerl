@@ -16,6 +16,10 @@ typedef struct {
     int type; // one of TILE consts
 } Tile;
 
+// return tile symbol for display
 char tile_symbol(Tile tile);
+
+// return 0 if impassable
+int is_passable(Tile tile);
 
 #endif

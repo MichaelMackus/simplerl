@@ -85,6 +85,34 @@ Level *create_level(int depth)
     return level;
 }
 
+const Tile *get_tile(Level *level, int y, int x)
+{
+    if (y >= MAX_HEIGHT || x >= MAX_WIDTH)
+        return NULL;
+
+    return &level->tiles[y][x];
+}
+
+Mob *get_mob(Level *level, int y, int x)
+{
+    if (y >= MAX_HEIGHT || x >= MAX_WIDTH)
+        return NULL;
+
+    for (int y = 0; y < MAX_HEIGHT; ++y)
+    {
+        for (int x = 0; x < MAX_WIDTH; ++x)
+        {
+            for (int i = 0; i < MAX_MOBS; ++i)
+            {
+                if (level->mobs[i].x == x && level->mobs[i].y == y)
+                    return &level->mobs[i];
+            }
+        }
+    }
+
+    return NULL;
+}
+
 int increase_depth(Dungeon *dungeon)
 {
     if (dungeon->level->depth == MAX_LEVEL)

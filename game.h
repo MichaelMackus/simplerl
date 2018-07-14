@@ -6,6 +6,7 @@
 #define GAME_QUIT 2
 #define GAME_DEATH 3
 #define GAME_OOM 4
+#define GAME_ERROR 5
 
 #include "map.h"
 #include <stdint.h>

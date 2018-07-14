@@ -20,3 +20,11 @@ char tile_symbol(Tile tile)
             return ' ';
     }
 }
+
+int is_passable(Tile tile)
+{
+    if (tile.type == TILE_DOOR || tile.type == TILE_WALL || tile.type == TILE_WALL_SIDE)
+        return 0; //impassable
+    else
+        return 1; //passable
+}
