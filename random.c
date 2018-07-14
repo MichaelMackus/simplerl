@@ -71,6 +71,7 @@ void draw_line(const Box *start, const Box *target, Level *level);
 void randomly_fill_corridors(Level *level, const Box **cells, int startIndex, int cellCount)
 {
     // TODO check for MAX_RANDOM_RECURSION
+    // TODO check for segmentation fault... only seems to happen when increasing depth...
 
     /**
      *
