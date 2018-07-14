@@ -1,13 +1,15 @@
 #ifndef TILE_H
 #define TILE_H
 
-#define TILE_FLOOR      0
-#define TILE_WALL       1
-#define TILE_WALL_SIDE  2
-#define TILE_STAIR_DOWN 3
-#define TILE_STAIR_UP   4
-#define TILE_DOOR       5
-#define TILE_DOOR_OPEN  6
+#define TILE_NONE       0
+#define TILE_CAVERN     1
+#define TILE_FLOOR      2
+#define TILE_WALL       3
+#define TILE_WALL_SIDE  4
+#define TILE_STAIR_DOWN 5
+#define TILE_STAIR_UP   6
+#define TILE_DOOR       7
+#define TILE_DOOR_OPEN  8
 
 #include "item.h"
 

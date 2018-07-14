@@ -37,10 +37,10 @@ Dungeon *create_dungeon();
 Level *create_level(int depth);
 
 // get tile from square, or NULL on error
-const Tile *get_tile(Level *level, unsigned int y, unsigned int x);
+const Tile *get_tile(const Level *level, unsigned int y, unsigned int x);
 
 // get mob from square, or NULL on error
-Mob *get_mob(Level *level, unsigned int y, unsigned int x);
+Mob *get_mob(const Level *level, unsigned int y, unsigned int x);
 
 // change current depth to next level deep
 // if there is no next level, create one

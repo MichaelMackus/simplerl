@@ -1,4 +1,5 @@
 #include "random.h"
+#include <memory.h>
 #include <stdlib.h>
 #include <time.h>
 
@@ -10,7 +11,7 @@ void seed_random()
 
 Box *random_cell(Level *level);
 void fill_cell(Box *cell, Level *level);
-void randomly_fill_corridors(Level *level, Box **cells);
+void randomly_fill_corridors(Level *level, const Box **cells, int startIndex, int cellCount);
 void randomly_fill_tiles(Level *level)
 {
     int maxCells = (rand() % MAX_CELLS) + MIN_CELLS;
@@ -33,7 +34,7 @@ void randomly_fill_tiles(Level *level)
     }
 
     // fill corridors between cells
-    randomly_fill_corridors(level, cells);
+    randomly_fill_corridors(level, (const Box**) cells, 0, cellCount);
 
     // TODO prune none-connecting cells
 
@@ -45,7 +46,10 @@ void randomly_fill_tiles(Level *level)
     free(cells);
 }
 
-void randomly_fill_corridors(Level *level, Box **cells)
+int is_neighbor(const Box *start, const Box *target, const Box **cells, int cellCount);
+int branches(const Box *cell, const Level *level);
+void draw_line(const Box *start, const Box *target, Level *level);
+void randomly_fill_corridors(Level *level, const Box **cells, int startIndex, int cellCount)
 {
     /**
      *
@@ -67,6 +71,42 @@ void randomly_fill_corridors(Level *level, Box **cells)
      *  Remove non-connected cells
      *
      */
+
+    // can't fill corridor if no start cell
+    if (startIndex >= cellCount || cells[startIndex] == NULL)
+        return;
+
+    // limit array to possible neighbors
+    const Box **neighbors;
+    neighbors = malloc(sizeof(Box*) * cellCount);
+    memset(neighbors, 0, sizeof(Box*) * cellCount);
+    int maxNeighbors = 0;
+    for (int i = startIndex + 1; i < cellCount; ++i) // check cells other than start cell
+    {
+        // check for clear line from center of start to center of neighbor
+        if (is_neighbor(cells[startIndex], cells[i], cells, cellCount))
+        {
+            // neighbor can have at most 1 branch
+            if (branches(cells[i], level) <= 1)
+            {
+                neighbors[maxNeighbors] = cells[i];
+                ++maxNeighbors;
+            }
+        }
+    }
+
+    if (maxNeighbors > 0)
+    {
+        // pick a random neighbor with at most 1 branch
+        int neighborIndex = rand() % maxNeighbors;
+
+        // draw line to neighbor
+        draw_line(cells[startIndex], cells[neighborIndex], level);
+    }
+
+    free(neighbors);
+
+    return randomly_fill_corridors(level, cells, startIndex + 1, cellCount);
 }
 
 /*************/
@@ -75,6 +115,43 @@ void randomly_fill_corridors(Level *level, Box **cells)
 /**         **/
 /*************/
 
+// draws a line using straight lines (just a simple right angle for now)
+const Coords find_wall_for_branch(const Box *cell, const Level *level);
+void draw_line(const Box *start, const Box *target, Level *level)
+{
+    const Coords a = find_wall_for_branch(start, (const Level*) level);
+    const Coords b = find_wall_for_branch(target, (const Level*) level);
+
+    if (a.x == b.x && a.y == b.y)
+        return;
+
+    // make cavern in start tile
+    level->tiles[a.y][a.x].type = TILE_CAVERN;
+
+    // TODO pick direction based on which wall
+    // TODO then, start drawing
+    if (a.y == start->coords.y)
+    {
+        // TODO direction *up*
+        level->tiles[a.y - 1][a.x].type = TILE_CAVERN;
+    }
+    else if (a.y == start->coords.y + start->dimensions.h - 1)
+    {
+        // TODO direction *down*
+        level->tiles[a.y + 1][a.x].type = TILE_CAVERN;
+    }
+    else if (a.x == start->coords.x)
+    {
+        // TODO direction *left*
+        level->tiles[a.y][a.x - 1].type = TILE_CAVERN;
+    }
+    else if (a.x == start->coords.x + start->dimensions.w - 1)
+    {
+        // TODO direction *right*
+        level->tiles[a.y][a.x + 1].type = TILE_CAVERN;
+    }
+}
+
 Coords random_coords(Level *level)
 {
     Coords coords;
@@ -82,6 +159,18 @@ Coords random_coords(Level *level)
     coords.y = rand() % MAX_HEIGHT;
 
     return coords;
+}
+
+Coords random_open_coords(Level *level)
+{
+    // do simple brute force attempt to get an open coord
+    while (1)
+    {
+        Coords coords = random_coords(level);
+        const Tile *t = get_tile(level, coords.y, coords.x);
+        if (t != NULL && t->type == TILE_NONE)
+            return coords;
+    }
 }
 
 Coords random_passable_coords(Level *level)
@@ -124,7 +213,7 @@ Box *random_cell(Level *level)
 
     do
     {
-        coords = random_passable_coords(level);
+        coords = random_open_coords(level);
         dimensions = random_dimensions();
 
         // check all tiles if passable from coords -> dimension
@@ -134,7 +223,7 @@ Box *random_cell(Level *level)
             for (int x = coords.x; x < coords.x + dimensions.w; ++x)
             {
                 const Tile *t = get_tile(level, y, x);
-                if (t == NULL || !is_passable(*t))
+                if (t == NULL || t->type != TILE_NONE)
                 {
                     ++impassable;
                     break;
@@ -192,4 +281,193 @@ Dimensions random_dimensions()
     dimensions.h = possibleCellDimensions[i][1];
 
     return dimensions;
+}
+
+// checks for a clear straight line from center of start to center of target
+// return 1 if possible neighbor
+int within_cell(const Coords c, const Box cell);
+const Coords **get_line(const Coords a, const Coords b);
+void free_line(const Coords **line);
+int is_neighbor(const Box *start, const Box *target, const Box **cells, int cellCount)
+{
+    Coords startCenter;
+    startCenter.x = start->coords.x + ((start->dimensions.w - start->coords.x) / 2);
+    startCenter.y = start->coords.y + ((start->dimensions.h - start->coords.y) / 2);
+
+    Coords targetCenter = target->coords;
+    targetCenter.x = target->coords.x + ((target->dimensions.w - target->coords.x) / 2);
+    targetCenter.y = target->coords.y + ((target->dimensions.h - target->coords.y) / 2);
+
+    // draw straight line from start -> target
+    const Coords **line = get_line(startCenter, targetCenter);
+
+    // check for any coord that passes through another cell
+    int i = 0;
+    while (line[i] != NULL)
+    {
+        // ensure we're not comparing start or target
+        if (!within_cell(*line[i], *start) && !within_cell(*line[i], *target))
+        {
+            // check within cells for intersection *not* start & *not* target
+            for (int j = 0; j < cellCount; ++j)
+            {
+                const Box *cell = cells[j];
+
+                // ensure we're not comparing start or target cell
+                if (within_cell(cell->coords, *start) || within_cell(cell->coords, *target))
+                    continue;
+
+                // if we're within *another* cell, this is no neighbor
+                if (within_cell(*line[i], *cell))
+                {
+                    free_line(line);
+
+                    return 0;
+                }
+            }
+        }
+        ++i;
+    }
+
+    free_line(line);
+
+    return 1;
+}
+
+// return 1 if coords are within cell
+int within_cell(const Coords c, const Box cell)
+{
+    for (int y = cell.coords.y; y < cell.coords.y + cell.dimensions.h; ++y)
+        for (int x = cell.coords.x; x < cell.coords.x + cell.dimensions.w; ++x)
+            if (c.x == x && c.y == y)
+                return 1;
+
+    return 0;
+}
+
+// calculate amount of branches (i.e. holes in cell walls)
+int branches(const Box *cell, const Level *level)
+{
+    // loop through walls of cell and check for tiles that are not walls
+    int count = 0;
+    for (int y = cell->coords.y; y < cell->coords.y + cell->dimensions.h; ++y)
+        for (int x = cell->coords.x; x < cell->coords.x + cell->dimensions.w; ++x)
+        {
+            if ((y == cell->coords.y || y == cell->coords.y + cell->dimensions.h - 1) ||
+                    (x == cell->coords.x || x == cell->coords.x + cell->dimensions.w - 1))
+            {
+                // increment branches count if this is *not* a wall
+                const Tile *t = get_tile(level, y, x);
+                if (t != NULL && t->type != TILE_WALL && t->type != TILE_WALL_SIDE)
+                    ++count;
+            }
+        }
+
+    return count;
+}
+
+// get straight line from a to b
+const Coords **get_line(const Coords a, const Coords b)
+{
+    Coords **line;
+    line = malloc(sizeof(Coords*)*MAX_WIDTH*MAX_HEIGHT);
+    memset(line, 0, sizeof(Coords*)*MAX_WIDTH*MAX_HEIGHT);
+
+    Coords currentCoords = a;
+    for (int i = 0; i < MAX_WIDTH + MAX_HEIGHT; ++i)
+    {
+        line[i] = malloc(sizeof(Coords));
+
+        // calculate x difference
+        if (b.x - currentCoords.x > 0)
+            ++currentCoords.x;
+        else if (b.x - currentCoords.x < 0)
+            --currentCoords.x;
+        // calculate y difference
+        if (b.y - currentCoords.y > 0)
+            ++currentCoords.y;
+        else if (b.y - currentCoords.y < 0)
+            --currentCoords.y;
+
+        line[i]->x = currentCoords.x;
+        line[i]->y = currentCoords.y;
+
+        // we're done if we are at the end
+        if (currentCoords.x == b.x && currentCoords.y == b.y)
+            break;
+    }
+
+    return (const Coords **) line;
+}
+
+void free_line(const Coords **line)
+{
+    int i = 0;
+    while (line[i] != NULL)
+    {
+        free((Coords*) line[i]);
+        ++i;
+    }
+    free((Coords**) line);
+}
+
+const Coords find_wall_for_branch(const Box *cell, const Level *level)
+{
+    // find an opening in cell for a branch
+    int ycount = 0, xcount = 0;
+    for (int y = cell->coords.y; y < cell->coords.y + cell->dimensions.h; ++y)
+    {
+        for (int x = cell->coords.x; x < cell->coords.x + cell->dimensions.w; ++x)
+        {
+            // check start & end rows, if walls increment xcount
+            if (y == cell->coords.y || y == cell->coords.y + cell->dimensions.h - 1)
+            {
+                // guard against being next to world edge
+                if (y > 0 && y < MAX_HEIGHT - 1)
+                {
+                    if (x == cell->coords.x)
+                        xcount = 0;
+
+                    // increment x count if it is a wall
+                    const Tile *t = get_tile(level, y, x);
+                    if (t != NULL && (t->type == TILE_WALL || t->type == TILE_WALL_SIDE))
+                        ++xcount;
+
+                    if (xcount == cell->dimensions.w)
+                    {
+                        Coords c;
+                        c.x = cell->coords.x + (cell->dimensions.w / 2);
+                        c.y = y;
+
+                        return c;
+                    }
+                }
+            }
+
+            // check start & end columns, if walls increment ycount
+            if (x == cell->coords.x || x == cell->coords.x + cell->dimensions.w - 1)
+            {
+                // guard against being next to world edge
+                if (x > 0 && x < MAX_WIDTH - 1)
+                {
+                    if (y == cell->coords.y)
+                        ycount = 0;
+
+                    // increment y count if it is a wall
+                    const Tile *t = get_tile(level, y, x);
+                    if (t != NULL && (t->type == TILE_WALL || t->type == TILE_WALL_SIDE))
+                        ++ycount;
+
+                    if (ycount == cell->dimensions.h)
+                    {
+                        Coords c;
+                        c.x = x;
+                        c.y = cell->coords.y + (cell->dimensions.h / 2);
+
+                        return c;
+                    }
+                }
+            }
+        }
+    }
 }

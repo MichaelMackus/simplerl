@@ -98,16 +98,7 @@ Level *create_level(int depth)
         for (int x = 0; x < MAX_WIDTH; ++x)
         {
             Tile t;
-            if (y == 0)
-                t.type = TILE_WALL;
-            else if (x == 0)
-                t.type = TILE_WALL_SIDE;
-            else if (x == MAX_WIDTH-1)
-                t.type = TILE_WALL_SIDE;
-            else if (y == MAX_HEIGHT-1)
-                t.type = TILE_WALL;
-            else
-                t.type = TILE_FLOOR;
+            t.type = TILE_NONE;
             level->tiles[y][x] = t;
         }
     }
@@ -115,7 +106,7 @@ Level *create_level(int depth)
     return level;
 }
 
-const Tile *get_tile(Level *level, unsigned int y, unsigned int x)
+const Tile *get_tile(const Level *level, unsigned int y, unsigned int x)
 {
     if (y >= MAX_HEIGHT || x >= MAX_WIDTH)
         return NULL;
@@ -123,7 +114,7 @@ const Tile *get_tile(Level *level, unsigned int y, unsigned int x)
     return &level->tiles[y][x];
 }
 
-Mob *get_mob(Level *level, unsigned int y, unsigned int x)
+Mob *get_mob(const Level *level, unsigned int y, unsigned int x)
 {
     if (y >= MAX_HEIGHT || x >= MAX_WIDTH)
         return NULL;

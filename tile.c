@@ -4,6 +4,10 @@ char tile_symbol(Tile tile)
 {
     switch (tile.type)
     {
+        case TILE_FLOOR:
+            return '.';
+        case TILE_CAVERN:
+            return '#';
         case TILE_WALL:
             return '-';
         case TILE_WALL_SIDE:
@@ -15,7 +19,7 @@ char tile_symbol(Tile tile)
         case TILE_DOOR:
             return '+';
         case TILE_DOOR_OPEN:
-            return ' '; // TODO need better tile
+            return '_'; // TODO need better tile
         default:
             return ' ';
     }
@@ -23,7 +27,7 @@ char tile_symbol(Tile tile)
 
 int is_passable(Tile tile)
 {
-    if (tile.type == TILE_DOOR || tile.type == TILE_WALL || tile.type == TILE_WALL_SIDE)
+    if (tile.type == TILE_DOOR || tile.type == TILE_WALL || tile.type == TILE_WALL_SIDE || tile.type == TILE_NONE)
         return 0; //impassable
     else
         return 1; //passable
