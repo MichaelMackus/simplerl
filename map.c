@@ -90,7 +90,7 @@ Level *create_level(int depth)
         {
             free(level->tiles[y]);
             free(level->mobs);
-            //free(level); // TODO free rest of tiles
+            //free(level); // TODO free rest of tiles FIXME possible memory leak
 
             return NULL;
         }
