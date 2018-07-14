@@ -8,7 +8,7 @@
 #include "item.h"
 
 typedef struct {
-    int x, y;
+    unsigned int x, y;
     int type;
     char symbol;
     Item *items;
