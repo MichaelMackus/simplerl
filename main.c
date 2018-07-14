@@ -30,7 +30,8 @@ int main()
         return ERROR_OOM;
 
     // randomize initial level
-    init_level(dungeon->level, messages);
+    if (!init_level(dungeon->level, messages))
+        return ERROR_OOM;
 
     // randomize player start, TODO set to upstair every new level
     Coords playerCoords = random_passable_coords(dungeon->level);

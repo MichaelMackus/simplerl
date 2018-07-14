@@ -12,7 +12,7 @@ int init_level(Level *level, const char **messages)
     if (level == NULL || messages == NULL)
     {
         // simple error case
-        return 1;
+        return 0;
     }
 
     // do this otherwise initial seed will always be the same
@@ -29,7 +29,7 @@ int init_level(Level *level, const char **messages)
     // alert level depth on game start
     alert_depth(level, messages);
 
-    return 0;
+    return 1;
 }
 
 int move_mob(Mob *mob, int y, int x, Level *level);
