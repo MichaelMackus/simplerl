@@ -2,12 +2,6 @@
 #include "message.h"
 #include <ncurses.h>
 
-/*************/
-/**         **/
-/** public  **/
-/**         **/
-/*************/
-
 int init()
 {
     initscr();            /* Start curses mode         */
