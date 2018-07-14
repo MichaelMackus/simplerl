@@ -13,9 +13,8 @@
 int main()
 {
     // initialize curses
-    if (!init()) {
+    if (!init())
         return ERROR_INIT;
-    }
 
     // initialize dungeon
     Dungeon *dungeon = create_dungeon();

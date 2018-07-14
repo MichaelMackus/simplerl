@@ -62,9 +62,11 @@ Level *create_level(int depth)
     // NOTE: initializing [y][x] since that is how C allocates
     // *row* would be first allocation, and *cols* second
     level->tiles = malloc(sizeof(Tile*) * MAX_HEIGHT);
-    for (int y = 0; y < MAX_HEIGHT; ++y) {
+    for (int y = 0; y < MAX_HEIGHT; ++y)
+    {
         level->tiles[y] = malloc(sizeof(Tile) * MAX_WIDTH);
-        for (int x = 0; x < MAX_WIDTH; ++x) {
+        for (int x = 0; x < MAX_WIDTH; ++x)
+        {
             Tile t;
             if (y == 0)
                 t.type = TILE_WALL;
