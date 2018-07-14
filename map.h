@@ -1,8 +1,10 @@
 #ifndef MAP_H
 #define MAP_H
 
-#define MAX_LEVEL 10
-#define MAX_MOBS  20
+#define MAX_LEVEL  10
+#define MAX_MOBS   20
+#define MAX_WIDTH  80
+#define MAX_HEIGHT 25
 
 #include "item.h"
 #include "mob.h"

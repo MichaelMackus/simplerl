@@ -3,9 +3,11 @@
 
 #define TILE_FLOOR      0
 #define TILE_WALL       1
-#define TILE_STAIR_DOWN 2
-#define TILE_STAIR_UP   3
-#define TILE_DOOR       4
+#define TILE_WALL_SIDE  2
+#define TILE_STAIR_DOWN 3
+#define TILE_STAIR_UP   4
+#define TILE_DOOR       5
+#define TILE_DOOR_OPEN  6
 
 #include "item.h"
 
@@ -13,5 +15,7 @@ typedef struct {
     Item *items;
     int type; // one of TILE consts
 } Tile;
+
+char tile_symbol(Tile tile);
 
 #endif
