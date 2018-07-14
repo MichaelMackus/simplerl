@@ -37,6 +37,25 @@ void randomly_fill_tiles(Level *level)
     // fill corridors between cells
     randomly_fill_corridors(level, (const Box**) cells, 0, cellCount);
 
+    // randomly place upstairs
+    i = rand() % cellCount;
+    while (branches(cells[i], level) == 0) // ensure we pick valid cell for upstairs
+        i = rand() % cellCount;
+    int x, y;
+    x = cells[i]->coords.x + cells[i]->dimensions.w/2;
+    y = cells[i]->coords.y + cells[i]->dimensions.h/2;
+    level->tiles[y][x].type = TILE_STAIR_UP;
+
+    // randomly place downstairs
+    // TODO place downstairs at greater distance from upstairs
+    // TODO once win condition is defined, don't place downstairs on last level
+    int j = i;
+    while (i == j || branches(cells[j], level) == 0) // ensure we pick valid cell for downstairs
+        j = rand() % cellCount;
+    x = cells[j]->coords.x + cells[j]->dimensions.w/2;
+    y = cells[j]->coords.y + cells[j]->dimensions.h/2;
+    level->tiles[y][x].type = TILE_STAIR_DOWN;
+
     // free cells & prune non-connecting cells
     for (i = 0; i < cellCount; ++i)
     {
@@ -51,6 +70,8 @@ int is_neighbor(const Box *start, const Box *target, const Box **cells, int cell
 void draw_line(const Box *start, const Box *target, Level *level);
 void randomly_fill_corridors(Level *level, const Box **cells, int startIndex, int cellCount)
 {
+    // TODO check for MAX_RANDOM_RECURSION
+
     /**
      *
      * RANDOM CORRIDOR GENERATION PSEUDO-CODE
