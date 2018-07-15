@@ -12,9 +12,6 @@
 #define ERROR_INIT 2 // curses initialization error
 #define ERROR_GAME 3 // internal game error
 
-// TODO put this somewhere public
-int alert_depth(Level *level, const char **messages);
-
 int main()
 {
     // initialize curses
@@ -40,7 +37,7 @@ int main()
     place_on_tile(dungeon->player, TILE_STAIR_UP, dungeon->level);
 
     // alert level depth on game start
-    alert_depth(dungeon->level, messages);
+    insert_message(create_message("Current level: %d", dungeon->level->depth), messages);
 
     int result = GAME_PLAYING;
     while (result == GAME_PLAYING)

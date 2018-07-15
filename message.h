@@ -8,7 +8,7 @@
 // #ifdef DEBUG printf ???
 
 // insert message to beginning, dropping older messages
-void insert_message(const char *message, const char **messages);
+int insert_message(const char *message, const char **messages);
 
 // simple function to reserve memory for message, TODO expand with our object types
 //

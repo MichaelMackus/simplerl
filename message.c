@@ -4,8 +4,11 @@
 #include <stdlib.h>
 #include <memory.h>
 
-void insert_message(const char *message, const char **messages)
+int insert_message(const char *message, const char **messages)
 {
+    if (message == NULL)
+        return 1;
+
     // free the last message
     if (messages[MAX_MESSAGES-1])
     {
@@ -20,6 +23,8 @@ void insert_message(const char *message, const char **messages)
 
     // insert message at index 0
     messages[0] = message;
+
+    return 0;
 }
 
 int vsnprintf(char *str, size_t size, const char *format, va_list ap); // FIXME this shouldn't be necessary...

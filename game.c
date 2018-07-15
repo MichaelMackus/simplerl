@@ -5,8 +5,6 @@
 #include <stdlib.h>
 #include <memory.h>
 
-int alert_depth(Level *level, const char **messages);
-
 int init_level(Level *level, Mob *player)
 {
     if (level == NULL)
@@ -77,7 +75,7 @@ int gameloop(Dungeon *dungeon, const char **messages)
                 if (!increase_depth(dungeon))
                     return GAME_OOM;
 
-                alert_depth(dungeon->level, messages);
+                insert_message(create_message("Current level: %d", level->depth), messages);
             }
 
             break;
@@ -95,7 +93,7 @@ int gameloop(Dungeon *dungeon, const char **messages)
                 if (!decrease_depth(dungeon))
                     return GAME_OOM;
 
-                alert_depth(dungeon->level, messages);
+                insert_message(create_message("Current level: %d", level->depth), messages);
             }
 
             break;
@@ -148,20 +146,6 @@ void attack(Mob *attacker, Mob *target)
     // TODO basic RNG, attack, health, etc.
     // for now, just free & remove the target
     // TODO want to reduce health to 0
-}
-
-// insert the current dungeon depth to messages array
-int alert_depth(Level *level, const char **messages)
-{
-    // allocate memory for message
-    const char *message = create_message("Current level: %d", level->depth);
-    if (message == NULL)
-        return 1;
-
-    // insert the message
-    insert_message(message, messages);
-
-    return 0;
 }
 
 // change current depth to next level deep
