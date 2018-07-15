@@ -15,7 +15,7 @@ int gameloop(Dungeon *dungeon)
     // Set smell for initial tile so that the smell for the current tile is
     // always set, in case the player doesn't move or this is the first
     // iteration.
-    level->tiles[player->y][player->x].smell = INITIAL_SMELL;
+    level->tiles[player->coords.y][player->coords.x].smell = INITIAL_SMELL;
 
     // handle input
     char ch = getch();
@@ -28,20 +28,20 @@ int gameloop(Dungeon *dungeon)
             return GAME_QUIT;
 
         case 'h':
-            move_or_attack(player, xy(player->x - 1, player->y), level);
+            move_or_attack(player, xy(player->coords.x - 1, player->coords.y), level);
             break;
         case 'l':
-            move_or_attack(player, xy(player->x + 1, player->y), level);
+            move_or_attack(player, xy(player->coords.x + 1, player->coords.y), level);
             break;
         case 'j':
-            move_or_attack(player, xy(player->x, player->y + 1), level);
+            move_or_attack(player, xy(player->coords.x, player->coords.y + 1), level);
             break;
         case 'k':
-            move_or_attack(player, xy(player->x, player->y - 1), level);
+            move_or_attack(player, xy(player->coords.x, player->coords.y - 1), level);
             break;
 
         case '>': // check for downstair
-            t = get_tile(level, xy(player->x, player->y));
+            t = get_tile(level, player->coords);
 
             if (t == NULL)
                 return GAME_ERROR;
@@ -59,7 +59,7 @@ int gameloop(Dungeon *dungeon)
 
         case '<': // check for upstair
 
-            t = get_tile(level, xy(player->x, player->y));
+            t = get_tile(level, player->coords);
 
             if (t == NULL)
                 return GAME_ERROR;
@@ -170,7 +170,7 @@ void move_or_attack(Mob *player, Coords coords, Level *level)
         move_mob(player, coords, level);
 
         // set smell for tile
-        level->tiles[player->y][player->x].smell = INITIAL_SMELL;
+        level->tiles[player->coords.y][player->coords.x].smell = INITIAL_SMELL;
     }
 }
 

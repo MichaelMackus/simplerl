@@ -150,7 +150,7 @@ Mob *get_mob(const Level *level, Coords coords)
     {
         if (level->mobs[i] == NULL)
             continue;
-        if (level->mobs[i]->x == coords.x && level->mobs[i]->y == coords.y)
+        if (level->mobs[i]->coords.x == coords.x && level->mobs[i]->coords.y == coords.y)
             return level->mobs[i];
     }
 
@@ -165,8 +165,8 @@ int place_on_tile(Mob *mob, int tileType, const Level *level)
         {
             if (level->tiles[y][x].type == tileType)
             {
-                mob->x = x;
-                mob->y = y;
+                mob->coords.x = x;
+                mob->coords.y = y;
 
                 return 1;
             }
@@ -193,8 +193,8 @@ int move_mob(Mob *mob, Coords coords, Level *level)
 
     if (t != NULL && is_passable(*t))
     {
-        mob->x = coords.x;
-        mob->y = coords.y;
+        mob->coords.x = coords.x;
+        mob->coords.y = coords.y;
 
         return 1;
     }

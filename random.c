@@ -109,8 +109,8 @@ void randomly_fill_mobs(Level *level, int max)
 
         mobs[mobIndex] = createMob(level->depth);
         Coords coords = random_passable_coords(level);
-        mobs[mobIndex]->x = coords.x;
-        mobs[mobIndex]->y = coords.y;
+        mobs[mobIndex]->coords.x = coords.x;
+        mobs[mobIndex]->coords.y = coords.y;
     }
 }
 

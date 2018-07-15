@@ -11,7 +11,7 @@
 
 typedef struct {
     int hp, maxHP;
-    unsigned int x, y;
+    Coords coords;
     unsigned int minDamage, maxDamage;
     int type;
     char symbol;

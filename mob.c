@@ -102,7 +102,7 @@ int can_see(const Mob *mob, Coords coords, Tile **tiles)
     // only show 1 cavern at a time
     if (tiles[coords.y][coords.x].type == TILE_CAVERN)
     {
-        const Coords **line = get_line(xy(mob->x, mob->y), coords);
+        const Coords **line = get_line(mob->coords, coords);
         const Coords **current = line;
         while (*current != NULL)
         {
@@ -125,7 +125,7 @@ int can_see(const Mob *mob, Coords coords, Tile **tiles)
     }
     else
     {
-        const Coords **line = get_line(xy(mob->x, mob->y), coords);
+        const Coords **line = get_line(mob->coords, coords);
         const Coords **current = line;
         while (*current != NULL)
         {

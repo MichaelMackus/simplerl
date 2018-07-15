@@ -50,7 +50,7 @@ void render(const Dungeon *dungeon)
     for (int i = 0; i < MAX_MOBS; ++i)
     {
         const Mob *mob = dungeon->level->mobs[i];
-        if (mob != NULL && can_see(player, xy(mob->x, mob->y), dungeon->level->tiles))
+        if (mob != NULL && can_see(player, mob->coords, dungeon->level->tiles))
             render_mob(mob);
     }
 
@@ -87,7 +87,7 @@ void render_level(Level *level, const Mob *player)
 
 void render_mob(const Mob *mob)
 {
-    drawBuffer[mob->y][mob->x] = mob->symbol;
+    drawBuffer[mob->coords.y][mob->coords.x] = mob->symbol;
 }
 
 // only draw difference in map to curses window
