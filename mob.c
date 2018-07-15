@@ -64,7 +64,7 @@ int attack(Mob *attacker, Mob *target)
         return 0;
 
     // calculate damage based on attacker's stats
-    int damage = rand() % attacker->maxDamage + attacker->minDamage;
+    int damage = rand() % (attacker->maxDamage - attacker->minDamage + 1)  +  attacker->minDamage;
 
     target->hp -= damage;
 
