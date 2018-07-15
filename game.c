@@ -75,7 +75,7 @@ int gameloop(Dungeon *dungeon, const char **messages)
                 if (!increase_depth(dungeon))
                     return GAME_OOM;
 
-                insert_message(create_message("Current level: %d", level->depth), messages);
+                insert_message(create_message("Current level: %d", dungeon->level->depth), messages);
             }
 
             break;
@@ -93,7 +93,7 @@ int gameloop(Dungeon *dungeon, const char **messages)
                 if (!decrease_depth(dungeon))
                     return GAME_OOM;
 
-                insert_message(create_message("Current level: %d", level->depth), messages);
+                insert_message(create_message("Current level: %d", dungeon->level->depth), messages);
             }
 
             break;
