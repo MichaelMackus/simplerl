@@ -1,5 +1,5 @@
 simplerl: main.c clean
-	gcc -o simplerl -lcurses -lm *.c
+	gcc -o simplerl -lcurses *.c
 
 clean:
 	rm *.o || exit 0
