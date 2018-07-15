@@ -303,7 +303,8 @@ Coords random_passable_coords(Level *level)
     {
         Coords coords = random_coords(level);
         const Tile *t = get_tile(level, coords);
-        if (t != NULL && is_passable(*t))
+        Mob *m = get_mob(level, coords);
+        if (t != NULL && is_passable(*t) && m == NULL)
             return coords;
         ++i;
     }

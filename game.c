@@ -1,5 +1,6 @@
 #include "game.h"
 #include "message.h"
+#include "random.h"
 #include <ncurses.h>
 #include <stdlib.h>
 #include <memory.h>
@@ -7,7 +8,7 @@
 int increase_depth(Dungeon *dungeon);
 int decrease_depth(Dungeon *dungeon);
 void move_player(Mob *player, Coords coords, Level *level);
-void tick(Mob *mob, Dungeon *dungeon);
+void tick(Dungeon *dungeon);
 int gameloop(Dungeon *dungeon)
 {
     Level *level = dungeon->level;
@@ -84,26 +85,12 @@ int gameloop(Dungeon *dungeon)
             return GAME_OOM;
     }
 
-    // TODO check for player death (i.e. damaged self)
+    // check for player death (i.e. damaged self)
+    if (player->hp <= 0)
+        return GAME_DEATH;
 
     // do simple AI & cleanup dead mobs
-    for (int i = 0; i < MAX_MOBS; ++i)
-    {
-        if (dungeon->level->mobs[i] != NULL)
-        {
-            Mob *mob = dungeon->level->mobs[i];
-            if (mob->hp <= 0)
-            {
-                free(mob);
-                // TODO transfer items to floor
-                dungeon->level->mobs[i] = NULL;
-            }
-            else
-            {
-                tick(mob, dungeon);
-            }
-        }
-    }
+    tick(dungeon);
 
     // check for player death
     if (player->hp <= 0)
@@ -156,12 +143,11 @@ void move_player(Mob *player, Coords coords, Level *level)
     level->tiles[player->coords.y][player->coords.x].smell = INITIAL_SMELL;
 }
 
-void tick(Mob *mob, Dungeon *dungeon)
+void tick_mob(Mob *mob, Level *level)
 {
-    Level *level = dungeon->level;
-    Mob *player = dungeon->player;
+    Mob *player = level->player;
 
-    if (can_see(player, player->coords, dungeon->level->tiles))
+    if (can_see(player, player->coords, level->tiles))
     {
         int dmg = -1;
 
@@ -188,6 +174,32 @@ void tick(Mob *mob, Dungeon *dungeon)
     }
 
     // TODO implement smell
+}
+
+void tick(Dungeon *dungeon)
+{
+    Level *level = dungeon->level;
+    Mob *player = level->player;
+
+    // spawn new mob(s) each turn, max of 1 per turn for now
+    randomly_fill_mobs(level, 1);
+
+    // cleanup mobs
+    for (int i = 0; i < MAX_MOBS; ++i)
+    {
+        if (level->mobs[i] != NULL)
+        {
+            Mob *mob = level->mobs[i];
+            if (mob->hp <= 0)
+            {
+                free(mob);
+                // TODO transfer items to floor
+                level->mobs[i] = NULL;
+            }
+            else
+                tick_mob(mob, level);
+        }
+    }
 }
 
 // change current depth to next level deep
