@@ -95,19 +95,19 @@ int can_smell(Mob *mob, Mob *player, Tile **tiles)
     return 0;
 }
 
-int can_see(const Mob *mob, int y, int x, Tile **tiles)
+int can_see(const Mob *mob, Coords coords, Tile **tiles)
 {
     int ret = 0;
 
     // only show 1 cavern at a time
-    if (tiles[y][x].type == TILE_CAVERN)
+    if (tiles[coords.y][coords.x].type == TILE_CAVERN)
     {
-        const Coords **line = get_line(xy(mob->x, mob->y), xy(x, y));
+        const Coords **line = get_line(xy(mob->x, mob->y), coords);
         const Coords **current = line;
         while (*current != NULL)
         {
             // if the line ends at the point we're looking at, we can see it!
-            if ((*current)->x == x && (*current)->y == y)
+            if ((*current)->x == coords.x && (*current)->y == coords.y)
             {
                 ret = 1; // success!
 
@@ -125,12 +125,12 @@ int can_see(const Mob *mob, int y, int x, Tile **tiles)
     }
     else
     {
-        const Coords **line = get_line(xy(mob->x, mob->y), xy(x, y));
+        const Coords **line = get_line(xy(mob->x, mob->y), coords);
         const Coords **current = line;
         while (*current != NULL)
         {
             // if the line ends at the point we're looking at, we can see it!
-            if ((*current)->x == x && (*current)->y == y)
+            if ((*current)->x == coords.x && (*current)->y == coords.y)
             {
                 ret = 1; // success!
 

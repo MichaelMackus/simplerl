@@ -30,6 +30,6 @@ int attack(Mob *attacker, Mob *target);
 int can_smell(Mob *mob, Mob *player, Tile **tiles);
 
 // simple lighting function to see if mob can see x and y
-int can_see(const Mob *mob, int y, int x, Tile **tiles);
+int can_see(const Mob *mob, Coords coords, Tile **tiles);
 
 #endif

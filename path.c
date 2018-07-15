@@ -2,15 +2,6 @@
 #include <memory.h>
 #include <stdlib.h>
 
-Coords xy(int x, int y)
-{
-    Coords c;
-    c.x = x;
-    c.y = y;
-
-    return c;
-}
-
 int pathfind(const Coords start, const Coords end, const Level *level, int **walked, int **path);
 int **create_walked(int **previous);
 void free_walked(int **walked);

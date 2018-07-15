@@ -13,14 +13,14 @@ void seed_random()
 Coords empty_coords()
 {
     Coords coords;
-    coords.x = -1;
-    coords.y = -1;
+    coords.x = MAX_WIDTH;
+    coords.y = MAX_HEIGHT;
 
     return coords;
 }
 int is_empty(Coords coords)
 {
-    return coords.x == -1 && coords.y == -1;
+    return coords.x == MAX_WIDTH && coords.y == MAX_HEIGHT;
 }
 
 Box *random_cell(Level *level);
@@ -286,7 +286,7 @@ Coords random_open_coords(Level *level)
     while (i < MAX_RANDOM_RECURSION)
     {
         Coords coords = random_coords(level);
-        const Tile *t = get_tile(level, coords.y, coords.x);
+        const Tile *t = get_tile(level, coords);
         if (t != NULL && t->type == TILE_NONE)
             return coords;
         ++i;
@@ -302,7 +302,7 @@ Coords random_passable_coords(Level *level)
     while (i < MAX_RANDOM_RECURSION)
     {
         Coords coords = random_coords(level);
-        const Tile *t = get_tile(level, coords.y, coords.x);
+        const Tile *t = get_tile(level, coords);
         if (t != NULL && is_passable(*t))
             return coords;
         ++i;
@@ -333,7 +333,7 @@ Box *random_cell(Level *level)
         {
             for (int x = coords.x; x < coords.x + dimensions.w; ++x)
             {
-                const Tile *t = get_tile(level, y, x);
+                const Tile *t = get_tile(level, xy(x, y));
                 if (t == NULL || t->type != TILE_NONE)
                 {
                     ++impassable;
@@ -491,7 +491,7 @@ int branches(const Box *cell, const Level *level)
                     (x == cell->coords.x || x == cell->coords.x + cell->dimensions.w - 1))
             {
                 // increment branches count if this is *not* a wall
-                const Tile *t = get_tile(level, y, x);
+                const Tile *t = get_tile(level, xy(x, y));
                 if (t != NULL && t->type != TILE_NONE && t->type != TILE_WALL && t->type != TILE_WALL_SIDE)
                     ++count;
             }
@@ -520,7 +520,7 @@ const Coords find_wall_for_branch(const Box *cell, const Level *level)
                         xcount = 0;
 
                     // increment x count if it is a wall
-                    const Tile *t = get_tile(level, y, x);
+                    const Tile *t = get_tile(level, xy(x, y));
                     if (t != NULL && (t->type == TILE_WALL || t->type == TILE_WALL_SIDE))
                         ++xcount;
 
@@ -545,7 +545,7 @@ const Coords find_wall_for_branch(const Box *cell, const Level *level)
                         ycount = 0;
 
                     // increment y count if it is a wall
-                    const Tile *t = get_tile(level, y, x);
+                    const Tile *t = get_tile(level, xy(x, y));
                     if (t != NULL && (t->type == TILE_WALL || t->type == TILE_WALL_SIDE))
                         ++ycount;
 

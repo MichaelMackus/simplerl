@@ -16,6 +16,13 @@
 #include "item.h"
 
 typedef struct {
+    int x;
+    int y;
+} Coords;
+
+Coords xy(int x, int y);
+
+typedef struct {
     Item *items;
     int type; // one of TILE consts
     int seen; // seen by player?

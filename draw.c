@@ -50,7 +50,7 @@ void render(const Dungeon *dungeon)
     for (int i = 0; i < MAX_MOBS; ++i)
     {
         const Mob *mob = dungeon->level->mobs[i];
-        if (mob != NULL && can_see(player, mob->y, mob->x, dungeon->level->tiles))
+        if (mob != NULL && can_see(player, xy(mob->x, mob->y), dungeon->level->tiles))
             render_mob(mob);
     }
 
@@ -76,7 +76,7 @@ void render_level(Level *level, const Mob *player)
         for (int x = 0; x < MAX_WIDTH; ++x)
         {
             // draw tile symbol if the player can see it
-            if (can_see(player, y, x, level->tiles) ||
+            if (can_see(player, xy(x, y), level->tiles) ||
                     level->tiles[y][x].seen)
                 drawBuffer[y][x] = tile_symbol(level->tiles[y][x]);
             else

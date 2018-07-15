@@ -1,6 +1,15 @@
 #include "tile.h"
 #include <stdlib.h>
 
+Coords xy(int x, int y)
+{
+    Coords c;
+    c.x = x;
+    c.y = y;
+
+    return c;
+}
+
 char tile_symbol(const Tile tile)
 {
     switch (tile.type)

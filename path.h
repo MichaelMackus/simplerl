@@ -3,13 +3,6 @@
 
 #include "map.h"
 
-typedef struct {
-    int x;
-    int y;
-} Coords;
-
-Coords xy(int x, int y);
-
 // return 1 if path between points is walkable, otherwise 0
 const Coords **find_path(const Coords start, const Coords end, const Level *level);
 

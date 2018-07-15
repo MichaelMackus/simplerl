@@ -4,10 +4,9 @@
 #include <stdlib.h>
 #include <memory.h>
 
-int move_mob(Mob *mob, int y, int x, Level *level);
 int increase_depth(Dungeon *dungeon);
 int decrease_depth(Dungeon *dungeon);
-void move_or_attack(Mob *player, int x, int y, Level *level);
+void move_or_attack(Mob *player, Coords coords, Level *level);
 int gameloop(Dungeon *dungeon)
 {
     Level *level = dungeon->level;
@@ -29,20 +28,20 @@ int gameloop(Dungeon *dungeon)
             return GAME_QUIT;
 
         case 'h':
-            move_or_attack(player, player->y, player->x - 1, level);
+            move_or_attack(player, xy(player->x - 1, player->y), level);
             break;
         case 'l':
-            move_or_attack(player, player->y, player->x + 1, level);
+            move_or_attack(player, xy(player->x + 1, player->y), level);
             break;
         case 'j':
-            move_or_attack(player, player->y + 1, player->x, level);
+            move_or_attack(player, xy(player->x, player->y + 1), level);
             break;
         case 'k':
-            move_or_attack(player, player->y - 1, player->x, level);
+            move_or_attack(player, xy(player->x, player->y - 1), level);
             break;
 
         case '>': // check for downstair
-            t = get_tile(level, player->y, player->x);
+            t = get_tile(level, xy(player->x, player->y));
 
             if (t == NULL)
                 return GAME_ERROR;
@@ -60,7 +59,7 @@ int gameloop(Dungeon *dungeon)
 
         case '<': // check for upstair
 
-            t = get_tile(level, player->y, player->x);
+            t = get_tile(level, xy(player->x, player->y));
 
             if (t == NULL)
                 return GAME_ERROR;
@@ -106,7 +105,7 @@ int gameloop(Dungeon *dungeon)
     {
         for (int x = 0; x < MAX_WIDTH; ++x)
         {
-            if (can_see(player, y, x, level->tiles))
+            if (can_see(player, xy(x, y), level->tiles))
                 level->tiles[y][x].seen = 1;
         }
     }
@@ -152,10 +151,10 @@ int increase_depth(Dungeon *dungeon)
     return 1;
 }
 
-void move_or_attack(Mob *player, int y, int x, Level *level)
+void move_or_attack(Mob *player, Coords coords, Level *level)
 {
     // first, check for mob
-    Mob *enemy = get_mob(level, y, x);
+    Mob *enemy = get_mob(level, coords);
 
     if (enemy != NULL)
     {
@@ -168,7 +167,7 @@ void move_or_attack(Mob *player, int y, int x, Level *level)
     }
     else
     {
-        move_mob(player, y, x, level);
+        move_mob(player, coords, level);
 
         // set smell for tile
         level->tiles[player->y][player->x].smell = INITIAL_SMELL;
