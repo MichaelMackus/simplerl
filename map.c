@@ -1,5 +1,4 @@
 #include "map.h"
-#include "random.h"
 #include <stdlib.h>
 #include <memory.h>
 
@@ -113,26 +112,6 @@ Level *create_level(int depth)
     }
 
     return level;
-}
-
-int init_level(Level *level, Mob *player)
-{
-    if (level == NULL)
-        // simple error case
-        return 0;
-
-    level->player = player;
-
-    // do this otherwise initial seed will always be the same
-    seed_random();
-
-    // randomly generate map
-    randomly_fill_tiles(level);
-
-    // randomly populate *new* levels with max of MAX_MOBS / 2
-    randomly_fill_mobs(level, MAX_MOBS / 2);
-
-    return 1;
 }
 
 const Tile *get_tile(const Level *level, Coords coords)

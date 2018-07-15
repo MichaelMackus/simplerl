@@ -1,6 +1,10 @@
 #ifndef PATH_H
 #define PATH_H
 
+// TODO where to put this
+#define MAX_WIDTH  80
+#define MAX_HEIGHT 25
+
 #include "tile.h"
 
 typedef struct {

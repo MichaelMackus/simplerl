@@ -5,6 +5,26 @@
 #include <stdlib.h>
 #include <memory.h>
 
+int init_level(Level *level, Mob *player)
+{
+    if (level == NULL)
+        // simple error case
+        return 0;
+
+    level->player = player;
+
+    // do this otherwise initial seed will always be the same
+    seed_random();
+
+    // randomly generate map
+    randomly_fill_tiles(level);
+
+    // randomly populate *new* levels with max of MAX_MOBS / 2
+    randomly_fill_mobs(level, MAX_MOBS / 2);
+
+    return 1;
+}
+
 int increase_depth(Dungeon *dungeon);
 int decrease_depth(Dungeon *dungeon);
 void move_player(Mob *player, Coords coords, Level *level);
