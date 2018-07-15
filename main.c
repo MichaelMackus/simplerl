@@ -24,7 +24,6 @@ int main()
         return ERROR_OOM;
 
     // allocate messages array
-    const char **messages;
     messages = malloc(sizeof(char*) * MAX_MESSAGE_LENGTH * MAX_MESSAGES);
     if (messages == NULL)
         return ERROR_OOM;
@@ -37,16 +36,16 @@ int main()
     place_on_tile(dungeon->player, TILE_STAIR_UP, dungeon->level);
 
     // alert level depth on game start
-    insert_message(create_message("Current level: %d", dungeon->level->depth), messages);
+    message("Current level: %d", dungeon->level->depth);
 
     int result = GAME_PLAYING;
     while (result == GAME_PLAYING)
     {
         // render & update curses
-        update(dungeon, messages);
+        update(dungeon);
 
         // trigger gameloop
-        result = gameloop(dungeon, messages);
+        result = gameloop(dungeon);
     }
 
     // de-initialize curses

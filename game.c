@@ -8,7 +8,7 @@ int move_mob(Mob *mob, int y, int x, Level *level);
 int increase_depth(Dungeon *dungeon);
 int decrease_depth(Dungeon *dungeon);
 void move_or_attack(Mob *player, int x, int y, Level *level);
-int gameloop(Dungeon *dungeon, const char **messages)
+int gameloop(Dungeon *dungeon)
 {
     Level *level = dungeon->level;
     Mob *player = dungeon->player;
@@ -48,7 +48,7 @@ int gameloop(Dungeon *dungeon, const char **messages)
                 if (!increase_depth(dungeon))
                     return GAME_OOM;
 
-                insert_message(create_message("Current level: %d", dungeon->level->depth), messages);
+                message("Current level: %d", dungeon->level->depth);
             }
 
             break;
@@ -66,7 +66,7 @@ int gameloop(Dungeon *dungeon, const char **messages)
                 if (!decrease_depth(dungeon))
                     return GAME_OOM;
 
-                insert_message(create_message("Current level: %d", dungeon->level->depth), messages);
+                message("Current level: %d", dungeon->level->depth);
             }
 
             break;

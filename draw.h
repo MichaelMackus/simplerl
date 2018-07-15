@@ -11,6 +11,6 @@ int init();
 void deinit();
 
 // update & refresh the screen
-void update(const Dungeon *dungeon, const char **messages);
+void update(const Dungeon *dungeon);
 
 #endif

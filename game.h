@@ -15,6 +15,6 @@
 int init_level(Level *level, Mob *player);
 
 // return GAME constant
-int gameloop(Dungeon *dungeon, const char **messages);
+int gameloop(Dungeon *dungeon);
 
 #endif

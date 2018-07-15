@@ -30,10 +30,10 @@ void deinit()
 char drawBuffer[MAX_HEIGHT + MAX_MESSAGES][MAX_WIDTH];
 
 void render_mob(const Mob *mob);
-void render_messages(const char **messages);
+void render_messages();
 void render_level(Level *level);
 void draw(const char drawBuffer[][MAX_WIDTH], const char prevDrawBuffer[][MAX_WIDTH]);
-void update(const Dungeon *dungeon, const char **messages)
+void update(const Dungeon *dungeon)
 {
     // fill previous map
     char prevDrawBuffer[MAX_HEIGHT + MAX_MESSAGES][MAX_WIDTH];
@@ -60,7 +60,7 @@ void update(const Dungeon *dungeon, const char **messages)
         }
     }
 
-    render_messages(messages);
+    render_messages();
 
     // draw difference from old map & new map
     draw(drawBuffer, prevDrawBuffer);
@@ -91,7 +91,7 @@ void render_mob(const Mob *mob)
     drawBuffer[mob->y][mob->x] = mob->symbol;
 }
 
-void render_messages(const char **messages)
+void render_messages()
 {
     for (int y=0; y<MAX_MESSAGES; ++y)
     {

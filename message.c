@@ -1,6 +1,4 @@
 #include "message.h"
-
-#include <stdarg.h>
 #include <stdlib.h>
 #include <memory.h>
 
@@ -28,11 +26,8 @@ int insert_message(const char *message, const char **messages)
 }
 
 int vsnprintf(char *str, size_t size, const char *format, va_list ap); // FIXME this shouldn't be necessary...
-const char *create_message(const char *fmt, ...)
+const char *create_message(const char *fmt, va_list args)
 {
-    va_list args;
-    va_start(args, fmt);
-
     char *message;
     message = malloc(MAX_MESSAGE_LENGTH + 1);
     memset((char*) message, 0, MAX_MESSAGE_LENGTH + 1);
@@ -47,7 +42,17 @@ const char *create_message(const char *fmt, ...)
         return NULL;
     }
 
+    return message;
+}
+
+int message(const char *fmt, ...)
+{
+    va_list args;
+    va_start(args, fmt);
+
+    const char *msg = create_message(fmt, args);
+
     va_end(args);
 
-    return message;
+    return insert_message(msg, messages);
 }
