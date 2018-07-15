@@ -56,23 +56,29 @@ void randomly_fill_tiles(Level *level)
     i = rand() % cellCount;
     while (branches(cells[i], level) == 0) // ensure we pick valid cell for upstairs
         i = rand() % cellCount;
-    int x, y;
-    x = cells[i]->coords.x + cells[i]->dimensions.w/2;
-    y = cells[i]->coords.y + cells[i]->dimensions.h/2;
-    level->tiles[y][x].type = TILE_STAIR_UP;
+    Coords up;
+    up.x = cells[i]->coords.x + cells[i]->dimensions.w/2;
+    up.y = cells[i]->coords.y + cells[i]->dimensions.h/2;
+    level->tiles[up.y][up.x].type = TILE_STAIR_UP;
 
     // randomly place downstairs
     // TODO place downstairs at greater distance from upstairs
     // TODO once win condition is defined, don't place downstairs on last level
     int j = i;
+    Coords down;
     while (i == j || branches(cells[j], level) == 0) // ensure we pick valid cell for downstairs
+    {
         j = rand() % cellCount;
-    x = cells[j]->coords.x + cells[j]->dimensions.w/2;
-    y = cells[j]->coords.y + cells[j]->dimensions.h/2;
-    level->tiles[y][x].type = TILE_STAIR_DOWN;
+        down.x = cells[j]->coords.x + cells[j]->dimensions.w/2;
+        down.y = cells[j]->coords.y + cells[j]->dimensions.h/2;
+
+        // try again if up & down stairs don't connect
+        if (!find_path(up, down, level))
+            j = i;
+    }
+    level->tiles[down.y][down.x].type = TILE_STAIR_DOWN;
 
     // free cells & prune non-connecting cells
-    // TODO all dungeon cells should connect, currently only checking for branch
     for (i = 0; i < cellCount; ++i)
     {
         if (branches(cells[i], level) == 0)

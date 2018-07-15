@@ -6,11 +6,7 @@
 #define MAX_RANDOM_RECURSION 100
 
 #include "map.h"
-
-typedef struct {
-    int x;
-    int y;
-} Coords;
+#include "path.h"
 
 typedef struct {
     int w;

@@ -1,6 +1,6 @@
 #include "tile.h"
 
-char tile_symbol(Tile tile)
+char tile_symbol(const Tile tile)
 {
     switch (tile.type)
     {
@@ -25,7 +25,7 @@ char tile_symbol(Tile tile)
     }
 }
 
-int is_passable(Tile tile)
+int is_passable(const Tile tile)
 {
     if (tile.type == TILE_DOOR || tile.type == TILE_WALL || tile.type == TILE_WALL_SIDE || tile.type == TILE_NONE)
         return 0; //impassable
