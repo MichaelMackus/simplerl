@@ -90,11 +90,12 @@ Mob *enemy(unsigned int hp, unsigned int minDamage, unsigned int maxDamage, char
     return m;
 }
 
-int can_smell(Mob *mob, Mob *player)
+int can_smell(Mob *mob, Mob *player, Tile **tiles)
 {
     return 0;
 }
 
+// TODO fix memory leak here
 int can_see(const Mob *mob, int y, int x, Tile **tiles)
 {
     int ret = 0;
@@ -121,7 +122,7 @@ int can_see(const Mob *mob, int y, int x, Tile **tiles)
 
             ++current;
         }
-        free_line(line);
+        free_path(line);
     }
     else
     {
@@ -144,7 +145,7 @@ int can_see(const Mob *mob, int y, int x, Tile **tiles)
 
             ++current;
         }
-        free_line(line);
+        free_path(line);
     }
 
     return ret;

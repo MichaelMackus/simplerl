@@ -13,6 +13,11 @@ int gameloop(Dungeon *dungeon)
     Level *level = dungeon->level;
     Mob *player = dungeon->player;
 
+    // Set smell for initial tile so that the smell for the current tile is
+    // always set, in case the player doesn't move or this is the first
+    // iteration.
+    level->tiles[player->y][player->x].smell = INITIAL_SMELL;
+
     // handle input
     char ch = getch();
     switch (ch)
@@ -162,7 +167,12 @@ void move_or_attack(Mob *player, int y, int x, Level *level)
             message("You missed!");
     }
     else
+    {
         move_mob(player, y, x, level);
+
+        // set smell for tile
+        level->tiles[player->y][player->x].smell = INITIAL_SMELL;
+    }
 }
 
 // change current depth to previous level

@@ -11,66 +11,115 @@ Coords xy(int x, int y)
     return c;
 }
 
-int pathfind(int x, int y, const Coords end, const Level *level, int **walked);
-int find_path(const Coords start, const Coords end, const Level *level)
+int pathfind(const Coords start, const Coords end, const Level *level, int **walked, int **path);
+int **create_walked(int **previous);
+void free_walked(int **walked);
+const Coords **find_path(const Coords start, const Coords end, const Level *level)
 {
-    // allocate array of walked tiles
-    int **walked;
-    walked = malloc(sizeof(int*) * MAX_HEIGHT);
-    memset(walked, 0, sizeof(int*) * MAX_HEIGHT);
-    for (int y = 0; y < MAX_HEIGHT; ++y)
+    int **walked = create_walked(NULL);
+    int **path = create_walked(NULL);
+
+    if (!pathfind(xy(start.x, start.y), end, level, walked, path))
     {
-        walked[y] = malloc(sizeof(int) * MAX_WIDTH);
-        memset(walked[y], 0, sizeof(int) * MAX_WIDTH);
+        free_walked(walked);
+        free_walked(path);
+
+        return NULL;
     }
 
-    int result = pathfind(start.x, start.y, end, level, walked);
+    free_walked(walked);
 
+    // allocate memory for result path
+    Coords **result;
+    result = malloc(sizeof(Coords*)*MAX_WIDTH*MAX_HEIGHT);
+    memset(result, 0, sizeof(Coords*)*MAX_WIDTH*MAX_HEIGHT);
+
+    // create Coords from path
+    Coords **cur = result;
     for (int y = 0; y < MAX_HEIGHT; ++y)
-    {
-        free(walked[y]);
-    }
-    free(walked);
+        for (int x = 0; x < MAX_WIDTH; ++x)
+        {
+            if (path[y][x])
+            {
+                *cur = malloc(sizeof(Coords));
+                (*cur)->x = x;
+                (*cur)->y = y;
+                ++cur;
+            }
+        }
 
-    return result;
+    free_walked(path);
+
+    return (const Coords **) result;
 }
 
 // core pathfinding function, updates walked with newly walked coords
 // returns 0 if no path, or 1 if path found
-int pathfind(int x, int y, const Coords end, const Level *level, int **walked)
+int pathfind(const Coords start, const Coords end, const Level *level, int **walked, int **path)
 {
     // out of bounds check
-    if (y >= MAX_HEIGHT || x >= MAX_WIDTH || y < 0 || x < 0)
+    if (start.y >= MAX_HEIGHT || start.x >= MAX_WIDTH || start.y < 0 || start.x < 0)
         return 0;
 
     // return 0 if we already checked this tile or if it is impassable
-    if (walked[y][x] == 1 || !is_passable((Tile) level->tiles[y][x]))
+    if (walked[start.y][start.x] == 1 || !is_passable((Tile) level->tiles[start.y][start.x]))
         return 0;
 
-    walked[y][x] = 1;
+    // needs paths to be initialized
+    if (walked == NULL || path == NULL)
+        return 0;
+
+    walked[start.y][start.x] = 1;
+    path[start.y][start.x] = 1;
 
     // check for success
-    if (x == end.x && y == end.y)
+    if (start.x == end.x && start.y == end.y)
         return 1;
 
-    if (pathfind(x + 1, y, end, level, walked) > 0 ||
-            pathfind(x - 1, y, end, level, walked) > 0 ||
-            pathfind(x, y + 1, end, level, walked) > 0 ||
-            pathfind(x, y - 1, end, level, walked) > 0)
-        return 1;
-    else
-        return 0;
+    // check path in 4 directions to end
+    Coords cur;
+    for (int i = 0; i < 4; ++i)
+    {
+        // set current coordinate
+        if (i == 0)
+            cur = xy(start.x + 1, start.y);
+        else if (i == 1)
+            cur = xy(start.x - 1, start.y);
+        else if (i == 2)
+            cur = xy(start.x, start.y + 1);
+        else
+            cur = xy(start.x, start.y - 1);
+
+        int **nextPath = create_walked(path);
+
+        if (pathfind(cur, end, level, walked, nextPath))
+        {
+            // assign nextPath values to path
+            for (int y = 0; y < MAX_HEIGHT; ++y)
+                for (int x = 0; x < MAX_WIDTH; ++x)
+                    path[y][x] = nextPath[y][x];
+
+            free_walked(nextPath);
+
+            return 1;
+        }
+
+        free_walked(nextPath);
+    }
+
+    return 0;
 }
 
 // get straight line from a to b
+// TODO memory leak... :(
 const Coords **get_line(const Coords a, const Coords b)
 {
     Coords **line;
-    line = malloc(sizeof(Coords*)*MAX_WIDTH+MAX_HEIGHT);
-    memset(line, 0, sizeof(Coords*)*MAX_WIDTH+MAX_HEIGHT);
+    line = malloc(sizeof(Coords*)*MAX_WIDTH*MAX_HEIGHT);
+    memset(line, 0, sizeof(Coords*)*MAX_WIDTH*MAX_HEIGHT);
 
     Coords currentCoords = a;
-    for (int i = 0; i < MAX_WIDTH + MAX_HEIGHT; ++i)
+    for (int i = 0; i < MAX_WIDTH*MAX_HEIGHT; ++i)
     {
         line[i] = malloc(sizeof(Coords));
 
@@ -96,14 +145,38 @@ const Coords **get_line(const Coords a, const Coords b)
     return (const Coords **) line;
 }
 
-void free_line(const Coords **line)
+int **create_walked(int **previous)
+{
+    int **walked = malloc(sizeof(int*) * MAX_HEIGHT);
+    memset(walked, 0, sizeof(int*) * MAX_HEIGHT);
+    for (int y = 0; y < MAX_HEIGHT; ++y)
+    {
+        walked[y] = malloc(sizeof(int) * MAX_WIDTH);
+        memset(walked[y], 0, sizeof(int) * MAX_WIDTH);
+        if (previous != NULL && previous[y] != NULL)
+            for (int x = 0; x < MAX_WIDTH; ++x)
+                walked[y][x] = previous[y][x];
+    }
+
+    return walked;
+}
+
+void free_walked(int **walked)
+{
+    for (int y = 0; y < MAX_HEIGHT; ++y)
+    {
+        free(walked[y]);
+    }
+    free(walked);
+}
+
+void free_path(const Coords **line)
 {
     int i = 0;
-    for (int i = 0; i < MAX_WIDTH + MAX_HEIGHT; ++i)
+    for (int i = 0; i < MAX_WIDTH*MAX_HEIGHT; ++i)
     {
-        if (line[i] == NULL)
-            break;
-        free((Coords*) line[i]);
+        if (line[i] != NULL)
+            free((Coords*) line[i]);
         ++i;
     }
     free((Coords**) line);

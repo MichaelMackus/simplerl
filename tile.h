@@ -11,12 +11,15 @@
 #define TILE_DOOR       7
 #define TILE_DOOR_OPEN  8
 
+#define INITIAL_SMELL   5
+
 #include "item.h"
 
 typedef struct {
     Item *items;
     int type; // one of TILE consts
     int seen; // seen by player?
+    int smell; // when player passes onto tile, set this to INITIAL_SMELL and decrement each turn
 } Tile;
 
 // return tile symbol for display

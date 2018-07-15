@@ -73,8 +73,11 @@ void randomly_fill_tiles(Level *level)
         down.y = cells[j]->coords.y + cells[j]->dimensions.h/2;
 
         // try again if up & down stairs don't connect
-        if (!find_path(up, down, level))
+        const Coords **path = find_path(up, down, level);
+        if (path == NULL)
             j = i;
+        else
+            free_path(path);
     }
     level->tiles[down.y][down.x].type = TILE_STAIR_DOWN;
 
@@ -418,7 +421,7 @@ Dimensions random_dimensions()
 // return 1 if possible neighbor
 int within_cell(const Coords c, const Box cell);
 const Coords **get_line(const Coords a, const Coords b);
-void free_line(const Coords **line);
+void free_path(const Coords **line);
 int is_neighbor(const Box *start, const Box *target, const Box **cells, int cellCount)
 {
     Coords startCenter;
@@ -451,7 +454,7 @@ int is_neighbor(const Box *start, const Box *target, const Box **cells, int cell
                 // if we're within *another* cell, this is no neighbor
                 if (within_cell(*line[i], *cell))
                 {
-                    free_line(line);
+                    free_path(line);
 
                     return 0;
                 }
@@ -460,7 +463,7 @@ int is_neighbor(const Box *start, const Box *target, const Box **cells, int cell
         ++i;
     }
 
-    free_line(line);
+    free_path(line);
 
     return 1;
 }
