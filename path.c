@@ -2,15 +2,24 @@
 #include <memory.h>
 #include <stdlib.h>
 
-int pathfind(const Coords start, const Coords end, const Level *level, int **walked, int **path);
+Coords xy(int x, int y)
+{
+    Coords c;
+    c.x = x;
+    c.y = y;
+
+    return c;
+}
+
+int pathfind(const Coords start, const Coords end, const Tile **tiles, int **walked, int **path);
 int **create_walked(int **previous);
 void free_walked(int **walked);
-const Coords **find_path(const Coords start, const Coords end, const Level *level)
+const Coords **find_path(const Coords start, const Coords end, const Tile **tiles)
 {
     int **walked = create_walked(NULL);
     int **path = create_walked(NULL);
 
-    if (!pathfind(xy(start.x, start.y), end, level, walked, path))
+    if (!pathfind(xy(start.x, start.y), end, tiles, walked, path))
     {
         free_walked(walked);
         free_walked(path);
@@ -46,14 +55,14 @@ const Coords **find_path(const Coords start, const Coords end, const Level *leve
 
 // core pathfinding function, updates walked with newly walked coords
 // returns 0 if no path, or 1 if path found
-int pathfind(const Coords start, const Coords end, const Level *level, int **walked, int **path)
+int pathfind(const Coords start, const Coords end, const Tile **tiles, int **walked, int **path)
 {
     // out of bounds check
     if (start.y >= MAX_HEIGHT || start.x >= MAX_WIDTH || start.y < 0 || start.x < 0)
         return 0;
 
     // return 0 if we already checked this tile or if it is impassable
-    if (walked[start.y][start.x] == 1 || !is_passable((Tile) level->tiles[start.y][start.x]))
+    if (walked[start.y][start.x] == 1 || !is_passable((Tile) tiles[start.y][start.x]))
         return 0;
 
     // needs paths to be initialized
@@ -83,7 +92,7 @@ int pathfind(const Coords start, const Coords end, const Level *level, int **wal
 
         int **nextPath = create_walked(path);
 
-        if (pathfind(cur, end, level, walked, nextPath))
+        if (pathfind(cur, end, tiles, walked, nextPath))
         {
             // assign nextPath values to path
             for (int y = 0; y < MAX_HEIGHT; ++y)

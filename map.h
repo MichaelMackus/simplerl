@@ -9,6 +9,7 @@
 #include "item.h"
 #include "mob.h"
 #include "tile.h"
+#include "path.h"
 
 typedef struct Level_t {
     Mob **mobs;

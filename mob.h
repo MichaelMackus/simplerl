@@ -8,6 +8,7 @@
 
 #include "item.h"
 #include "tile.h"
+#include "path.h"
 
 typedef struct {
     int hp, maxHP;

@@ -73,7 +73,7 @@ void randomly_fill_tiles(Level *level)
         down.y = cells[j]->coords.y + cells[j]->dimensions.h/2;
 
         // try again if up & down stairs don't connect
-        const Coords **path = find_path(up, down, level);
+        const Coords **path = find_path(up, down, (const Tile**) level->tiles);
         if (path == NULL)
             j = i;
         else
