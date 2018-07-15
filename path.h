@@ -10,6 +10,9 @@ typedef struct {
 
 Coords xy(int x, int y);
 
+// distance algorithm
+double distance(const Coords a, const Coords b);
+
 // return 1 if path between points is walkable, otherwise 0
 const Coords **find_path(const Coords start, const Coords end, const Tile **tiles);
 

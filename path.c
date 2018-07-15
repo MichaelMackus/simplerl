@@ -1,4 +1,5 @@
 #include "random.h"
+#include <math.h>
 #include <memory.h>
 #include <stdlib.h>
 
@@ -9,6 +10,11 @@ Coords xy(int x, int y)
     c.y = y;
 
     return c;
+}
+
+double distance(const Coords a, const Coords b)
+{
+    return sqrt(pow((double) (a.x - b.x), 2.0) + pow((double) (a.y - b.y), 2.0));
 }
 
 int pathfind(const Coords start, const Coords end, const Tile **tiles, int **walked, int **path);
