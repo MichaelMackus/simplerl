@@ -6,7 +6,8 @@
 
 int increase_depth(Dungeon *dungeon);
 int decrease_depth(Dungeon *dungeon);
-void move_or_attack(Mob *player, Coords coords, Level *level);
+void move_player(Mob *player, Coords coords, Level *level);
+void tick(Mob *mob, Dungeon *dungeon);
 int gameloop(Dungeon *dungeon)
 {
     Level *level = dungeon->level;
@@ -28,16 +29,16 @@ int gameloop(Dungeon *dungeon)
             return GAME_QUIT;
 
         case 'h':
-            move_or_attack(player, xy(player->coords.x - 1, player->coords.y), level);
+            move_player(player, xy(player->coords.x - 1, player->coords.y), level);
             break;
         case 'l':
-            move_or_attack(player, xy(player->coords.x + 1, player->coords.y), level);
+            move_player(player, xy(player->coords.x + 1, player->coords.y), level);
             break;
         case 'j':
-            move_or_attack(player, xy(player->coords.x, player->coords.y + 1), level);
+            move_player(player, xy(player->coords.x, player->coords.y + 1), level);
             break;
         case 'k':
-            move_or_attack(player, xy(player->coords.x, player->coords.y - 1), level);
+            move_player(player, xy(player->coords.x, player->coords.y - 1), level);
             break;
 
         case '>': // check for downstair
@@ -83,22 +84,30 @@ int gameloop(Dungeon *dungeon)
             return GAME_OOM;
     }
 
-    // cleanup dead mobs
+    // TODO check for player death (i.e. damaged self)
+
+    // do simple AI & cleanup dead mobs
     for (int i = 0; i < MAX_MOBS; ++i)
     {
         if (dungeon->level->mobs[i] != NULL)
         {
-            if (dungeon->level->mobs[i]->hp <= 0)
+            Mob *mob = dungeon->level->mobs[i];
+            if (mob->hp <= 0)
             {
-                Mob *mob = dungeon->level->mobs[i];
                 free(mob);
                 // TODO transfer items to floor
                 dungeon->level->mobs[i] = NULL;
             }
+            else
+            {
+                tick(mob, dungeon);
+            }
         }
     }
 
-    // TODO simple AI
+    // check for player death
+    if (player->hp <= 0)
+        return GAME_DEATH;
 
     // update seen tiles
     for (int y = 0; y < MAX_HEIGHT; ++y)
@@ -118,6 +127,68 @@ int gameloop(Dungeon *dungeon)
 /** private **/
 /**         **/
 /*************/
+
+// returns -1 on move, 0 or more damage on attack
+int move_or_attack(Mob *attacker, Coords coords, Level *level)
+{
+    // first, check for mob
+    Mob *target = get_mob(level, coords);
+
+    if (target != NULL)
+        return attack(attacker, target);
+    else
+        move_mob(attacker, coords, level);
+
+    return -1;
+}
+
+void move_player(Mob *player, Coords coords, Level *level)
+{
+    int dmg = move_or_attack(player, coords, level);
+
+    // there was an enemy there!
+    if (dmg > 0)
+        message("You hit it for %d damage!", dmg); // TODO mob name
+    else if (dmg == 0)
+        message("You missed!");
+
+    // set smell for tile
+    level->tiles[player->coords.y][player->coords.x].smell = INITIAL_SMELL;
+}
+
+void tick(Mob *mob, Dungeon *dungeon)
+{
+    Level *level = dungeon->level;
+    Mob *player = dungeon->player;
+
+    if (can_see(player, player->coords, dungeon->level->tiles))
+    {
+        int dmg = -1;
+
+        // advance mob towards player, if there is no enemy at target spot
+        if (player->coords.x > mob->coords.x &&
+                get_enemy(level, xy(mob->coords.x + 1, mob->coords.y)) == NULL)
+            dmg = move_or_attack(mob, xy(mob->coords.x + 1, mob->coords.y), level);
+        else if (player->coords.x < mob->coords.x &&
+                get_enemy(level, xy(mob->coords.x - 1, mob->coords.y)) == NULL)
+            dmg = move_or_attack(mob, xy(mob->coords.x - 1, mob->coords.y), level);
+        else if (player->coords.y > mob->coords.y &&
+                get_enemy(level, xy(mob->coords.x, mob->coords.y + 1)) == NULL)
+            dmg = move_or_attack(mob, xy(mob->coords.x, mob->coords.y + 1), level);
+        else if (player->coords.y < mob->coords.y &&
+                get_enemy(level, xy(mob->coords.x, mob->coords.y - 1)) == NULL)
+            dmg = move_or_attack(mob, xy(mob->coords.x, mob->coords.y - 1), level);
+        else
+            return;
+
+        if (dmg > 0)
+            message("You got hit for %d damage!", dmg); // TODO mob name
+        else if (dmg == 0)
+            message("It missed!");
+    }
+
+    // TODO implement smell
+}
 
 // change current depth to next level deep
 // if there is no next level, create one
@@ -149,29 +220,6 @@ int increase_depth(Dungeon *dungeon)
     place_on_tile(dungeon->player, TILE_STAIR_UP, dungeon->level);
 
     return 1;
-}
-
-void move_or_attack(Mob *player, Coords coords, Level *level)
-{
-    // first, check for mob
-    Mob *enemy = get_mob(level, coords);
-
-    if (enemy != NULL)
-    {
-        // attack mob & insert damage message
-        int dmg = attack(player, enemy);
-        if (dmg > 0)
-            message("You hit it for %d damage!", dmg); // TODO mob name
-        else
-            message("You missed!");
-    }
-    else
-    {
-        move_mob(player, coords, level);
-
-        // set smell for tile
-        level->tiles[player->coords.y][player->coords.x].smell = INITIAL_SMELL;
-    }
 }
 
 // change current depth to previous level

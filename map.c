@@ -121,6 +121,8 @@ int init_level(Level *level, Mob *player)
         // simple error case
         return 0;
 
+    level->player = player;
+
     // do this otherwise initial seed will always be the same
     seed_random();
 
@@ -141,7 +143,7 @@ const Tile *get_tile(const Level *level, Coords coords)
     return &level->tiles[coords.y][coords.x];
 }
 
-Mob *get_mob(const Level *level, Coords coords)
+Mob *get_enemy(const Level *level, Coords coords)
 {
     if (coords.y >= MAX_HEIGHT || coords.x >= MAX_WIDTH || coords.y < 0 || coords.x < 0)
         return NULL;
@@ -155,6 +157,20 @@ Mob *get_mob(const Level *level, Coords coords)
     }
 
     return NULL;
+}
+
+Mob *get_mob(const Level *level, Coords coords)
+{
+    if (coords.y >= MAX_HEIGHT || coords.x >= MAX_WIDTH || coords.y < 0 || coords.x < 0)
+        return NULL;
+
+    if (level->player != NULL)
+    {
+        if (level->player->coords.x == coords.x && level->player->coords.y == coords.y)
+            return level->player;
+    }
+
+    return get_enemy(level, coords);
 }
 
 int place_on_tile(Mob *mob, int tileType, const Level *level)
@@ -183,9 +199,9 @@ int move_mob(Mob *mob, Coords coords, Level *level)
         return 0;
 
     // check for mob
-    Mob *enemy = get_mob(level, coords);
+    Mob *target = get_mob(level, coords);
 
-    if (enemy != NULL)
+    if (target != NULL)
         return 0;
 
     const Tile *t;

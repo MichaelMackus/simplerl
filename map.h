@@ -12,6 +12,7 @@
 #include "path.h"
 
 typedef struct Level_t {
+    Mob *player;
     Mob **mobs;
     Tile **tiles; // 2d array of tiles
     struct Level_t *prev;
@@ -40,7 +41,10 @@ Level *create_level(int depth);
 // get tile from square, or NULL on error
 const Tile *get_tile(const Level *level, Coords coords);
 
-// get mob from square, or NULL on error
+// get enemy from square, or NULL on error
+Mob *get_enemy(const Level *level, Coords coords);
+
+// get enemy *or* player from square, or NULL on error
 Mob *get_mob(const Level *level, Coords coords);
 
 // place mob on tile type (i.e. up or down stair)
