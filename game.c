@@ -79,7 +79,22 @@ int gameloop(Dungeon *dungeon)
             return GAME_OOM;
     }
 
-    // TODO possibly do cleanup of dead mobs here?
+    // cleanup dead mobs
+    for (int i = 0; i < MAX_MOBS; ++i)
+    {
+        if (dungeon->level->mobs[i] != NULL)
+        {
+            if (dungeon->level->mobs[i]->hp <= 0)
+            {
+                Mob *mob = dungeon->level->mobs[i];
+                free(mob);
+                // TODO transfer items to floor
+                dungeon->level->mobs[i] = NULL;
+            }
+        }
+    }
+
+    // TODO simple AI
 
     return GAME_PLAYING;
 }

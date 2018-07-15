@@ -46,19 +46,8 @@ void update(const Dungeon *dungeon)
 
     // render mobs
     for (int i = 0; i < MAX_MOBS; ++i)
-    {
         if (dungeon->level->mobs[i] != NULL)
-        {
-            if (dungeon->level->mobs[i]->hp <= 0)
-            {
-                // TODO transfer items to floor
-                free(dungeon->level->mobs[i]);
-                dungeon->level->mobs[i] = NULL;
-            }
-            else
-                render_mob(dungeon->level->mobs[i]);
-        }
-    }
+            render_mob(dungeon->level->mobs[i]);
 
     // render player last (should always be seen)
     render_mob(dungeon->player);
