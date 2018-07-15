@@ -153,15 +153,19 @@ void tick_mob(Mob *mob, Level *level)
 
         // advance mob towards player, if there is no enemy at target spot
         if (player->coords.x > mob->coords.x &&
+                is_passable(level->tiles[mob->coords.y][mob->coords.x + 1]) &&
                 get_enemy(level, xy(mob->coords.x + 1, mob->coords.y)) == NULL)
             dmg = move_or_attack(mob, xy(mob->coords.x + 1, mob->coords.y), level);
         else if (player->coords.x < mob->coords.x &&
+                is_passable(level->tiles[mob->coords.y][mob->coords.x - 1]) &&
                 get_enemy(level, xy(mob->coords.x - 1, mob->coords.y)) == NULL)
             dmg = move_or_attack(mob, xy(mob->coords.x - 1, mob->coords.y), level);
         else if (player->coords.y > mob->coords.y &&
+                is_passable(level->tiles[mob->coords.y + 1][mob->coords.x]) &&
                 get_enemy(level, xy(mob->coords.x, mob->coords.y + 1)) == NULL)
             dmg = move_or_attack(mob, xy(mob->coords.x, mob->coords.y + 1), level);
         else if (player->coords.y < mob->coords.y &&
+                is_passable(level->tiles[mob->coords.y - 1][mob->coords.x]) &&
                 get_enemy(level, xy(mob->coords.x, mob->coords.y - 1)) == NULL)
             dmg = move_or_attack(mob, xy(mob->coords.x, mob->coords.y - 1), level);
         else
