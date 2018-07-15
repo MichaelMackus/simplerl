@@ -143,8 +143,14 @@ void move_or_attack(Mob *player, int y, int x, Level *level)
     Mob *enemy = get_mob(level, y, x);
 
     if (enemy != NULL)
-        // attack mob, TODO insert damage message
-        attack(player, enemy);
+    {
+        // attack mob & insert damage message
+        int dmg = attack(player, enemy);
+        if (dmg > 0)
+            message("You hit it for %d damage!", dmg); // TODO mob name
+        else
+            message("You missed!");
+    }
     else
         move_mob(player, y, x, level);
 }
