@@ -45,4 +45,8 @@ Mob *get_mob(const Level *level, unsigned int y, unsigned int x);
 // place mob on tile type (i.e. up or down stair)
 int place_on_tile(Mob *mob, int tileType, const Level *level);
 
+// move a mob to x, y
+// return 1 on success, or 0 if impassable
+int move_mob(Mob *mob, int y, int x, Level *level);
+
 #endif

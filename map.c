@@ -177,3 +177,29 @@ int place_on_tile(Mob *mob, int tileType, const Level *level)
 
     return 0;
 }
+
+// TODO handle NULL exception
+int move_mob(Mob *mob, int y, int x, Level *level)
+{
+    if (mob == NULL)
+        return 0;
+
+    // check for mob
+    Mob *enemy = get_mob(level, y, x);
+
+    if (enemy != NULL)
+        return 0;
+
+    const Tile *t;
+    t = get_tile(level, y, x);
+
+    if (t != NULL && is_passable(*t))
+    {
+        mob->x = x;
+        mob->y = y;
+
+        return 1;
+    }
+    else
+        return 0;
+}

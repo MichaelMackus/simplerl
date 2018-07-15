@@ -56,6 +56,21 @@ Mob *createMob(int depth)
     }
 }
 
+// try to attack x, y
+// if no mob found at x, y do nothing
+int attack(Mob *attacker, Mob *target)
+{
+    if (attacker == NULL || target == NULL)
+        return 0;
+
+    // calculate damage based on attacker's stats
+    int damage = rand() % attacker->maxDamage + attacker->minDamage;
+
+    target->hp -= damage;
+
+    return damage;
+}
+
 Mob *enemy(unsigned int hp, unsigned int minDamage, unsigned int maxDamage, char symbol)
 {
     Mob *m;

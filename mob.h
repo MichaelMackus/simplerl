@@ -9,8 +9,8 @@
 #include "item.h"
 
 typedef struct {
+    int hp, maxHP;
     unsigned int x, y;
-    unsigned int hp, maxHP; // TODO hp should be signed
     unsigned int minDamage, maxDamage;
     int type;
     char symbol;
@@ -19,5 +19,10 @@ typedef struct {
 
 // return a random mob for the specified dungeon depth
 Mob *createMob(int depth);
+
+// try to attack x, y
+// if no mob found at x, y do nothing
+// return damage
+int attack(Mob *attacker, Mob *target);
 
 #endif

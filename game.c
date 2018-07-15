@@ -5,9 +5,9 @@
 #include <memory.h>
 
 int move_mob(Mob *mob, int y, int x, Level *level);
-void attack(Mob *attacker, Mob *target);
 int increase_depth(Dungeon *dungeon);
 int decrease_depth(Dungeon *dungeon);
+void move_or_attack(Mob *player, int x, int y, Level *level);
 int gameloop(Dungeon *dungeon, const char **messages)
 {
     Level *level = dungeon->level;
@@ -22,25 +22,18 @@ int gameloop(Dungeon *dungeon, const char **messages)
 
         case 'q':
             return GAME_QUIT;
-        case 'h':
-            if (!move_mob(player, player->y, player->x - 1,level))
-                attack(player, get_mob(level, player->y, player->x - 1));
 
+        case 'h':
+            move_or_attack(player, player->y, player->x - 1, level);
             break;
         case 'l':
-            if (!move_mob(player, player->y, player->x + 1, level))
-                attack(player, get_mob(level, player->y, player->x + 1));
-
+            move_or_attack(player, player->y, player->x + 1, level);
             break;
         case 'j':
-            if (!move_mob(player, player->y + 1, player->x, level))
-                attack(player, get_mob(level, player->y + 1, player->x));
-
+            move_or_attack(player, player->y + 1, player->x, level);
             break;
         case 'k':
-            if (!move_mob(player, player->y - 1, player->x, level))
-                attack(player, get_mob(level, player->y - 1, player->x));
-
+            move_or_attack(player, player->y - 1, player->x, level);
             break;
 
         case '>': // check for downstair
@@ -97,40 +90,6 @@ int gameloop(Dungeon *dungeon, const char **messages)
 /**         **/
 /*************/
 
-// move a mob to x, y
-// return 1 on success, or 0 if impassable
-// TODO handle NULL exception
-int move_mob(Mob *mob, int y, int x, Level *level)
-{
-    const Tile *t;
-    t = get_tile(level, y, x);
-
-    // check for mob
-    Mob *enemy = get_mob(level, y, x);
-
-    if (enemy == NULL && mob != NULL && t != NULL && is_passable(*t))
-    {
-        mob->x = x;
-        mob->y = y;
-
-        return 1;
-    }
-    else
-        return 0;
-}
-
-// try to attack x, y
-// if no mob found at x, y do nothing
-void attack(Mob *attacker, Mob *target)
-{
-    if (attacker == NULL || target == NULL)
-        return;
-
-    // TODO basic RNG, attack, health, etc.
-    // for now, just reduce health to 0
-    target->hp = 0;
-}
-
 // change current depth to next level deep
 // if there is no next level, create one
 // return 0 on error
@@ -163,6 +122,17 @@ int increase_depth(Dungeon *dungeon)
     return 1;
 }
 
+void move_or_attack(Mob *player, int y, int x, Level *level)
+{
+    // first, check for mob
+    Mob *enemy = get_mob(level, y, x);
+
+    if (enemy != NULL)
+        // attack mob, TODO insert damage message
+        attack(player, enemy);
+    else
+        move_mob(player, y, x, level);
+}
 
 // change current depth to previous level
 // return 0 on error
