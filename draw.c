@@ -112,8 +112,11 @@ void draw(const char drawBuffer[][MAX_WIDTH], const char prevDrawBuffer[][MAX_WI
     {
         if (messages[y] != NULL)
         {
-            mvaddstr(y + MAX_HEIGHT, 0, messages[y]);
-            refresh();
+            move(y + MAX_HEIGHT, 0);
+            clrtoeol();
+            addstr(messages[y]);
         }
     }
+
+    refresh();
 }
