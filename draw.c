@@ -45,7 +45,8 @@ void update(const Dungeon *dungeon)
     render_level(dungeon->level);
 
     // render mobs
-    for (int i = 0; i < MAX_MOBS; ++i) {
+    for (int i = 0; i < MAX_MOBS; ++i)
+    {
         if (dungeon->level->mobs[i] != NULL)
         {
             if (dungeon->level->mobs[i]->hp <= 0)
