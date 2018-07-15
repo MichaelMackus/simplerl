@@ -88,6 +88,29 @@ void randomly_fill_tiles(Level *level)
     free(cells);
 }
 
+void randomly_fill_mobs(Level *level, int max)
+{
+    Mob **mobs = level->mobs;
+
+    int mobIndex = 0;
+    int amount = rand() % (max + 1);
+    for (int i = 0; i < amount; ++i)
+    {
+        // seek to available mob index
+        while (mobs[mobIndex] != NULL)
+        {
+            ++mobIndex;
+            if (mobIndex >= MAX_MOBS)
+                return; // out of range!
+        }
+
+        mobs[mobIndex] = createMob(level->depth);
+        Coords coords = random_passable_coords(level);
+        mobs[mobIndex]->x = coords.x;
+        mobs[mobIndex]->y = coords.y;
+    }
+}
+
 int is_neighbor(const Box *start, const Box *target, const Box **cells, int cellCount);
 void draw_line(const Box *start, const Box *target, Level *level);
 void randomly_fill_corridors(Level *level, const Box **cells, int startIndex, int cellCount)

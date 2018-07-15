@@ -11,7 +11,7 @@
 #include "tile.h"
 
 typedef struct Level_t {
-    Mob *mobs;
+    Mob **mobs;
     Tile **tiles; // 2d array of tiles
     struct Level_t *prev;
     struct Level_t *next;
@@ -23,7 +23,7 @@ typedef struct {
     Level *level;
     const char **unknownItems; // randomized item names, indexed by ID
     const char **knownItems; // known item names, indexed by ID
-    Mob *killed; // killed monsters (for scorekeeping)
+    Mob **killed; // killed monsters (for scorekeeping)
 } Dungeon;
 
 // create a new dungeon (once per game)

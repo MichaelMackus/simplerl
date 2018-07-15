@@ -2,6 +2,7 @@
 #include "message.h"
 #include <ncurses.h>
 #include <string.h>
+#include <stdlib.h>
 
 int init()
 {
@@ -43,6 +44,22 @@ void update(const Dungeon *dungeon, const char **messages)
     // render onto our current map
     render_level(dungeon->level);
     render_mob(dungeon->player);
+
+    // render mobs
+    for (int i = 0; i < MAX_MOBS; ++i) {
+        if (dungeon->level->mobs[i] != NULL)
+        {
+            if (dungeon->level->mobs[i]->hp <= 0)
+            {
+                // TODO transfer items to floor
+                free(dungeon->level->mobs[i]);
+                dungeon->level->mobs[i] = NULL;
+            }
+            else
+                render_mob(dungeon->level->mobs[i]);
+        }
+    }
+
     render_messages(messages);
 
     // draw difference from old map & new map

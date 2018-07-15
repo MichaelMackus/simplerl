@@ -29,6 +29,10 @@ Dungeon *create_dungeon()
     // initialize player
     player->type = MOB_PLAYER;
     player->symbol = '@';
+    player->hp = 10;
+    player->maxHP = 10;
+    player->minDamage = 3;
+    player->maxDamage = 5;
 
     // initialize first level
     Level *level = create_level(1);
@@ -56,8 +60,8 @@ Level *create_level(int depth)
         return NULL;
 
     // initialize mobs array
-    level->mobs = malloc(sizeof(Mob) * MAX_MOBS);
-    memset(level->mobs, 0, sizeof(Mob) * MAX_MOBS);
+    level->mobs = malloc(sizeof(Mob*) * MAX_MOBS);
+    memset(level->mobs, 0, sizeof(Mob*) * MAX_MOBS);
 
     // check for OOM
     if (level->mobs == NULL)
@@ -116,10 +120,8 @@ Level *create_level(int depth)
 int init_level(Level *level, Mob *player)
 {
     if (level == NULL)
-    {
         // simple error case
         return 0;
-    }
 
     // do this otherwise initial seed will always be the same
     seed_random();
@@ -127,7 +129,8 @@ int init_level(Level *level, Mob *player)
     // randomly generate map
     randomly_fill_tiles(level);
 
-    // TODO randomly populate *new* levels with mobs
+    // randomly populate *new* levels with max of MAX_MOBS / 2
+    randomly_fill_mobs(level, MAX_MOBS / 2);
 
     return 1;
 }
@@ -145,16 +148,12 @@ Mob *get_mob(const Level *level, unsigned int y, unsigned int x)
     if (y >= MAX_HEIGHT || x >= MAX_WIDTH)
         return NULL;
 
-    for (int y = 0; y < MAX_HEIGHT; ++y)
+    for (int i = 0; i < MAX_MOBS; ++i)
     {
-        for (int x = 0; x < MAX_WIDTH; ++x)
-        {
-            for (int i = 0; i < MAX_MOBS; ++i)
-            {
-                if (level->mobs[i].x == x && level->mobs[i].y == y)
-                    return &level->mobs[i];
-            }
-        }
+        if (level->mobs[i] == NULL)
+            continue;
+        if (level->mobs[i]->x == x && level->mobs[i]->y == y)
+            return level->mobs[i];
     }
 
     return NULL;

@@ -6,6 +6,7 @@
 #define MAX_RANDOM_RECURSION 100
 
 #include "map.h"
+#include "mob.h"
 #include "path.h"
 
 typedef struct {
@@ -26,5 +27,8 @@ Coords random_passable_coords(Level *level);
 // randomly generate tiles by filling dungeon with cells
 // and then connecting via corridors
 void randomly_fill_tiles(Level *level);
+
+// randomly fill mobs in level by max amount
+void randomly_fill_mobs(Level *level, int max);
 
 #endif

@@ -25,6 +25,7 @@ char tile_symbol(const Tile tile)
     }
 }
 
+// TODO need to check x, y coord since we need to test for mob
 int is_passable(const Tile tile)
 {
     if (tile.type == TILE_DOOR || tile.type == TILE_WALL || tile.type == TILE_WALL_SIDE || tile.type == TILE_NONE)

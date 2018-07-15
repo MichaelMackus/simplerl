@@ -24,22 +24,22 @@ int gameloop(Dungeon *dungeon, const char **messages)
             return GAME_QUIT;
         case 'h':
             if (!move_mob(player, player->y, player->x - 1,level))
-                attack(player, get_mob(level, player->x - 1, player->y));
+                attack(player, get_mob(level, player->y, player->x - 1));
 
             break;
         case 'l':
             if (!move_mob(player, player->y, player->x + 1, level))
-                attack(player, get_mob(level, player->x + 1, player->y));
+                attack(player, get_mob(level, player->y, player->x + 1));
 
             break;
         case 'j':
             if (!move_mob(player, player->y + 1, player->x, level))
-                attack(player, get_mob(level, player->x, player->y + 1));
+                attack(player, get_mob(level, player->y + 1, player->x));
 
             break;
         case 'k':
             if (!move_mob(player, player->y - 1, player->x, level))
-                attack(player, get_mob(level, player->x, player->y - 1));
+                attack(player, get_mob(level, player->y - 1, player->x));
 
             break;
 
@@ -86,7 +86,7 @@ int gameloop(Dungeon *dungeon, const char **messages)
             return GAME_OOM;
     }
 
-    // TODO cleanup dead mobs, potentially transferring items to square
+    // TODO possibly do cleanup of dead mobs here?
 
     return GAME_PLAYING;
 }
@@ -105,7 +105,10 @@ int move_mob(Mob *mob, int y, int x, Level *level)
     const Tile *t;
     t = get_tile(level, y, x);
 
-    if (mob != NULL && t != NULL && is_passable(*t))
+    // check for mob
+    Mob *enemy = get_mob(level, y, x);
+
+    if (enemy == NULL && mob != NULL && t != NULL && is_passable(*t))
     {
         mob->x = x;
         mob->y = y;
@@ -124,8 +127,8 @@ void attack(Mob *attacker, Mob *target)
         return;
 
     // TODO basic RNG, attack, health, etc.
-    // for now, just free & remove the target
-    // TODO want to reduce health to 0
+    // for now, just reduce health to 0
+    target->hp = 0;
 }
 
 // change current depth to next level deep
