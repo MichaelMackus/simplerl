@@ -82,6 +82,8 @@ void render_messages(const char **messages)
         {
             if (messages[y] != NULL)
                 drawBuffer[y+MAX_HEIGHT][x] = messages[y][x];
+            else
+                drawBuffer[y+MAX_HEIGHT][x] = ' ';
         }
     }
 }

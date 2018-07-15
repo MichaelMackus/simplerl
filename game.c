@@ -1,28 +1,8 @@
 #include "game.h"
 #include "message.h"
-#include "random.h"
 #include <ncurses.h>
 #include <stdlib.h>
 #include <memory.h>
-
-int init_level(Level *level, Mob *player)
-{
-    if (level == NULL)
-    {
-        // simple error case
-        return 0;
-    }
-
-    // do this otherwise initial seed will always be the same
-    seed_random();
-
-    // randomly generate map
-    randomly_fill_tiles(level);
-
-    // TODO randomly populate *new* levels with mobs
-
-    return 1;
-}
 
 int move_mob(Mob *mob, int y, int x, Level *level);
 void attack(Mob *attacker, Mob *target);
