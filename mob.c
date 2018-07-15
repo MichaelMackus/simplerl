@@ -1,4 +1,5 @@
 #include "mob.h"
+#include "path.h"
 #include <stdlib.h>
 
 Mob *enemy(unsigned int hp, unsigned int minDamage, unsigned int maxDamage, char symbol);
@@ -14,6 +15,7 @@ Mob *createMob(int depth)
     // level 10: 5 - 16
     int difficulty = (rand() % (depth+1)) + (depth / 2);
 
+    // TODO need to scale difficulty more later (i.e. hobgoblins in alte dungeon...)
     if (difficulty == 1)
         return enemy(4, 1, 2, 'r'); // rat
     if (difficulty == 2)
@@ -64,6 +66,7 @@ int attack(Mob *attacker, Mob *target)
         return 0;
 
     // calculate damage based on attacker's stats
+    // TODO add simple roll function
     int damage = rand() % (attacker->maxDamage - attacker->minDamage + 1)  +  attacker->minDamage;
 
     target->hp -= damage;
@@ -85,4 +88,64 @@ Mob *enemy(unsigned int hp, unsigned int minDamage, unsigned int maxDamage, char
     m->items = NULL;
 
     return m;
+}
+
+int can_smell(Mob *mob, Mob *player)
+{
+    return 0;
+}
+
+int can_see(const Mob *mob, int y, int x, Tile **tiles)
+{
+    int ret = 0;
+
+    // only show 1 cavern at a time
+    if (tiles[y][x].type == TILE_CAVERN)
+    {
+        const Coords **line = get_line(xy(mob->x, mob->y), xy(x, y));
+        const Coords **current = line;
+        while (*current != NULL)
+        {
+            // if the line ends at the point we're looking at, we can see it!
+            if ((*current)->x == x && (*current)->y == y)
+            {
+                ret = 1; // success!
+
+                break;
+            }
+
+            // if the current coord blocks the view, we can't see
+            int type = tiles[(*current)->y][(*current)->x].type;
+            if (type == TILE_NONE || type == TILE_WALL_SIDE || type == TILE_WALL || type == TILE_CAVERN)
+                break;
+
+            ++current;
+        }
+        free_line(line);
+    }
+    else
+    {
+        const Coords **line = get_line(xy(mob->x, mob->y), xy(x, y));
+        const Coords **current = line;
+        while (*current != NULL)
+        {
+            // if the line ends at the point we're looking at, we can see it!
+            if ((*current)->x == x && (*current)->y == y)
+            {
+                ret = 1; // success!
+
+                break;
+            }
+
+            // if the current coord blocks the view, we can't see
+            int type = tiles[(*current)->y][(*current)->x].type;
+            if (type == TILE_NONE || type == TILE_WALL_SIDE || type == TILE_WALL || type == TILE_CAVERN)
+                break;
+
+            ++current;
+        }
+        free_line(line);
+    }
+
+    return ret;
 }

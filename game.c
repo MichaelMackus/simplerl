@@ -96,6 +96,16 @@ int gameloop(Dungeon *dungeon)
 
     // TODO simple AI
 
+    // update seen tiles
+    for (int y = 0; y < MAX_HEIGHT; ++y)
+    {
+        for (int x = 0; x < MAX_WIDTH; ++x)
+        {
+            if (can_see(player, y, x, level->tiles))
+                level->tiles[y][x].seen = 1;
+        }
+    }
+
     return GAME_PLAYING;
 }
 

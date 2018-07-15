@@ -1,4 +1,5 @@
 #include "tile.h"
+#include <stdlib.h>
 
 char tile_symbol(const Tile tile)
 {
@@ -38,6 +39,8 @@ Tile create_tile(int tileType)
 {
     Tile t;
     t.type = tileType;
+    t.seen = 0;
+    t.items = NULL;
 
     return t;
 }

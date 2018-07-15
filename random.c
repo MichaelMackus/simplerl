@@ -497,53 +497,6 @@ int branches(const Box *cell, const Level *level)
     return count;
 }
 
-// get straight line from a to b
-const Coords **get_line(const Coords a, const Coords b)
-{
-    Coords **line;
-    line = malloc(sizeof(Coords*)*MAX_WIDTH+MAX_HEIGHT);
-    memset(line, 0, sizeof(Coords*)*MAX_WIDTH+MAX_HEIGHT);
-
-    Coords currentCoords = a;
-    for (int i = 0; i < MAX_WIDTH + MAX_HEIGHT; ++i)
-    {
-        line[i] = malloc(sizeof(Coords));
-
-        // calculate x difference
-        if (b.x - currentCoords.x > 0)
-            ++currentCoords.x;
-        else if (b.x - currentCoords.x < 0)
-            --currentCoords.x;
-        // calculate y difference
-        if (b.y - currentCoords.y > 0)
-            ++currentCoords.y;
-        else if (b.y - currentCoords.y < 0)
-            --currentCoords.y;
-
-        line[i]->x = currentCoords.x;
-        line[i]->y = currentCoords.y;
-
-        // we're done if we are at the end
-        if (currentCoords.x == b.x && currentCoords.y == b.y)
-            break;
-    }
-
-    return (const Coords **) line;
-}
-
-void free_line(const Coords **line)
-{
-    int i = 0;
-    for (int i = 0; i < MAX_WIDTH + MAX_HEIGHT; ++i)
-    {
-        if (line[i] == NULL)
-            break;
-        free((Coords*) line[i]);
-        ++i;
-    }
-    free((Coords**) line);
-}
-
 const Coords find_wall_for_branch(const Box *cell, const Level *level)
 {
     // find an opening in cell for a branch

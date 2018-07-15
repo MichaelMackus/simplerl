@@ -42,7 +42,7 @@ int main()
     while (result == GAME_PLAYING)
     {
         // render & update curses
-        update(dungeon);
+        render(dungeon);
 
         // trigger gameloop
         result = gameloop(dungeon);

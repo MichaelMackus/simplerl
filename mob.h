@@ -7,6 +7,7 @@
 #define MOB_MIND_FLAYER 4
 
 #include "item.h"
+#include "tile.h"
 
 typedef struct {
     int hp, maxHP;
@@ -24,5 +25,11 @@ Mob *createMob(int depth);
 // if no mob found at x, y do nothing
 // return damage
 int attack(Mob *attacker, Mob *target);
+
+// simple function to see if mob can smell player (should follow trail)
+int can_smell(Mob *mob, Mob *player);
+
+// simple lighting function to see if mob can see x and y
+int can_see(const Mob *mob, int y, int x, Tile **tiles);
 
 #endif

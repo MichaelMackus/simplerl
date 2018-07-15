@@ -108,9 +108,7 @@ Level *create_level(int depth)
 
         for (int x = 0; x < MAX_WIDTH; ++x)
         {
-            Tile t;
-            t.type = TILE_NONE;
-            level->tiles[y][x] = t;
+            level->tiles[y][x] = create_tile(TILE_NONE);
         }
     }
 

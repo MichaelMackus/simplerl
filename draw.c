@@ -31,10 +31,12 @@ char drawBuffer[MAX_HEIGHT][MAX_WIDTH];
 
 void render_mob(const Mob *mob);
 void render_messages();
-void render_level(Level *level);
+void render_level(Level *level, const Mob *player);
 void draw(const char drawBuffer[][MAX_WIDTH], const char prevDrawBuffer[][MAX_WIDTH]);
-void update(const Dungeon *dungeon)
+void render(const Dungeon *dungeon)
 {
+    const Mob *player = dungeon->player;
+
     // fill previous map
     char prevDrawBuffer[MAX_HEIGHT][MAX_WIDTH];
     for (int y = 0; y < MAX_HEIGHT; ++y)
@@ -42,12 +44,15 @@ void update(const Dungeon *dungeon)
             prevDrawBuffer[y][x] = drawBuffer[y][x];
 
     // render onto our current map
-    render_level(dungeon->level);
+    render_level(dungeon->level, player);
 
     // render mobs
     for (int i = 0; i < MAX_MOBS; ++i)
-        if (dungeon->level->mobs[i] != NULL)
-            render_mob(dungeon->level->mobs[i]);
+    {
+        const Mob *mob = dungeon->level->mobs[i];
+        if (mob != NULL && can_see(player, mob->y, mob->x, dungeon->level->tiles))
+            render_mob(mob);
+    }
 
     // render player last (should always be seen)
     render_mob(dungeon->player);
@@ -62,7 +67,7 @@ void update(const Dungeon *dungeon)
 /**         **/
 /*************/
 
-void render_level(Level *level)
+void render_level(Level *level, const Mob *player)
 {
     // draw tiles array
     for (int y = 0; y < MAX_HEIGHT; ++y)
@@ -70,8 +75,12 @@ void render_level(Level *level)
         move(y+5, 0);
         for (int x = 0; x < MAX_WIDTH; ++x)
         {
-            // draw character, offset y by 5 for message area
-            drawBuffer[y][x] = tile_symbol(level->tiles[y][x]);
+            // draw tile symbol if the player can see it
+            if (can_see(player, y, x, level->tiles) ||
+                    level->tiles[y][x].seen)
+                drawBuffer[y][x] = tile_symbol(level->tiles[y][x]);
+            else
+                drawBuffer[y][x] = tile_symbol(create_tile(TILE_NONE));
         }
     }
 }

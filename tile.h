@@ -16,6 +16,7 @@
 typedef struct {
     Item *items;
     int type; // one of TILE consts
+    int seen; // seen by player?
 } Tile;
 
 // return tile symbol for display
