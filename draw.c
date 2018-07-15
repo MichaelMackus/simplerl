@@ -27,7 +27,7 @@ void deinit()
 
 // temporary global to hold previous map state, so we only draw what was changed
 // THANKS curses!
-char drawBuffer[MAX_HEIGHT + MAX_MESSAGES][MAX_WIDTH];
+char drawBuffer[MAX_HEIGHT][MAX_WIDTH];
 
 void render_mob(const Mob *mob);
 void render_messages();
@@ -36,14 +36,13 @@ void draw(const char drawBuffer[][MAX_WIDTH], const char prevDrawBuffer[][MAX_WI
 void update(const Dungeon *dungeon)
 {
     // fill previous map
-    char prevDrawBuffer[MAX_HEIGHT + MAX_MESSAGES][MAX_WIDTH];
-    for (int y = 0; y < MAX_HEIGHT + MAX_MESSAGES; ++y)
+    char prevDrawBuffer[MAX_HEIGHT][MAX_WIDTH];
+    for (int y = 0; y < MAX_HEIGHT; ++y)
         for (int x = 0; x < MAX_WIDTH; ++x)
             prevDrawBuffer[y][x] = drawBuffer[y][x];
 
     // render onto our current map
     render_level(dungeon->level);
-    render_mob(dungeon->player);
 
     // render mobs
     for (int i = 0; i < MAX_MOBS; ++i) {
@@ -60,9 +59,10 @@ void update(const Dungeon *dungeon)
         }
     }
 
-    render_messages();
+    // render player last (should always be seen)
+    render_mob(dungeon->player);
 
-    // draw difference from old map & new map
+    // draw difference from old map & new map, and messages
     draw(drawBuffer, prevDrawBuffer);
 }
 
@@ -91,24 +91,10 @@ void render_mob(const Mob *mob)
     drawBuffer[mob->y][mob->x] = mob->symbol;
 }
 
-void render_messages()
-{
-    for (int y=0; y<MAX_MESSAGES; ++y)
-    {
-        for (int x = 0; x < MAX_MESSAGE_LENGTH; ++x)
-        {
-            if (messages[y] != NULL)
-                drawBuffer[y+MAX_HEIGHT][x] = messages[y][x];
-            else
-                drawBuffer[y+MAX_HEIGHT][x] = ' ';
-        }
-    }
-}
-
 // only draw difference in map to curses window
 void draw(const char drawBuffer[][MAX_WIDTH], const char prevDrawBuffer[][MAX_WIDTH])
 {
-    for (int y = 0; y < MAX_HEIGHT + MAX_MESSAGES; ++y)
+    for (int y = 0; y < MAX_HEIGHT; ++y)
     {
         for (int x = 0; x < MAX_WIDTH; ++x)
         {
@@ -117,6 +103,16 @@ void draw(const char drawBuffer[][MAX_WIDTH], const char prevDrawBuffer[][MAX_WI
                 mvaddch(y, x, drawBuffer[y][x]);
                 refresh();
             }
+        }
+    }
+
+    // re-render messages
+    for (int y = 0; y < MAX_MESSAGES; ++y)
+    {
+        if (messages[y] != NULL)
+        {
+            mvaddstr(y + MAX_HEIGHT, 0, messages[y]);
+            refresh();
         }
     }
 }
