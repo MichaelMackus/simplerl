@@ -95,7 +95,6 @@ int can_smell(Mob *mob, Mob *player, Tile **tiles)
     return 0;
 }
 
-// TODO fix memory leak here
 int can_see(const Mob *mob, int y, int x, Tile **tiles)
 {
     int ret = 0;

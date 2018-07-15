@@ -111,7 +111,6 @@ int pathfind(const Coords start, const Coords end, const Level *level, int **wal
 }
 
 // get straight line from a to b
-// TODO memory leak... :(
 const Coords **get_line(const Coords a, const Coords b)
 {
     Coords **line;
@@ -177,7 +176,6 @@ void free_path(const Coords **line)
     {
         if (line[i] != NULL)
             free((Coords*) line[i]);
-        ++i;
     }
     free((Coords**) line);
 }
