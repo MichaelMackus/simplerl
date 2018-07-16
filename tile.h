@@ -11,7 +11,7 @@
 #define TILE_DOOR       7
 #define TILE_DOOR_OPEN  8
 
-#define INITIAL_SMELL   5
+#define INITIAL_SMELL   10
 
 #include "item.h"
 
