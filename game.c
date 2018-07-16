@@ -31,15 +31,14 @@ void move_player(Mob *player, Coords coords, Level *level);
 void tick(Dungeon *dungeon);
 void tick_mob(Mob *mob, Level *level);
 int handle_input(Dungeon *dungeon);
+void taint(const Coords playerCoords, Level *level);
 int gameloop(Dungeon *dungeon)
 {
     Level *level = dungeon->level;
     Mob *player = dungeon->player;
 
-    // Set smell for initial tile so that the smell for the current tile is
-    // always set, in case the player doesn't move or this is the first
-    // iteration.
-    level->tiles[player->coords.y][player->coords.x].smell = INITIAL_SMELL;
+    // set smell around player before movement (also done in move_player)
+    taint(player->coords, level);
 
     char ch = '.'; // do nothing
     // handle input
@@ -165,6 +164,9 @@ void move_player(Mob *player, Coords coords, Level *level)
         message("You hit it for %d damage!", dmg); // TODO mob name
     else if (dmg == 0)
         message("You missed!");
+    else
+        // movement - set the smell of the player again
+        taint(player->coords, level);
 }
 
 Coords smelliest(Coords coords, Level *level);
@@ -203,7 +205,6 @@ void tick_mob(Mob *mob, Level *level)
     }
     else
     {
-        // TODO do smell "aura" so that mob can still smell player they never see
         // if mob can't see, they can still smell the player (thanks NetHack!)
         Coords coords = smelliest(mob->coords, level);
         const Tile *tile = get_tile(level, coords);
@@ -283,6 +284,39 @@ void tick(Dungeon *dungeon)
     ++dungeon->turn;
 }
 
+// taint smell aura around player
+void taint(const Coords playerCoords, Level *level)
+{
+    // NOTE: all these tiles *except* the current player tile will get
+    // decremented by 1 in gameloop after this code is run
+    int coords[13][3] = {
+        { playerCoords.x, playerCoords.y, INITIAL_SMELL },
+        { playerCoords.x - 1, playerCoords.y, INITIAL_SMELL - 1 },
+        { playerCoords.x - 1, playerCoords.y - 1, INITIAL_SMELL - 1 },
+        { playerCoords.x - 1, playerCoords.y + 1, INITIAL_SMELL - 1 },
+        { playerCoords.x - 2, playerCoords.y, INITIAL_SMELL - 2 },
+        { playerCoords.x, playerCoords.y - 1, INITIAL_SMELL - 1 },
+        { playerCoords.x, playerCoords.y - 2, INITIAL_SMELL - 2 },
+        { playerCoords.x + 1, playerCoords.y, INITIAL_SMELL - 1 },
+        { playerCoords.x + 1, playerCoords.y - 1, INITIAL_SMELL - 1 },
+        { playerCoords.x + 1, playerCoords.y + 1, INITIAL_SMELL - 1 },
+        { playerCoords.x + 2, playerCoords.y, INITIAL_SMELL - 2 },
+        { playerCoords.x, playerCoords.y + 1, INITIAL_SMELL - 1 },
+        { playerCoords.x, playerCoords.y + 2, INITIAL_SMELL - 2 }
+    };
+
+    for (int i = 0; i < 13; ++i)
+    {
+        Coords location = xy(coords[i][0], coords[i][1]);
+        int smell = coords[i][2];
+
+        // set smell if tile & greater than current smell
+        Tile *tile = get_tile(level, location);
+        if (tile != NULL && tile->smell < smell)
+            tile->smell = smell;
+    }
+}
+
 // change current depth to next level deep
 // if there is no next level, create one
 // return 0 on error
@@ -360,6 +394,7 @@ int handle_input(Dungeon *dungeon)
     return 1;
 }
 
+// TODO allow mobs to smell diagonally
 Coords smelliest(Coords coords, Level *level)
 {
     Tile **tiles = level->tiles;
@@ -368,6 +403,7 @@ Coords smelliest(Coords coords, Level *level)
 
     if (get_tile(level, xy(coords.x, coords.y + 1)) != NULL &&
             get_tile(level, xy(coords.x, coords.y + 1))->smell > smell &&
+            is_passable(*get_tile(level, xy(coords.x, coords.y + 1))) &&
             get_enemy(level, xy(coords.x, coords.y + 1)) == NULL)
     {
         smelliest.y = coords.y + 1;
@@ -377,6 +413,7 @@ Coords smelliest(Coords coords, Level *level)
 
     if (get_tile(level, xy(coords.x, coords.y - 1)) != NULL &&
             get_tile(level, xy(coords.x, coords.y - 1))->smell > smell &&
+            is_passable(*get_tile(level, xy(coords.x, coords.y + 1))) &&
             get_enemy(level, xy(coords.x, coords.y - 1)) == NULL)
     {
         smelliest.y = coords.y - 1;
@@ -386,6 +423,7 @@ Coords smelliest(Coords coords, Level *level)
 
     if (get_tile(level, xy(coords.x + 1, coords.y)) != NULL &&
             get_tile(level, xy(coords.x + 1, coords.y))->smell > smell &&
+            is_passable(*get_tile(level, xy(coords.x, coords.y + 1))) &&
             get_enemy(level, xy(coords.x + 1, coords.y)) == NULL)
     {
         smelliest.y = coords.y;
@@ -395,6 +433,7 @@ Coords smelliest(Coords coords, Level *level)
 
     if (get_tile(level, xy(coords.x - 1, coords.y)) != NULL &&
             get_tile(level, xy(coords.x - 1, coords.y))->smell > smell &&
+            is_passable(*get_tile(level, xy(coords.x, coords.y + 1))) &&
             get_enemy(level, xy(coords.x - 1, coords.y)) == NULL)
     {
         smelliest.y = coords.y;

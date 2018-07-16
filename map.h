@@ -40,7 +40,7 @@ Dungeon *create_dungeon();
 Level *create_level(int depth);
 
 // get tile from square, or NULL on error
-const Tile *get_tile(const Level *level, Coords coords);
+Tile *get_tile(const Level *level, Coords coords);
 
 // get enemy from square, or NULL on error
 Mob *get_enemy(const Level *level, Coords coords);

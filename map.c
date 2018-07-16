@@ -119,7 +119,7 @@ Level *create_level(int depth)
     return level;
 }
 
-const Tile *get_tile(const Level *level, Coords coords)
+Tile *get_tile(const Level *level, Coords coords)
 {
     if (coords.y >= MAX_HEIGHT || coords.x >= MAX_WIDTH || coords.y < 0 || coords.x < 0)
         return NULL;
