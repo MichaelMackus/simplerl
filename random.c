@@ -91,7 +91,7 @@ void randomly_fill_tiles(Level *level)
     free(cells);
 }
 
-void randomly_fill_mobs(Level *level, int max)
+void randomly_fill_mobs(Level *level, int max, int nearPlayer)
 {
     Mob **mobs = level->mobs;
 
@@ -107,10 +107,19 @@ void randomly_fill_mobs(Level *level, int max)
                 return; // out of range!
         }
 
-        mobs[mobIndex] = createMob(level->depth);
+        Mob *mob = createMob(level->depth);
         Coords coords = random_passable_coords(level);
-        mobs[mobIndex]->coords.x = coords.x;
-        mobs[mobIndex]->coords.y = coords.y;
+        mob->coords.x = coords.x;
+        mob->coords.y = coords.y;
+
+        // check if mob is near player
+        if (nearPlayer && can_see(mob, level->player->coords, level->tiles))
+        {
+            free(mob);
+            continue;
+        }
+
+        mobs[mobIndex] = mob;
     }
 }
 

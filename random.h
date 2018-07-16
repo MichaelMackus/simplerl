@@ -31,6 +31,6 @@ Coords random_passable_coords(Level *level);
 void randomly_fill_tiles(Level *level);
 
 // randomly fill mobs in level by max amount
-void randomly_fill_mobs(Level *level, int max);
+void randomly_fill_mobs(Level *level, int max, int nearPlayer);
 
 #endif

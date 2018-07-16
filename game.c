@@ -20,7 +20,7 @@ int init_level(Level *level, Mob *player)
     randomly_fill_tiles(level);
 
     // randomly populate *new* levels with max of MAX_MOBS / 2
-    randomly_fill_mobs(level, MAX_MOBS / 2);
+    randomly_fill_mobs(level, MAX_MOBS / 2, true);
 
     return 1;
 }
@@ -29,6 +29,7 @@ int increase_depth(Dungeon *dungeon);
 int decrease_depth(Dungeon *dungeon);
 void move_player(Mob *player, Coords coords, Level *level);
 void tick(Dungeon *dungeon);
+void tick_mob(Mob *mob, Level *level);
 int gameloop(Dungeon *dungeon)
 {
     Level *level = dungeon->level;
@@ -38,6 +39,9 @@ int gameloop(Dungeon *dungeon)
     // always set, in case the player doesn't move or this is the first
     // iteration.
     level->tiles[player->coords.y][player->coords.x].smell = INITIAL_SMELL;
+
+    // cleanup dead mobs, heal player, spawn new mobs
+    tick(dungeon);
 
     // handle input
     char ch = getch();
@@ -109,8 +113,10 @@ int gameloop(Dungeon *dungeon)
     if (player->hp <= 0)
         return GAME_DEATH;
 
-    // do simple AI & cleanup dead mobs
-    tick(dungeon);
+    // mob AI
+    for (int i = 0; i < MAX_MOBS; ++i)
+        if (level->mobs[i] != NULL)
+            tick_mob(level->mobs[i], level);
 
     // check for player death
     if (player->hp <= 0)
@@ -163,7 +169,7 @@ void tick_mob(Mob *mob, Level *level)
 {
     Mob *player = level->player;
 
-    if (can_see(player, player->coords, level->tiles))
+    if (can_see(mob, player->coords, level->tiles))
     {
         int dmg = -1;
 
@@ -201,8 +207,9 @@ void tick(Dungeon *dungeon)
     Level *level = dungeon->level;
     Mob *player = level->player;
 
-    // spawn new mob(s) each turn, max of 1 per turn for now
-    randomly_fill_mobs(level, 1);
+    // spawn new mob every 10 turns
+    if (dungeon->turn % 10 == 0)
+        randomly_fill_mobs(level, 1, false);
 
     // cleanup mobs
     for (int i = 0; i < MAX_MOBS; ++i)
@@ -216,8 +223,6 @@ void tick(Dungeon *dungeon)
                 // TODO transfer items to floor
                 level->mobs[i] = NULL;
             }
-            else
-                tick_mob(mob, level);
         }
     }
 
