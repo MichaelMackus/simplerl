@@ -76,7 +76,6 @@ void render_level(Level *level, const Mob *player)
     // draw tiles array
     for (int y = 0; y < MAX_HEIGHT; ++y)
     {
-        move(y+5, 0);
         for (int x = 0; x < MAX_WIDTH; ++x)
         {
             // draw tile symbol if the player can see it
