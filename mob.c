@@ -90,11 +90,6 @@ Mob *enemy(unsigned int hp, unsigned int minDamage, unsigned int maxDamage, char
     return m;
 }
 
-int can_smell(Mob *mob, Mob *player, Tile **tiles)
-{
-    return 0;
-}
-
 int can_see(const Mob *mob, Coords coords, Tile **tiles)
 {
     int ret = 0;

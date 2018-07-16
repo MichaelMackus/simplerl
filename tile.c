@@ -40,6 +40,7 @@ Tile create_tile(int tileType)
     Tile t;
     t.type = tileType;
     t.seen = 0;
+    t.smell = 0;
     t.items = NULL;
 
     return t;

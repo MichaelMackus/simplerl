@@ -119,6 +119,7 @@ int gameloop(Dungeon *dungeon)
         return GAME_DEATH;
 
     // cleanup dead mobs, heal player, spawn new mobs
+    // TODO move this before loop to prevent mobs jumping player?
     tick(dungeon);
 
     // check for player death
@@ -163,11 +164,9 @@ void move_player(Mob *player, Coords coords, Level *level)
         message("You hit it for %d damage!", dmg); // TODO mob name
     else if (dmg == 0)
         message("You missed!");
-
-    // set smell for tile
-    level->tiles[player->coords.y][player->coords.x].smell = INITIAL_SMELL;
 }
 
+Coords smelliest(Coords coords, Level *level);
 void tick_mob(Mob *mob, Level *level)
 {
     Mob *player = level->player;
@@ -201,8 +200,18 @@ void tick_mob(Mob *mob, Level *level)
         else if (dmg == 0)
             message("It missed!");
     }
-
-    // TODO implement smell
+    else
+    {
+        // TODO do smell "aura" so that mob can still smell player they never see
+        // if mob can't see, they can still smell the player (thanks NetHack!)
+        Coords coords = smelliest(mob->coords, level);
+        const Tile *tile = get_tile(level, coords);
+        if (tile != NULL && is_passable(*tile) &&
+                !(coords.x == mob->coords.x && coords.y == mob->coords.y))
+        {
+            move_or_attack(mob, coords, level);
+        }
+    }
 }
 
 void reward_exp(Mob *player, Mob *mob)
@@ -215,6 +224,7 @@ void reward_exp(Mob *player, Mob *mob)
         return;
 
     // level up condition
+    // TODO this is getting triggered on 0 exp sometimes
     if (player->attrs.exp % 1000 == 0)
     {
         ++player->attrs.level;
@@ -230,6 +240,13 @@ void tick(Dungeon *dungeon)
 {
     Level *level = dungeon->level;
     Mob *player = level->player;
+
+    // reduce smell on all tiles not on current player x, y
+    for (int y = 0; y < MAX_HEIGHT; ++y)
+        for (int x = 0; x < MAX_WIDTH; ++x)
+            if (player->coords.x != x && player->coords.y != y &&
+                    level->tiles[y][x].smell > 0)
+                --level->tiles[y][x].smell;
 
     if (dungeon->turn % 10 == 0)
     {
@@ -340,4 +357,49 @@ int handle_input(Dungeon *dungeon)
     }
 
     return 1;
+}
+
+Coords smelliest(Coords coords, Level *level)
+{
+    Tile **tiles = level->tiles;
+    Coords smelliest = coords;
+    int smell = 0;
+
+    if (get_tile(level, xy(coords.x, coords.y + 1)) != NULL &&
+            get_tile(level, xy(coords.x, coords.y + 1))->smell > smell &&
+            get_enemy(level, xy(coords.x, coords.y + 1)) == NULL)
+    {
+        smelliest.y = coords.y + 1;
+        smelliest.x = coords.x;
+        smell = tiles[coords.y + 1][coords.x].smell;
+    }
+
+    if (get_tile(level, xy(coords.x, coords.y - 1)) != NULL &&
+            get_tile(level, xy(coords.x, coords.y - 1))->smell > smell &&
+            get_enemy(level, xy(coords.x, coords.y - 1)) == NULL)
+    {
+        smelliest.y = coords.y - 1;
+        smelliest.x = coords.x;
+        smell = tiles[coords.y - 1][coords.x].smell;
+    }
+
+    if (get_tile(level, xy(coords.x + 1, coords.y)) != NULL &&
+            get_tile(level, xy(coords.x + 1, coords.y))->smell > smell &&
+            get_enemy(level, xy(coords.x + 1, coords.y)) == NULL)
+    {
+        smelliest.y = coords.y;
+        smelliest.x = coords.x + 1;
+        smell = tiles[coords.y][coords.x + 1].smell;
+    }
+
+    if (get_tile(level, xy(coords.x - 1, coords.y)) != NULL &&
+            get_tile(level, xy(coords.x - 1, coords.y))->smell > smell &&
+            get_enemy(level, xy(coords.x - 1, coords.y)) == NULL)
+    {
+        smelliest.y = coords.y;
+        smelliest.x = coords.x - 1;
+        smell = tiles[coords.y][coords.x - 1].smell;
+    }
+
+    return smelliest;
 }

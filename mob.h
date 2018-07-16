@@ -39,9 +39,6 @@ Mob *createMob(int depth);
 // return damage
 int attack(Mob *attacker, Mob *target);
 
-// simple function to see if mob can smell player (should follow trail)
-int can_smell(Mob *mob, Mob *player, Tile **tiles);
-
 // simple lighting function to see if mob can see x and y
 int can_see(const Mob *mob, Coords coords, Tile **tiles);
 
