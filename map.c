@@ -12,6 +12,8 @@ Dungeon *create_dungeon()
     if (dungeon == NULL)
         return NULL;
 
+    dungeon->turn = 0;
+
     // allocate player
     Mob *player;
     player = malloc(sizeof(Mob));

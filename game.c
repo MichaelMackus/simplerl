@@ -118,13 +118,9 @@ int gameloop(Dungeon *dungeon)
 
     // update seen tiles
     for (int y = 0; y < MAX_HEIGHT; ++y)
-    {
         for (int x = 0; x < MAX_WIDTH; ++x)
-        {
             if (can_see(player, xy(x, y), level->tiles))
                 level->tiles[y][x].seen = 1;
-        }
-    }
 
     return GAME_PLAYING;
 }
@@ -224,6 +220,12 @@ void tick(Dungeon *dungeon)
                 tick_mob(mob, level);
         }
     }
+
+    // heal player every 10 turns
+    if (player->hp < player->maxHP && dungeon->turn % 10 == 0)
+        player->hp += 1;
+
+    ++dungeon->turn;
 }
 
 // change current depth to next level deep

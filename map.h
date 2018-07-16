@@ -26,6 +26,7 @@ typedef struct {
     const char **unknownItems; // randomized item names, indexed by ID
     const char **knownItems; // known item names, indexed by ID
     Mob **killed; // killed monsters (for scorekeeping)
+    int turn; // turn number
 } Dungeon;
 
 // create a new dungeon (once per game)
