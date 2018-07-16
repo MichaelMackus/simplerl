@@ -113,23 +113,33 @@ void draw(const char drawBuffer[][MAX_WIDTH], const char prevDrawBuffer[][MAX_WI
 // draw status
 void drawStatus(const Dungeon *dungeon)
 {
+    // clear status area
+    for (int y = 0; y < MAX_MESSAGES; ++y)
+    {
+        move(MAX_HEIGHT + y, 0);
+        clrtoeol();
+    }
+
+    move(MAX_HEIGHT, 0);
+
+    // re-render status area
+    char *status;
+    status = malloc(sizeof(char) * (MAX_WIDTH/2));
+    sprintf(status, "HP: %d / %d\n", dungeon->player->hp, dungeon->player->maxHP);
+    addstr(status);
+    sprintf(status, "LVL: %d, EXP: %d\n", dungeon->player->attrs.level, dungeon->player->attrs.exp);
+    addstr(status);
+    sprintf(status, "Depth: %d\n", dungeon->level->depth);
+    addstr(status);
+
     // re-render messages
     for (int y = 0; y < MAX_MESSAGES; ++y)
     {
         if (messages[y] != NULL)
         {
-            move(y + MAX_HEIGHT, 0);
-            clrtoeol();
             mvaddstr(y + MAX_HEIGHT, MAX_WIDTH / 2, messages[y]);
         }
     }
-
-    // re-render status area
-    move(MAX_HEIGHT, 0);
-    char *status;
-    status = malloc(sizeof(char) * (MAX_WIDTH/2));
-    sprintf(status, "HP: %d / %d", dungeon->player->hp, dungeon->player->maxHP);
-    addstr(status);
 
     refresh();
 }
