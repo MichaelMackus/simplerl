@@ -8,12 +8,12 @@ Mob *createMob(int depth)
     // difficulty ranges
     //
     // level 1: 1 - 2
-    // level 2: 1 - 4
-    // level 3: 2 - 6
-    // level 5: 2 - 8
-    // level 7: 4 - 12
-    // level 10: 5 - 16
-    int difficulty = (rand() % (depth+1)) + (depth / 2);
+    // level 2: 2 - 4
+    // level 3: 3 - 5
+    // level 5: 5 - 11
+    // level 7: 7 - 13
+    // level 10: 10 - 19
+    int difficulty = (rand() % (depth+1)) + depth;
 
     Mob *m;
 
