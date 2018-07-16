@@ -13,7 +13,6 @@ Dungeon *create_dungeon()
         return NULL;
 
     dungeon->turn = 0;
-    dungeon->playerResting = 0;
 
     // allocate player
     Mob *player;
@@ -35,6 +34,9 @@ Dungeon *create_dungeon()
     player->maxHP = 10;
     player->minDamage = 3;
     player->maxDamage = 5;
+    player->attrs.resting = 0;
+    player->attrs.exp = 0;
+    player->attrs.level = 1;
 
     // initialize first level
     Level *level = create_level(1);

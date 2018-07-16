@@ -22,7 +22,6 @@ typedef struct Level_t {
 
 typedef struct {
     Mob *player;
-    int playerResting;
     Level *level;
     const char **unknownItems; // randomized item names, indexed by ID
     const char **knownItems; // known item names, indexed by ID

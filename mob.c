@@ -15,24 +15,26 @@ Mob *createMob(int depth)
     // level 10: 5 - 16
     int difficulty = (rand() % (depth+1)) + (depth / 2);
 
+    Mob *m;
+
     // TODO need to scale difficulty more later (i.e. hobgoblins in alte dungeon...)
     if (difficulty == 1)
-        return enemy(4, 1, 2, 'r'); // rat
-    if (difficulty == 2)
-        return enemy(4, 2, 3, 'k'); // kobold
-    if (difficulty == 3)
-        return enemy(5, 3, 5, 'g'); // goblin
-    if (difficulty <= 5)
-        return enemy(5, 3, 5, 'o'); // orc
-    if (difficulty <= 7)
-        return enemy(7, 5, 7, 'h'); // hobgoblin
-    if (difficulty <= 9)
-        return enemy(10, 6, 9, 'O'); // ogre
-    if (difficulty <= 11)
-        return enemy(12, 7, 10, 'd'); // drake
-    if (difficulty <= 13)
+        m = enemy(4, 1, 2, 'r'); // rat
+    else if (difficulty == 2)
+        m = enemy(4, 2, 3, 'k'); // kobold
+    else if (difficulty == 3)
+        m = enemy(5, 3, 5, 'g'); // goblin
+    else if (difficulty <= 5)
+        m = enemy(5, 3, 5, 'o'); // orc
+    else if (difficulty <= 7)
+        m = enemy(7, 5, 7, 'h'); // hobgoblin
+    else if (difficulty <= 9)
+        m = enemy(10, 6, 9, 'O'); // ogre
+    else if (difficulty <= 11)
+        m = enemy(12, 7, 10, 'd'); // drake
+    else if (difficulty <= 13)
     {
-        Mob *m = enemy(12, 7, 10, 'H'); // mind flayer
+        m = enemy(12, 7, 10, 'H'); // mind flayer
 
         // OOM check
         if (m == NULL)
@@ -40,12 +42,10 @@ Mob *createMob(int depth)
 
         m->type = MOB_MIND_FLAYER;
         // TODO drain effect
-
-        return m;
     }
-    if (difficulty >= 15)
+    else if (difficulty >= 15)
     {
-        Mob *m = enemy(20, 10, 15, 'D'); // dragon
+        m = enemy(20, 10, 15, 'D'); // dragon
 
         // OOM check
         if (m == NULL)
@@ -53,9 +53,9 @@ Mob *createMob(int depth)
 
         m->type = MOB_DRAGON;
         // TODO breath effects
-
-        return m;
     }
+
+    m->difficulty = difficulty;
 }
 
 // try to attack x, y

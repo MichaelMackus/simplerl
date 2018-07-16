@@ -1,6 +1,8 @@
 #ifndef MOB_H
 #define MOB_H
 
+#define MAX_PLAYER_LEVEL 10
+
 #define MOB_PLAYER 1
 #define MOB_ENEMY  2
 #define MOB_DRAGON 3
@@ -11,12 +13,22 @@
 #include "path.h"
 
 typedef struct {
+    int resting; // boolean
+    int exp;
+    int level;
+} PlayerAttributes;
+
+typedef struct {
     int hp, maxHP;
     Coords coords;
     unsigned int minDamage, maxDamage;
     int type;
     char symbol;
     Item *items;
+    union {
+        PlayerAttributes attrs;
+        int difficulty;
+    };
 } Mob;
 
 // return a random mob for the specified dungeon depth

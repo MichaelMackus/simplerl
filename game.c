@@ -68,7 +68,7 @@ int gameloop(Dungeon *dungeon)
             break;
 
         case 'R':
-            dungeon->playerResting = 1;
+            dungeon->player->attrs.resting = 1;
             break;
 
         case '>': // check for downstair
@@ -205,6 +205,27 @@ void tick_mob(Mob *mob, Level *level)
     // TODO implement smell
 }
 
+void reward_exp(Mob *player, Mob *mob)
+{
+    // calculate exp based on difficulty of mob
+    player->attrs.exp += 100*mob->difficulty;
+
+    // max level
+    if (player->attrs.level == MAX_PLAYER_LEVEL)
+        return;
+
+    // level up condition
+    if (player->attrs.exp % 1000 == 0)
+    {
+        ++player->attrs.level;
+        // TODO figure out better stat system
+        ++player->minDamage;
+        ++player->maxDamage;
+        player->maxHP += 5;
+        player->hp = player->maxHP;
+    }
+}
+
 void tick(Dungeon *dungeon)
 {
     Level *level = dungeon->level;
@@ -230,6 +251,7 @@ void tick(Dungeon *dungeon)
             {
                 free(mob);
                 // TODO transfer items to floor
+                reward_exp(player, mob);
                 level->mobs[i] = NULL;
             }
         }
@@ -296,9 +318,9 @@ int handle_input(Dungeon *dungeon)
     Mob *player = dungeon->player;
 
     if (player->hp >= player->maxHP)
-        dungeon->playerResting = 0;
+        dungeon->player->attrs.resting = 0;
 
-    if (dungeon->playerResting)
+    if (dungeon->player->attrs.resting)
     {
         // if player can see any mobs, reset resting flag
         Level *level = dungeon->level;
@@ -308,7 +330,7 @@ int handle_input(Dungeon *dungeon)
                 Mob *mob = level->mobs[i];
                 if (can_see(player, mob->coords, level->tiles))
                 {
-                    dungeon->playerResting = 0;
+                    dungeon->player->attrs.resting = 0;
 
                     return 1;
                 }
