@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <memory.h>
 
+void taint(const Coords playerCoords, Level *level);
 int init_level(Level *level, Mob *player)
 {
     if (level == NULL)
@@ -22,6 +23,12 @@ int init_level(Level *level, Mob *player)
     // randomly populate *new* levels with max of MAX_MOBS / 2
     randomly_fill_mobs(level, MAX_MOBS / 2, true);
 
+    // place player on upstair
+    place_on_tile(player, TILE_STAIR_UP, level);
+
+    // set smell around player before movement (also done in move_player)
+    taint(player->coords, level);
+
     return 1;
 }
 
@@ -31,14 +38,11 @@ void move_player(Mob *player, Coords coords, Level *level);
 void tick(Dungeon *dungeon);
 void tick_mob(Mob *mob, Level *level);
 int handle_input(Dungeon *dungeon);
-void taint(const Coords playerCoords, Level *level);
+void cleanup(Level *level);
 int gameloop(Dungeon *dungeon)
 {
     Level *level = dungeon->level;
     Mob *player = dungeon->player;
-
-    // set smell around player before movement (also done in move_player)
-    taint(player->coords, level);
 
     char ch = '.'; // do nothing
     // handle input
@@ -76,14 +80,10 @@ int gameloop(Dungeon *dungeon)
             if (t == NULL)
                 return GAME_ERROR;
             if (t->type == TILE_STAIR_DOWN)
-            {
                 if (dungeon->level->depth == MAX_LEVEL)
                     return GAME_WON;
                 if (!increase_depth(dungeon))
                     return GAME_OOM;
-
-                message("Current level: %d", dungeon->level->depth);
-            }
 
             break;
 
@@ -94,14 +94,10 @@ int gameloop(Dungeon *dungeon)
             if (t == NULL)
                 return GAME_ERROR;
             if (t->type == TILE_STAIR_UP)
-            {
                 if (dungeon->level->depth == 1)
                     return GAME_QUIT;
                 if (!decrease_depth(dungeon))
                     return GAME_OOM;
-
-                message("Current level: %d", dungeon->level->depth);
-            }
 
             break;
 
@@ -117,7 +113,10 @@ int gameloop(Dungeon *dungeon)
     if (player->hp <= 0)
         return GAME_DEATH;
 
-    // cleanup dead mobs, heal player, spawn new mobs
+    // cleanup dead mobs
+    cleanup(level);
+
+    // heal player, spawn new mobs
     // TODO move this before loop to prevent mobs jumping player?
     tick(dungeon);
 
@@ -239,6 +238,7 @@ void reward_exp(Mob *player, Mob *mob)
 }
 
 // TODO add simple mob movement (instead of just sitting there)
+// TODO add simple sound AI (i.e. mob should be able to hear combat further than they can smell, and also remember that)
 void tick(Dungeon *dungeon)
 {
     Level *level = dungeon->level;
@@ -261,7 +261,19 @@ void tick(Dungeon *dungeon)
             player->hp += 1;
     }
 
-    // cleanup mobs
+    // mob AI
+    for (int i = 0; i < MAX_MOBS; ++i)
+        if (level->mobs[i] != NULL)
+            tick_mob(level->mobs[i], level);
+
+    ++dungeon->turn;
+}
+
+// cleanup dead mobs
+void cleanup(Level *level)
+{
+    Mob *player = level->player;
+
     for (int i = 0; i < MAX_MOBS; ++i)
     {
         if (level->mobs[i] != NULL)
@@ -276,13 +288,6 @@ void tick(Dungeon *dungeon)
             }
         }
     }
-
-    // mob AI
-    for (int i = 0; i < MAX_MOBS; ++i)
-        if (level->mobs[i] != NULL)
-            tick_mob(level->mobs[i], level);
-
-    ++dungeon->turn;
 }
 
 // taint smell aura around player
