@@ -127,6 +127,7 @@ int gameloop(Dungeon *dungeon)
         return GAME_DEATH;
 
     // update seen tiles
+    // TODO make more efficient
     for (int y = 0; y < MAX_HEIGHT; ++y)
         for (int x = 0; x < MAX_WIDTH; ++x)
             if (can_see(player, xy(x, y), level->tiles))
@@ -203,6 +204,7 @@ void tick_mob(Mob *mob, Level *level)
     else
     {
         // TODO do smell "aura" so that mob can still smell player they never see
+        // FIXME sometimes when running through cavern monster loses smell ...
         // if mob can't see, they can still smell the player (thanks NetHack!)
         Coords coords = smelliest(mob->coords, level);
         const Tile *tile = get_tile(level, coords);
@@ -371,7 +373,7 @@ Coords smelliest(Coords coords, Level *level)
     {
         smelliest.y = coords.y + 1;
         smelliest.x = coords.x;
-        smell = tiles[coords.y + 1][coords.x].smell;
+        smell = get_tile(level, xy(coords.x, coords.y + 1))->smell;
     }
 
     if (get_tile(level, xy(coords.x, coords.y - 1)) != NULL &&
@@ -380,7 +382,7 @@ Coords smelliest(Coords coords, Level *level)
     {
         smelliest.y = coords.y - 1;
         smelliest.x = coords.x;
-        smell = tiles[coords.y - 1][coords.x].smell;
+        smell = get_tile(level, xy(coords.x, coords.y - 1))->smell;
     }
 
     if (get_tile(level, xy(coords.x + 1, coords.y)) != NULL &&
@@ -389,7 +391,7 @@ Coords smelliest(Coords coords, Level *level)
     {
         smelliest.y = coords.y;
         smelliest.x = coords.x + 1;
-        smell = tiles[coords.y][coords.x + 1].smell;
+        smell = get_tile(level, xy(coords.x + 1, coords.y))->smell;
     }
 
     if (get_tile(level, xy(coords.x - 1, coords.y)) != NULL &&
@@ -398,7 +400,7 @@ Coords smelliest(Coords coords, Level *level)
     {
         smelliest.y = coords.y;
         smelliest.x = coords.x - 1;
-        smell = tiles[coords.y][coords.x - 1].smell;
+        smell = get_tile(level, xy(coords.x - 1, coords.y))->smell;
     }
 
     return smelliest;
