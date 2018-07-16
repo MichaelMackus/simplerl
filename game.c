@@ -238,6 +238,7 @@ void reward_exp(Mob *player, Mob *mob)
     }
 }
 
+// TODO add simple mob movement (instead of just sitting there)
 void tick(Dungeon *dungeon)
 {
     Level *level = dungeon->level;
@@ -413,7 +414,7 @@ Coords smelliest(Coords coords, Level *level)
 
     if (get_tile(level, xy(coords.x, coords.y - 1)) != NULL &&
             get_tile(level, xy(coords.x, coords.y - 1))->smell > smell &&
-            is_passable(*get_tile(level, xy(coords.x, coords.y + 1))) &&
+            is_passable(*get_tile(level, xy(coords.x, coords.y - 1))) &&
             get_enemy(level, xy(coords.x, coords.y - 1)) == NULL)
     {
         smelliest.y = coords.y - 1;
@@ -423,7 +424,7 @@ Coords smelliest(Coords coords, Level *level)
 
     if (get_tile(level, xy(coords.x + 1, coords.y)) != NULL &&
             get_tile(level, xy(coords.x + 1, coords.y))->smell > smell &&
-            is_passable(*get_tile(level, xy(coords.x, coords.y + 1))) &&
+            is_passable(*get_tile(level, xy(coords.x + 1, coords.y))) &&
             get_enemy(level, xy(coords.x + 1, coords.y)) == NULL)
     {
         smelliest.y = coords.y;
@@ -433,7 +434,7 @@ Coords smelliest(Coords coords, Level *level)
 
     if (get_tile(level, xy(coords.x - 1, coords.y)) != NULL &&
             get_tile(level, xy(coords.x - 1, coords.y))->smell > smell &&
-            is_passable(*get_tile(level, xy(coords.x, coords.y + 1))) &&
+            is_passable(*get_tile(level, xy(coords.x - 1, coords.y))) &&
             get_enemy(level, xy(coords.x - 1, coords.y)) == NULL)
     {
         smelliest.y = coords.y;
