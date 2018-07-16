@@ -17,7 +17,7 @@ Mob *createMob(int depth)
 
     Mob *m;
 
-    // TODO need to scale difficulty more later (i.e. hobgoblins in alte dungeon...)
+    // TODO need to scale difficulty more later (i.e. hobgoblins in later dungeon...)
     if (difficulty == 1)
         m = enemy(4, 1, 2, 'r'); // rat
     else if (difficulty == 2)
@@ -56,6 +56,8 @@ Mob *createMob(int depth)
     }
 
     m->difficulty = difficulty;
+
+    return m;
 }
 
 // try to attack x, y
