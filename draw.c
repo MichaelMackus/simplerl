@@ -33,6 +33,7 @@ void render_mob(const Mob *mob);
 void render_messages();
 void render_level(Level *level, const Mob *player);
 void draw(const char drawBuffer[][MAX_WIDTH], const char prevDrawBuffer[][MAX_WIDTH]);
+void drawStatus(const Dungeon *dungeon);
 void render(const Dungeon *dungeon)
 {
     const Mob *player = dungeon->player;
@@ -59,6 +60,9 @@ void render(const Dungeon *dungeon)
 
     // draw difference from old map & new map, and messages
     draw(drawBuffer, prevDrawBuffer);
+
+    // draw status area & messages
+    drawStatus(dungeon);
 }
 
 /*************/
@@ -104,7 +108,11 @@ void draw(const char drawBuffer[][MAX_WIDTH], const char prevDrawBuffer[][MAX_WI
             }
         }
     }
+}
 
+// draw status
+void drawStatus(const Dungeon *dungeon)
+{
     // re-render messages
     for (int y = 0; y < MAX_MESSAGES; ++y)
     {
@@ -112,9 +120,16 @@ void draw(const char drawBuffer[][MAX_WIDTH], const char prevDrawBuffer[][MAX_WI
         {
             move(y + MAX_HEIGHT, 0);
             clrtoeol();
-            addstr(messages[y]);
+            mvaddstr(y + MAX_HEIGHT, MAX_WIDTH / 2, messages[y]);
         }
     }
+
+    // re-render status area
+    move(MAX_HEIGHT, 0);
+    char *status;
+    status = malloc(sizeof(char) * (MAX_WIDTH/2));
+    sprintf(status, "HP: %d / %d", dungeon->player->hp, dungeon->player->maxHP);
+    addstr(status);
 
     refresh();
 }
