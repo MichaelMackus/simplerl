@@ -108,6 +108,10 @@ void randomly_fill_mobs(Level *level, int max, int nearPlayer)
         }
 
         Mob *mob = createMob(level->depth);
+
+        if (mob == NULL)
+            return;
+
         Coords coords = random_passable_coords(level);
         mob->coords.x = coords.x;
         mob->coords.y = coords.y;
