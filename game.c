@@ -204,7 +204,6 @@ void tick_mob(Mob *mob, Level *level)
     else
     {
         // TODO do smell "aura" so that mob can still smell player they never see
-        // FIXME sometimes when running through cavern monster loses smell ...
         // if mob can't see, they can still smell the player (thanks NetHack!)
         Coords coords = smelliest(mob->coords, level);
         const Tile *tile = get_tile(level, coords);
@@ -246,7 +245,7 @@ void tick(Dungeon *dungeon)
     // reduce smell on all tiles not on current player x, y
     for (int y = 0; y < MAX_HEIGHT; ++y)
         for (int x = 0; x < MAX_WIDTH; ++x)
-            if (player->coords.x != x && player->coords.y != y &&
+            if (!(player->coords.x == x && player->coords.y == y) &&
                     level->tiles[y][x].smell > 0)
                 --level->tiles[y][x].smell;
 
