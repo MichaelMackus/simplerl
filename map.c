@@ -13,6 +13,7 @@ Dungeon *create_dungeon()
         return NULL;
 
     dungeon->turn = 0;
+    dungeon->playerResting = 0;
 
     // allocate player
     Mob *player;

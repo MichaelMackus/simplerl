@@ -30,6 +30,7 @@ int decrease_depth(Dungeon *dungeon);
 void move_player(Mob *player, Coords coords, Level *level);
 void tick(Dungeon *dungeon);
 void tick_mob(Mob *mob, Level *level);
+int handle_input(Dungeon *dungeon);
 int gameloop(Dungeon *dungeon)
 {
     Level *level = dungeon->level;
@@ -40,11 +41,11 @@ int gameloop(Dungeon *dungeon)
     // iteration.
     level->tiles[player->coords.y][player->coords.x].smell = INITIAL_SMELL;
 
-    // cleanup dead mobs, heal player, spawn new mobs
-    tick(dungeon);
-
+    char ch = '.'; // do nothing
     // handle input
-    char ch = getch();
+    if (handle_input(dungeon))
+        ch = getch();
+
     switch (ch)
     {
         const Tile *t;
@@ -64,6 +65,10 @@ int gameloop(Dungeon *dungeon)
             break;
         case 'k':
             move_player(player, xy(player->coords.x, player->coords.y - 1), level);
+            break;
+
+        case 'R':
+            dungeon->playerResting = 1;
             break;
 
         case '>': // check for downstair
@@ -113,10 +118,8 @@ int gameloop(Dungeon *dungeon)
     if (player->hp <= 0)
         return GAME_DEATH;
 
-    // mob AI
-    for (int i = 0; i < MAX_MOBS; ++i)
-        if (level->mobs[i] != NULL)
-            tick_mob(level->mobs[i], level);
+    // cleanup dead mobs, heal player, spawn new mobs
+    tick(dungeon);
 
     // check for player death
     if (player->hp <= 0)
@@ -207,9 +210,15 @@ void tick(Dungeon *dungeon)
     Level *level = dungeon->level;
     Mob *player = level->player;
 
-    // spawn new mob every 10 turns
     if (dungeon->turn % 10 == 0)
+    {
+        // spawn new mob every 10 turns
         randomly_fill_mobs(level, 1, false);
+
+        // heal player every 10 turns
+        if (player->hp < player->maxHP)
+            player->hp += 1;
+    }
 
     // cleanup mobs
     for (int i = 0; i < MAX_MOBS; ++i)
@@ -226,9 +235,10 @@ void tick(Dungeon *dungeon)
         }
     }
 
-    // heal player every 10 turns
-    if (player->hp < player->maxHP && dungeon->turn % 10 == 0)
-        player->hp += 1;
+    // mob AI
+    for (int i = 0; i < MAX_MOBS; ++i)
+        if (level->mobs[i] != NULL)
+            tick_mob(level->mobs[i], level);
 
     ++dungeon->turn;
 }
@@ -277,6 +287,35 @@ int decrease_depth(Dungeon *dungeon)
 
     // place player on downstair
     place_on_tile(dungeon->player, TILE_STAIR_DOWN, dungeon->level);
+
+    return 1;
+}
+
+int handle_input(Dungeon *dungeon)
+{
+    Mob *player = dungeon->player;
+
+    if (player->hp >= player->maxHP)
+        dungeon->playerResting = 0;
+
+    if (dungeon->playerResting)
+    {
+        // if player can see any mobs, reset resting flag
+        Level *level = dungeon->level;
+        for (int i = 0; i < MAX_MOBS; ++i)
+            if (level->mobs[i] != NULL)
+            {
+                Mob *mob = level->mobs[i];
+                if (can_see(player, mob->coords, level->tiles))
+                {
+                    dungeon->playerResting = 0;
+
+                    return 1;
+                }
+            }
+
+        return 0;
+    }
 
     return 1;
 }
