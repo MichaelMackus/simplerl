@@ -1,7 +1,6 @@
 #include "game.h"
 #include "message.h"
 #include "random.h"
-#include <ncurses.h>
 #include <stdlib.h>
 #include <memory.h>
 
@@ -21,7 +20,7 @@ int init_level(Level *level, Mob *player)
     randomly_fill_tiles(level);
 
     // randomly populate *new* levels with max of MAX_MOBS / 2
-    randomly_fill_mobs(level, MAX_MOBS / 2, true);
+    randomly_fill_mobs(level, MAX_MOBS / 2, 1);
 
     // place player on upstair
     place_on_tile(player, TILE_STAIR_UP, level);
@@ -37,19 +36,16 @@ int decrease_depth(Dungeon *dungeon);
 void move_player(Mob *player, Coords coords, Level *level);
 void tick(Dungeon *dungeon);
 void tick_mob(Mob *mob, Level *level);
-int handle_input(Dungeon *dungeon);
 void cleanup(Level *level);
-int gameloop(Dungeon *dungeon)
+int gameloop(Dungeon *dungeon, char input)
 {
     Level *level = dungeon->level;
     Mob *player = dungeon->player;
 
-    char ch = '.'; // do nothing
-    // handle input
-    if (handle_input(dungeon))
-        ch = getch();
+    if (player->attrs.resting)
+        input = '.'; // do nothing
 
-    switch (ch)
+    switch (input)
     {
         const Tile *t;
         const Mob *m;
@@ -126,10 +122,11 @@ int gameloop(Dungeon *dungeon)
 
     // update seen tiles
     // TODO make more efficient
-    for (int y = 0; y < MAX_HEIGHT; ++y)
-        for (int x = 0; x < MAX_WIDTH; ++x)
-            if (can_see(player, xy(x, y), level->tiles))
-                level->tiles[y][x].seen = 1;
+    if (!dungeon->player->attrs.resting)
+        for (int y = 0; y < MAX_HEIGHT; ++y)
+            for (int x = 0; x < MAX_WIDTH; ++x)
+                if (can_see(player, xy(x, y), level->tiles))
+                    level->tiles[y][x].seen = 1;
 
     return GAME_PLAYING;
 }
@@ -225,8 +222,7 @@ void reward_exp(Mob *player, Mob *mob)
         return;
 
     // level up condition
-    // TODO this is getting triggered on 0 exp sometimes
-    if (player->attrs.exp % 1000 == 0)
+    if (player->attrs.exp / 1000 > (player->attrs.level - 1))
     {
         ++player->attrs.level;
         // TODO figure out better stat system
@@ -251,20 +247,20 @@ void tick(Dungeon *dungeon)
                     level->tiles[y][x].smell > 0)
                 --level->tiles[y][x].smell;
 
+    // mob AI
+    for (int i = 0; i < MAX_MOBS; ++i)
+        if (level->mobs[i] != NULL)
+            tick_mob(level->mobs[i], level);
+
     if (dungeon->turn % 10 == 0)
     {
         // spawn new mob every 10 turns
-        randomly_fill_mobs(level, 1, false);
+        randomly_fill_mobs(level, 1, 0);
 
         // heal player every 10 turns
         if (player->hp < player->maxHP)
             player->hp += 1;
     }
-
-    // mob AI
-    for (int i = 0; i < MAX_MOBS; ++i)
-        if (level->mobs[i] != NULL)
-            tick_mob(level->mobs[i], level);
 
     ++dungeon->turn;
 }

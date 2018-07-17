@@ -9,12 +9,15 @@
 #define GAME_ERROR 5
 
 #include "map.h"
-#include <stdint.h>
 
 // initialize random dungeon
 int init_level(Level *level, Mob *player);
 
 // return GAME constant
-int gameloop(Dungeon *dungeon);
+int gameloop(Dungeon *dungeon, char input);
+
+// does thing like autorest, and TODO automove
+// return 1 if we should grab input this turn
+int handle_input(Dungeon *dungeon);
 
 #endif

@@ -4,6 +4,7 @@
 #include "message.h"
 #include "random.h"
 
+#include <ncurses.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <memory.h>
@@ -33,13 +34,19 @@ int main()
         return ERROR_OOM;
 
     int result = GAME_PLAYING;
+    char input;
     while (result == GAME_PLAYING)
     {
         // render & update curses
         render(dungeon);
 
+        if (handle_input(dungeon))
+            input = getch();
+        else
+            input = '.';
+
         // trigger gameloop
-        result = gameloop(dungeon);
+        result = gameloop(dungeon, input);
     }
 
     // de-initialize curses
