@@ -11,6 +11,15 @@ Coords xy(int x, int y)
     return c;
 }
 
+Direction direction(int xdir, int ydir)
+{
+    Direction dir;
+    dir.xdir = xdir;
+    dir.ydir = ydir;
+
+    return dir;
+}
+
 int pathfind(const Coords start, const Coords end, const Tile **tiles, int **walked, int **path);
 int **create_walked(int **previous);
 void free_walked(int **walked);

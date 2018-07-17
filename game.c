@@ -34,6 +34,7 @@ int init_level(Level *level, Mob *player)
 int increase_depth(Dungeon *dungeon);
 int decrease_depth(Dungeon *dungeon);
 void move_player(Mob *player, Coords coords, Level *level);
+void run_player(Mob *player, Direction dir, Level *level);
 void tick(Dungeon *dungeon);
 void tick_mobs(Level *level);
 void cleanup(Level *level);
@@ -42,7 +43,7 @@ int gameloop(Dungeon *dungeon, char input)
     Level *level = dungeon->level;
     Mob *player = dungeon->player;
 
-    if (player->attrs.resting)
+    if (is_resting(player) || is_running(player))
         input = '.'; // do nothing
 
     switch (input)
@@ -64,6 +65,19 @@ int gameloop(Dungeon *dungeon, char input)
             break;
         case 'k':
             move_player(player, xy(player->coords.x, player->coords.y - 1), level);
+            break;
+
+        case 'H':
+            run_player(player, direction(-1, 0), level);
+            break;
+        case 'L':
+            run_player(player, direction(1, 0), level);
+            break;
+        case 'J':
+            run_player(player, direction(0, 1), level);
+            break;
+        case 'K':
+            run_player(player, direction(0, -1), level);
             break;
 
         case 'R':
@@ -128,7 +142,7 @@ int gameloop(Dungeon *dungeon, char input)
 
     // update seen tiles
     // TODO make more efficient
-    if (!dungeon->player->attrs.resting)
+    if (!is_resting(player))
         for (int y = 0; y < MAX_HEIGHT; ++y)
             for (int x = 0; x < MAX_WIDTH; ++x)
                 if (can_see(player->coords, xy(x, y), level->tiles))
@@ -169,6 +183,12 @@ void move_player(Mob *player, Coords coords, Level *level)
     else
         // movement - set the smell of the player again
         taint(player->coords, level);
+}
+
+void run_player(Mob *player, Direction dir, Level *level)
+{
+    player->attrs.running = dir;
+    move_player(player, xy(player->coords.x + dir.xdir, player->coords.y + dir.ydir), level);
 }
 
 // mob AI & spawning
@@ -395,27 +415,47 @@ int decrease_depth(Dungeon *dungeon)
 int handle_input(Dungeon *dungeon)
 {
     Mob *player = dungeon->player;
+    Level *level = dungeon->level;
 
-    if (player->hp >= player->maxHP)
-        dungeon->player->attrs.resting = 0;
-
-    if (dungeon->player->attrs.resting)
+    if (is_resting(player))
     {
+        if (player->hp >= player->maxHP)
+            dungeon->player->attrs.resting = 0;
+
         // if player can see any mobs, reset resting flag
-        Level *level = dungeon->level;
         for (int i = 0; i < MAX_MOBS; ++i)
-            if (level->mobs[i] != NULL)
-            {
-                Mob *mob = level->mobs[i];
-                if (can_see(player->coords, mob->coords, level->tiles))
-                {
+            if (level->mobs[i] != NULL &&
+                can_see(player->coords, level->mobs[i]->coords, level->tiles))
                     dungeon->player->attrs.resting = 0;
 
-                    return 1;
-                }
-            }
+        // if we're still resting, don't handle input
+        if (is_resting(player))
+            return 0;
+    }
 
-        return 0;
+    if (is_running(player))
+    {
+        Direction dir = player->attrs.running;
+        Coords target = xy(player->coords.x + dir.xdir, player->coords.y + dir.ydir);
+        Tile *tile = get_tile(level, target);
+
+        // if player can see any mobs, reset running flag
+        for (int i = 0; i < MAX_MOBS; ++i)
+            if (level->mobs[i] != NULL &&
+                    can_see(player->coords, level->mobs[i]->coords, level->tiles))
+                dungeon->player->attrs.running = direction(0, 0);
+
+        if (tile == NULL || !is_passable(*tile) ||
+                get_enemy(level, target) != NULL)
+            player->attrs.running = direction(0, 0);
+
+        // if we're still running, move the player and don't handle input
+        if (is_running(player))
+        {
+            move_player(player, target, level);
+
+            return 0;
+        }
     }
 
     return 1;

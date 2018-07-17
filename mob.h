@@ -16,6 +16,7 @@
 
 typedef struct {
     int resting; // boolean
+    Direction running;
     int exp;
     int level;
 } PlayerAttributes;
@@ -43,5 +44,10 @@ int attack(Mob *attacker, Mob *target);
 
 // insert mob into mobs list
 void insert_mob(Mob *mob, Mob **mobs);
+
+// helper functions to determine player status
+
+int is_resting(Mob *player);
+int is_running(Mob *player);
 
 #endif

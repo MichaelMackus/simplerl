@@ -115,3 +115,21 @@ void insert_mob(Mob *mob, Mob **mobs)
 
     mobs[mobIndex] = mob;
 }
+
+int is_resting(Mob *player)
+{
+    if (player == NULL || player->type != MOB_PLAYER)
+        return 0;
+
+    return player->attrs.resting;
+}
+
+int is_running(Mob *player)
+{
+    if (player == NULL || player->type != MOB_PLAYER)
+        return 0;
+
+    Direction runDir = player->attrs.running;
+
+    return runDir.xdir != 0 || runDir.ydir != 0;
+}
