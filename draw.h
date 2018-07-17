@@ -1,7 +1,7 @@
 #ifndef DRAW_H
 #define DRAW_H
 
-#include "map.h"
+#include "dungeon.h"
 
 // initialize our screen
 // returns 0 on success

@@ -1,8 +1,6 @@
 #include "draw.h"
 #include "game.h"
-#include "map.h"
 #include "message.h"
-#include "random.h"
 
 #include <ncurses.h>
 #include <stdio.h>

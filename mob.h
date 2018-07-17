@@ -11,7 +11,6 @@
 #define MOB_DEMON 5
 
 #include "item.h"
-#include "tile.h"
 #include "path.h"
 
 typedef struct {

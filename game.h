@@ -8,7 +8,7 @@
 #define GAME_OOM 4
 #define GAME_ERROR 5
 
-#include "map.h"
+#include "dungeon.h"
 
 // initialize random dungeon
 int init_level(Level *level, Mob *player);
