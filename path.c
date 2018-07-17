@@ -179,3 +179,58 @@ void free_path(const Coords **line)
     }
     free((Coords**) line);
 }
+
+int can_see(Coords from, Coords to, Tile **tiles)
+{
+    int ret = 0;
+
+    // only show 1 cavern at a time
+    if (tiles[from.y][from.x].type == TILE_CAVERN)
+    {
+        const Coords **line = get_line(to, from);
+        const Coords **current = line;
+        while (*current != NULL)
+        {
+            // if the line ends at the point we're looking at, we can see it!
+            if ((*current)->x == from.x && (*current)->y == from.y)
+            {
+                ret = 1; // success!
+
+                break;
+            }
+
+            // if the current coord blocks the view, we can't see
+            int type = tiles[(*current)->y][(*current)->x].type;
+            if (type == TILE_NONE || type == TILE_WALL_SIDE || type == TILE_WALL || type == TILE_CAVERN)
+                break;
+
+            ++current;
+        }
+        free_path(line);
+    }
+    else
+    {
+        const Coords **line = get_line(to, from);
+        const Coords **current = line;
+        while (*current != NULL)
+        {
+            // if the line ends at the point we're looking at, we can see it!
+            if ((*current)->x == from.x && (*current)->y == from.y)
+            {
+                ret = 1; // success!
+
+                break;
+            }
+
+            // if the current coord blocks the view, we can't see
+            int type = tiles[(*current)->y][(*current)->x].type;
+            if (type == TILE_NONE || type == TILE_WALL_SIDE || type == TILE_WALL || type == TILE_CAVERN)
+                break;
+
+            ++current;
+        }
+        free_path(line);
+    }
+
+    return ret;
+}

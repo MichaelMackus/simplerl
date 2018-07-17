@@ -23,4 +23,7 @@ const Coords **get_line(const Coords a, const Coords b);
 // free the result from get_line and find_path
 void free_path(const Coords **line);
 
+// simple lighting function to see if mob can see x and y
+int can_see(Coords from, Coords to, Tile **tiles);
+
 #endif

@@ -20,7 +20,7 @@ int init_level(Level *level, Mob *player)
     randomly_fill_tiles(level);
 
     // randomly populate *new* levels with max of MAX_MOBS / 2
-    randomly_fill_mobs(level, MAX_MOBS / 2, 1);
+    randomly_fill_mobs(level, MAX_MOBS / 2);
 
     // place player on upstair
     place_on_tile(player, TILE_STAIR_UP, level);
@@ -125,7 +125,7 @@ int gameloop(Dungeon *dungeon, char input)
     if (!dungeon->player->attrs.resting)
         for (int y = 0; y < MAX_HEIGHT; ++y)
             for (int x = 0; x < MAX_WIDTH; ++x)
-                if (can_see(player, xy(x, y), level->tiles))
+                if (can_see(player->coords, xy(x, y), level->tiles))
                     level->tiles[y][x].seen = 1;
 
     return GAME_PLAYING;
@@ -170,7 +170,7 @@ void tick_mob(Mob *mob, Level *level)
 {
     Mob *player = level->player;
 
-    if (can_see(mob, player->coords, level->tiles))
+    if (can_see(mob->coords, player->coords, level->tiles))
     {
         int dmg = -1;
 
@@ -254,8 +254,13 @@ void tick(Dungeon *dungeon)
 
     if (dungeon->turn % 10 == 0)
     {
-        // spawn new mob every 10 turns
-        randomly_fill_mobs(level, 1, 0);
+        // 50/50 chance of new mob every 10 turns
+        /*if (rand() % 2)
+        {
+            // TODO spawn new mob
+            Coords coords = random_passable_coords(level);
+            if (can_see(mob->coords, level->player->coords, level->tiles))
+        }*/
 
         // heal player every 10 turns
         if (player->hp < player->maxHP)
@@ -382,7 +387,7 @@ int handle_input(Dungeon *dungeon)
             if (level->mobs[i] != NULL)
             {
                 Mob *mob = level->mobs[i];
-                if (can_see(player, mob->coords, level->tiles))
+                if (can_see(player->coords, mob->coords, level->tiles))
                 {
                     dungeon->player->attrs.resting = 0;
 

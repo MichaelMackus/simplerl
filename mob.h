@@ -39,7 +39,4 @@ Mob *createMob(int depth);
 // return damage
 int attack(Mob *attacker, Mob *target);
 
-// simple lighting function to see if mob can see x and y
-int can_see(const Mob *mob, Coords coords, Tile **tiles);
-
 #endif

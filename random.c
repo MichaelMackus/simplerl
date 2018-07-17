@@ -91,7 +91,7 @@ void randomly_fill_tiles(Level *level)
     free(cells);
 }
 
-void randomly_fill_mobs(Level *level, int max, int nearPlayer)
+void randomly_fill_mobs(Level *level, int max)
 {
     Mob **mobs = level->mobs;
 
@@ -117,11 +117,12 @@ void randomly_fill_mobs(Level *level, int max, int nearPlayer)
         mob->coords.y = coords.y;
 
         // check if mob is near player
-        if (nearPlayer && can_see(mob, level->player->coords, level->tiles))
+        // TODO don't spawn if mob can see *or* smell
+        /*if (nearPlayer && can_see(mob, level->player->coords, level->tiles))
         {
             free(mob);
             continue;
-        }
+        }*/
 
         mobs[mobIndex] = mob;
     }
