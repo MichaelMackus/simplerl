@@ -85,6 +85,8 @@ int gameloop(Dungeon *dungeon, char input)
             if (item != NULL)
                 insert_item(item, &player->items);
 
+            break;
+
         case 'R':
             dungeon->player->attrs.resting = 1;
             break;
