@@ -4,7 +4,7 @@
 #include <stdlib.h>
 
 Mob *enemy(unsigned int hp, unsigned int minDamage, unsigned int maxDamage, char symbol);
-Mob *createMob(int depth, Coords coords)
+Mob *create_mob(int depth, Coords coords)
 {
     // difficulty ranges
     //

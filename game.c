@@ -208,7 +208,7 @@ void tick_mobs(Level *level)
                 can_smell(coords, level))
             coords = random_passable_coords(level);
 
-        Mob *mob = createMob(level->depth, coords);
+        Mob *mob = create_mob(level->depth, coords);
 
         if (mob == NULL)
             return;

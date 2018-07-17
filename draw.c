@@ -33,7 +33,7 @@ void render_mob(const Mob *mob);
 void render_messages();
 void render_level(Level *level, const Mob *player);
 void draw(const char drawBuffer[][MAX_WIDTH], const char prevDrawBuffer[][MAX_WIDTH]);
-void drawStatus(const Dungeon *dungeon);
+void draw_status(const Dungeon *dungeon);
 void render(const Dungeon *dungeon)
 {
     const Mob *player = dungeon->player;
@@ -62,7 +62,7 @@ void render(const Dungeon *dungeon)
     draw(drawBuffer, prevDrawBuffer);
 
     // draw status area & messages
-    drawStatus(dungeon);
+    draw_status(dungeon);
 }
 
 /*************/
@@ -110,7 +110,7 @@ void draw(const char drawBuffer[][MAX_WIDTH], const char prevDrawBuffer[][MAX_WI
 }
 
 // draw status
-void drawStatus(const Dungeon *dungeon)
+void draw_status(const Dungeon *dungeon)
 {
     // clear status area
     for (int y = 0; y < MAX_MESSAGES; ++y)
