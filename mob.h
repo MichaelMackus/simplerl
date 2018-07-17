@@ -8,6 +8,7 @@
 #define MOB_ENEMY  2
 #define MOB_DRAGON 3
 #define MOB_MIND_FLAYER 4
+#define MOB_DEMON 5
 
 #include "item.h"
 #include "tile.h"
