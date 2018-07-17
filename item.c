@@ -67,6 +67,18 @@ int insert_item(Item *item, Items *items)
     return 1;
 }
 
+Item *take_item(Items *items)
+{
+    if (items == NULL || items->count <= 0)
+        return NULL;
+
+    Item *item = items->content[items->count - 1];
+    items->content[items->count - 1] = NULL;
+    --items->count;
+
+    return item;
+}
+
 int copy_items(Items src, Items *target)
 {
     for (int i = 0; i < src.count; ++i)

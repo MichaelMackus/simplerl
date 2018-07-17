@@ -76,6 +76,15 @@ int gameloop(Dungeon *dungeon, char input)
             run_player(player, direction(0, -1), level);
             break;
 
+        case ',':
+        case 'g':
+            ;
+            // get top item from floor
+            Tile *tile = get_tile(level, player->coords);
+            Item *item = tile ? take_item(&tile->items) : NULL;
+            if (item != NULL)
+                insert_item(item, &player->items);
+
         case 'R':
             dungeon->player->attrs.resting = 1;
             break;

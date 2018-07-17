@@ -62,6 +62,9 @@ Items initialize_items();
 // insert item into variable-length list
 int insert_item(Item *item, Items *items);
 
+// take top item from list
+Item *take_item(Items *items);
+
 // copy item contents from one container to another
 int copy_items(Items src, Items *target);
 
