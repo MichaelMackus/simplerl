@@ -35,7 +35,7 @@ int increase_depth(Dungeon *dungeon);
 int decrease_depth(Dungeon *dungeon);
 void move_player(Mob *player, Coords coords, Level *level);
 void tick(Dungeon *dungeon);
-void tick_mob(Mob *mob, Level *level);
+void tick_mobs(Level *level);
 void cleanup(Level *level);
 int gameloop(Dungeon *dungeon, char input)
 {
@@ -112,12 +112,15 @@ int gameloop(Dungeon *dungeon, char input)
     // cleanup dead mobs
     cleanup(level);
 
-    // get a new level (in case we changed depth)
-    level = dungeon->level;
-
-    // heal player, spawn new mobs
-    // TODO move this before loop to prevent mobs jumping player?
+    // heal player, increase turn count, and decrement smell
     tick(dungeon);
+
+    // be a bit kind & handle mob AI only when *not* changing depth
+    if (level->depth == dungeon->level->depth)
+        tick_mobs(level);
+    else
+        // changed depth - get the new level
+        level = dungeon->level;
 
     // check for player death
     if (player->hp <= 0)
@@ -166,6 +169,25 @@ void move_player(Mob *player, Coords coords, Level *level)
     else
         // movement - set the smell of the player again
         taint(player->coords, level);
+}
+
+// mob AI & spawning
+// TODO add simple mob movement (instead of just sitting there)
+// TODO add simple sound AI (i.e. mob should be able to hear combat further than they can smell, and also remember that)
+void tick_mob(Mob *mob, Level *level);
+void tick_mobs(Level *level)
+{
+    for (int i = 0; i < MAX_MOBS; ++i)
+        if (level->mobs[i] != NULL)
+            tick_mob(level->mobs[i], level);
+
+    // 1/10 chance of new mob every turn
+    if (rand() % 10 == 0)
+    {
+        // TODO spawn new mob
+        //Coords coords = random_passable_coords(level);
+        //if (can_see(mob->coords, level->player->coords, level->tiles))
+    }
 }
 
 Coords smelliest(Coords coords, Level *level);
@@ -236,8 +258,6 @@ void reward_exp(Mob *player, Mob *mob)
     }
 }
 
-// TODO add simple mob movement (instead of just sitting there)
-// TODO add simple sound AI (i.e. mob should be able to hear combat further than they can smell, and also remember that)
 void tick(Dungeon *dungeon)
 {
     Level *level = dungeon->level;
@@ -250,21 +270,8 @@ void tick(Dungeon *dungeon)
                     level->tiles[y][x].smell > 0)
                 --level->tiles[y][x].smell;
 
-    // mob AI
-    for (int i = 0; i < MAX_MOBS; ++i)
-        if (level->mobs[i] != NULL)
-            tick_mob(level->mobs[i], level);
-
     if (dungeon->turn % 10 == 0)
     {
-        // 50/50 chance of new mob every 10 turns
-        /*if (rand() % 2)
-        {
-            // TODO spawn new mob
-            Coords coords = random_passable_coords(level);
-            if (can_see(mob->coords, level->player->coords, level->tiles))
-        }*/
-
         // heal player every 10 turns
         if (player->hp < player->maxHP)
             player->hp += 1;
@@ -330,6 +337,7 @@ void taint(const Coords playerCoords, Level *level)
 // change current depth to next level deep
 // if there is no next level, create one
 // return 0 on error
+// TODO should probably remove smells when changing depth
 int increase_depth(Dungeon *dungeon)
 {
     if (dungeon->level->depth == MAX_LEVEL)
@@ -361,6 +369,7 @@ int increase_depth(Dungeon *dungeon)
 
 // change current depth to previous level
 // return 0 on error
+// TODO should probably remove smells when changing depth
 int decrease_depth(Dungeon *dungeon)
 {
     if (dungeon->level->prev == NULL)
