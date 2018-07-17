@@ -43,7 +43,7 @@ Mob *createMob(int depth)
         m->type = MOB_MIND_FLAYER;
         // TODO drain effect
     }
-    else if (difficulty >= 15)
+    else //if (difficulty >= 14)
     {
         m = enemy(20, 10, 15, 'D'); // dragon
 
