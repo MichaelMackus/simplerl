@@ -314,8 +314,8 @@ void cleanup(Level *level)
             Mob *mob = level->mobs[i];
             if (mob->hp <= 0)
             {
-                free(mob);
                 // TODO transfer items to floor
+                free_mob(mob);
                 reward_exp(player, mob);
                 level->mobs[i] = NULL;
             }

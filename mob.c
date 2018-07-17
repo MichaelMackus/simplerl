@@ -18,7 +18,6 @@ Mob *create_mob(int depth, Coords coords)
 
     Mob *m;
 
-    // TODO need to scale difficulty more later (i.e. hobgoblins in later dungeon...)
     if (difficulty == 1)
         m = enemy(4, 1, 2, 'r'); // rat
     else if (difficulty == 2)
@@ -34,41 +33,41 @@ Mob *create_mob(int depth, Coords coords)
     else if (difficulty <= 11)
     {
         m = enemy(12, 7, 10, 'H'); // mind flayer
-
-        // OOM check
-        if (m == NULL)
-            return NULL;
-
         m->type = MOB_MIND_FLAYER;
         // TODO drain effect
     }
     else if (difficulty <= 15)
     {
         m = enemy(20, 10, 15, 'D'); // dragon
-
-        // OOM check
-        if (m == NULL)
-            return NULL;
-
         m->type = MOB_DRAGON;
         // TODO breath effects
     }
     else
     {
         m = enemy(30, 13, 17, '&'); // demon
-
-        // OOM check
-        if (m == NULL)
-            return NULL;
-
         m->type = MOB_DEMON;
         // TODO drain effects
     }
+
+    // OOM check
+    if (m == NULL)
+        return NULL;
+
+    // give mob some gold and a weapon
+    insert_item(create_item(depth, ITEM_GOLD), &m->items);
+    insert_item(create_item(depth, ITEM_WEAPON), &m->items);
 
     m->difficulty = difficulty;
     m->coords = coords;
 
     return m;
+}
+
+// free mob & items
+void free_mob(Mob *mob)
+{
+    free_items(mob->items);
+    free(mob);
 }
 
 // try to attack x, y

@@ -36,6 +36,9 @@ typedef struct {
 // return a random mob for the specified dungeon depth
 Mob *create_mob(int depth, Coords coords);
 
+// free mob & items
+void free_mob(Mob *mob);
+
 // try to attack x, y
 // if no mob found at x, y do nothing
 // return damage

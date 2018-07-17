@@ -57,6 +57,9 @@ Item *create_item(int depth, int type);
 // initialize our item list
 Items initialize_items();
 
+// free our item list
+void free_items(Items items);
+
 // insert item into variable-length list
 int insert_item(Item *item, Items *items);
 

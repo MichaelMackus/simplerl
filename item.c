@@ -50,6 +50,15 @@ int insert_item(Item *item, Items *items)
     return 1;
 }
 
+void free_items(Items items)
+{
+    if (items.content != NULL)
+        for (int i = 0; i < items.count; ++i)
+            if (items.content[i] != NULL)
+                free(items.content[i]);
+    free(items.content);
+}
+
 
 // type-specific item generators
 
