@@ -1,6 +1,7 @@
 #ifndef MOB_H
 #define MOB_H
 
+#define MAX_MOBS   20
 #define MAX_PLAYER_LEVEL 10
 
 #define MOB_PLAYER 1
@@ -32,11 +33,14 @@ typedef struct {
 } Mob;
 
 // return a random mob for the specified dungeon depth
-Mob *createMob(int depth);
+Mob *createMob(int depth, Coords coords);
 
 // try to attack x, y
 // if no mob found at x, y do nothing
 // return damage
 int attack(Mob *attacker, Mob *target);
+
+// insert mob into mobs list
+void insert_mob(Mob *mob, Mob **mobs);
 
 #endif

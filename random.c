@@ -99,32 +99,13 @@ void randomly_fill_mobs(Level *level, int max)
     int amount = rand() % (max + 1);
     for (int i = 0; i < amount; ++i)
     {
-        // seek to available mob index
-        while (mobs[mobIndex] != NULL)
-        {
-            ++mobIndex;
-            if (mobIndex >= MAX_MOBS)
-                return; // out of range!
-        }
-
-        Mob *mob = createMob(level->depth);
+        Coords coords = random_passable_coords(level);
+        Mob *mob = createMob(level->depth, coords);
 
         if (mob == NULL)
             return;
 
-        Coords coords = random_passable_coords(level);
-        mob->coords.x = coords.x;
-        mob->coords.y = coords.y;
-
-        // check if mob is near player
-        // TODO don't spawn if mob can see *or* smell
-        /*if (nearPlayer && can_see(mob, level->player->coords, level->tiles))
-        {
-            free(mob);
-            continue;
-        }*/
-
-        mobs[mobIndex] = mob;
+        insert_mob(mob, mobs);
     }
 }
 

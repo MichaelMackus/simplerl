@@ -3,7 +3,7 @@
 #include <stdlib.h>
 
 Mob *enemy(unsigned int hp, unsigned int minDamage, unsigned int maxDamage, char symbol);
-Mob *createMob(int depth)
+Mob *createMob(int depth, Coords coords)
 {
     // difficulty ranges
     //
@@ -56,6 +56,7 @@ Mob *createMob(int depth)
     }
 
     m->difficulty = difficulty;
+    m->coords = coords;
 
     return m;
 }
@@ -90,4 +91,18 @@ Mob *enemy(unsigned int hp, unsigned int minDamage, unsigned int maxDamage, char
     m->items = NULL;
 
     return m;
+}
+
+void insert_mob(Mob *mob, Mob **mobs)
+{
+    // seek to available mob index
+    int mobIndex = 0;
+    while (mobs[mobIndex] != NULL)
+    {
+        ++mobIndex;
+        if (mobIndex >= MAX_MOBS)
+            return; // out of range!
+    }
+
+    mobs[mobIndex] = mob;
 }

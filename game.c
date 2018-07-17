@@ -175,6 +175,8 @@ void move_player(Mob *player, Coords coords, Level *level)
 // TODO add simple mob movement (instead of just sitting there)
 // TODO add simple sound AI (i.e. mob should be able to hear combat further than they can smell, and also remember that)
 void tick_mob(Mob *mob, Level *level);
+Coords smelliest(Coords coords, Level *level);
+int can_smell(Coords coords, Level *level);
 void tick_mobs(Level *level)
 {
     for (int i = 0; i < MAX_MOBS; ++i)
@@ -184,13 +186,21 @@ void tick_mobs(Level *level)
     // 1/10 chance of new mob every turn
     if (rand() % 10 == 0)
     {
-        // TODO spawn new mob
-        //Coords coords = random_passable_coords(level);
-        //if (can_see(mob->coords, level->player->coords, level->tiles))
+        // get random coordinates for new mob, must not be near player
+        Coords coords = random_passable_coords(level);
+        while (can_see(coords, level->player->coords, level->tiles) ||
+                can_smell(coords, level))
+            coords = random_passable_coords(level);
+
+        Mob *mob = createMob(level->depth, coords);
+
+        if (mob == NULL)
+            return;
+
+        insert_mob(mob, level->mobs);
     }
 }
 
-Coords smelliest(Coords coords, Level *level);
 void tick_mob(Mob *mob, Level *level)
 {
     Mob *player = level->player;
@@ -227,11 +237,9 @@ void tick_mob(Mob *mob, Level *level)
     else
     {
         // if mob can't see, they can still smell the player (thanks NetHack!)
-        Coords coords = smelliest(mob->coords, level);
-        const Tile *tile = get_tile(level, coords);
-        if (tile != NULL && is_passable(*tile) &&
-                !(coords.x == mob->coords.x && coords.y == mob->coords.y))
+        if (can_smell(mob->coords, level))
         {
+            Coords coords = smelliest(mob->coords, level);
             move_or_attack(mob, coords, level);
         }
     }
@@ -461,4 +469,27 @@ Coords smelliest(Coords coords, Level *level)
     }
 
     return smelliest;
+}
+
+int can_smell(Coords coords, Level *level)
+{
+    Tile *tile;
+
+    tile = get_tile(level, xy(coords.x + 1, coords.y));
+    if (tile != NULL && is_passable(*tile) && tile->smell > 0)
+        return 1;
+
+    tile = get_tile(level, xy(coords.x - 1, coords.y));
+    if (tile != NULL && is_passable(*tile) && tile->smell > 0)
+        return 1;
+
+    tile = get_tile(level, xy(coords.x, coords.y + 1));
+    if (tile != NULL && is_passable(*tile) && tile->smell > 0)
+        return 1;
+
+    tile = get_tile(level, xy(coords.x, coords.y - 1));
+    if (tile != NULL && is_passable(*tile) && tile->smell > 0)
+        return 1;
+
+    return 0;
 }
