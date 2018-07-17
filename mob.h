@@ -26,7 +26,7 @@ typedef struct {
     unsigned int minDamage, maxDamage;
     int type;
     char symbol;
-    Item *items;
+    Items items;
     union {
         PlayerAttributes attrs;
         int difficulty;

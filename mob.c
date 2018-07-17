@@ -97,7 +97,7 @@ Mob *enemy(unsigned int hp, unsigned int minDamage, unsigned int maxDamage, char
     m->maxDamage = maxDamage;
     m->symbol = symbol;
     m->type = MOB_ENEMY;
-    m->items = NULL;
+    m->items = initialize_items();
 
     return m;
 }

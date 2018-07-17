@@ -16,7 +16,7 @@
 #include "item.h"
 
 typedef struct {
-    Item *items;
+    Items items;
     int type; // one of TILE consts
     int seen; // seen by player?
     int smell; // when player passes onto tile, set this to INITIAL_SMELL and decrement each turn

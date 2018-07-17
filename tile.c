@@ -41,7 +41,7 @@ Tile create_tile(int tileType)
     t.type = tileType;
     t.seen = 0;
     t.smell = 0;
-    t.items = NULL;
+    t.items = initialize_items();
 
     return t;
 }

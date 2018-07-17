@@ -1,6 +1,8 @@
 #ifndef ITEM_H
 #define ITEM_H
 
+#include <stdlib.h>
+
 #define ITEM_GOLD   0
 #define ITEM_FOOD   1
 #define ITEM_POTION 2
@@ -19,12 +21,21 @@ typedef struct {
     const char *name; // real (identified) name
 } Item;
 
+typedef struct {
+    size_t count;
+    size_t size;
+    Item **content;
+} Items;
+
 // return a random item for the specified dungeon depth
-Item *createItem(int depth, int type, const char **unknownItems, const char **knownItems);
+Item *create_item(int depth, int type, const char **unknownItems, const char **knownItems);
+
+// initialize our item list
+Items initialize_items();
 
 // insert item into variable-length list
-void insert_item(Item *item, Item **items);
+int insert_item(Item *item, Items *items);
 
-// TODO need to sort items by type
+// TODO need to sort items by type for inventory management
 
 #endif
