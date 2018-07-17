@@ -97,7 +97,7 @@ void randomly_fill_corridors(Level *level, const Box **cells, int startIndex, in
 int branches(const Box *cell, const Level *level);
 void randomly_fill_tiles(Level *level)
 {
-    int maxCells = (rand() % MAX_CELLS) + MIN_CELLS;
+    int maxCells = generate(MIN_CELLS, MAX_CELLS - 1);
     int cellCount = 0;
     int i = 0;
 
@@ -121,9 +121,9 @@ void randomly_fill_tiles(Level *level)
     randomly_fill_corridors(level, (const Box**) cells, 0, cellCount);
 
     // randomly place upstairs
-    i = rand() % cellCount;
+    i = generate(0, cellCount - 1);
     while (branches(cells[i], level) == 0) // ensure we pick valid cell for upstairs
-        i = rand() % cellCount;
+        i = generate(0, cellCount - 1);
     Coords up;
     up.x = cells[i]->coords.x + cells[i]->dimensions.w/2;
     up.y = cells[i]->coords.y + cells[i]->dimensions.h/2;
@@ -136,7 +136,7 @@ void randomly_fill_tiles(Level *level)
     Coords down;
     while (i == j || branches(cells[j], level) == 0) // ensure we pick valid cell for downstairs
     {
-        j = rand() % cellCount;
+        j = generate(0, cellCount - 1);
         down.x = cells[j]->coords.x + cells[j]->dimensions.w/2;
         down.y = cells[j]->coords.y + cells[j]->dimensions.h/2;
 
@@ -164,7 +164,7 @@ void randomly_fill_mobs(Level *level, int max)
     Mob **mobs = level->mobs;
 
     int mobIndex = 0;
-    int amount = rand() % (max + 1);
+    int amount = generate(0, max);
     for (int i = 0; i < amount; ++i)
     {
         Coords coords = random_passable_coords(level);
@@ -229,7 +229,7 @@ void randomly_fill_corridors(Level *level, const Box **cells, int startIndex, in
     if (maxNeighbors > 0)
     {
         // pick a random neighbor with at most 1 branch
-        int neighborIndex = rand() % maxNeighbors;
+        int neighborIndex = generate(0, maxNeighbors - 1);
 
         // draw line to neighbor
         draw_line(cells[startIndex], cells[neighborIndex], level);
@@ -336,8 +336,8 @@ void draw_line(const Box *start, const Box *target, Level *level)
 Coords random_coords(Level *level)
 {
     Coords coords;
-    coords.x = rand() % MAX_WIDTH;
-    coords.y = rand() % MAX_HEIGHT;
+    coords.x = generate(0, MAX_WIDTH - 1);
+    coords.y = generate(0, MAX_HEIGHT - 1);
 
     return coords;
 }
@@ -472,7 +472,7 @@ Dimensions random_dimensions()
         { 8, 7 },
     };
 
-    int i = rand() % 15;
+    int i = generate(0, 14);
 
     Dimensions dimensions;
     dimensions.w = possibleCellDimensions[i][0];

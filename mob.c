@@ -1,5 +1,6 @@
 #include "mob.h"
 #include "path.h"
+#include "random.h"
 #include <stdlib.h>
 
 Mob *enemy(unsigned int hp, unsigned int minDamage, unsigned int maxDamage, char symbol);
@@ -9,11 +10,11 @@ Mob *createMob(int depth, Coords coords)
     //
     // level 1: 1 - 2
     // level 2: 2 - 4
-    // level 3: 3 - 5
-    // level 5: 5 - 11
-    // level 7: 7 - 13
-    // level 10: 10 - 19
-    int difficulty = (rand() % (depth+1)) + depth;
+    // level 3: 3 - 6
+    // level 5: 5 - 10
+    // level 7: 7 - 14
+    // level 10: 10 - 20
+    int difficulty = generate(depth, depth*2);
 
     Mob *m;
 
@@ -78,8 +79,7 @@ int attack(Mob *attacker, Mob *target)
         return 0;
 
     // calculate damage based on attacker's stats
-    // TODO add simple roll function
-    int damage = rand() % (attacker->maxDamage - attacker->minDamage + 1)  +  attacker->minDamage;
+    int damage = generate(attacker->minDamage, attacker->maxDamage);
 
     target->hp -= damage;
 

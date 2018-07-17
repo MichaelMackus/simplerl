@@ -12,12 +12,19 @@
 #define ITEM_EFFECT_DAMAGE 3
 
 typedef struct {
-    int id; // unique item ID for identification & index purposes
     int type; // one of ITEM consts
     int effect; // one of ITEM_EFFECT consts (for potions/scrolls)
     unsigned int strength; // strength of EFFECT or amount of $
     const char *unknownName; // random (unidentified) name
     const char *name; // real (identified) name
 } Item;
+
+// return a random item for the specified dungeon depth
+Item *createItem(int depth, int type, const char **unknownItems, const char **knownItems);
+
+// insert item into variable-length list
+void insert_item(Item *item, Item **items);
+
+// TODO need to sort items by type
 
 #endif

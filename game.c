@@ -200,7 +200,7 @@ void tick_mobs(Level *level)
             tick_mob(level->mobs[i], level);
 
     // 1/10 chance of new mob every turn
-    if (rand() % 10 == 0)
+    if (generate(1, 10) == 10)
     {
         // get random coordinates for new mob, must not be near player
         Coords coords = random_passable_coords(level);
