@@ -1,6 +1,5 @@
 #include "game.h"
 #include "message.h"
-#include "random.h"
 #include <stdlib.h>
 #include <memory.h>
 
@@ -12,9 +11,6 @@ int init_level(Level *level, Mob *player)
         return 0;
 
     level->player = player;
-
-    // do this otherwise initial seed will always be the same
-    seed_random();
 
     // randomly generate map
     randomly_fill_tiles(level);
