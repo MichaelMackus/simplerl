@@ -112,6 +112,9 @@ int gameloop(Dungeon *dungeon, char input)
     // cleanup dead mobs
     cleanup(level);
 
+    // get a new level (in case we changed depth)
+    level = dungeon->level;
+
     // heal player, spawn new mobs
     // TODO move this before loop to prevent mobs jumping player?
     tick(dungeon);
