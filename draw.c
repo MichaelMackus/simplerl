@@ -137,6 +137,8 @@ void draw_status(const Dungeon *dungeon)
     addstr(status);
     sprintf(status, "Depth: %d\n", dungeon->level->depth);
     addstr(status);
+    sprintf(status, "Gold: %d\n", total_gold(dungeon->level->player->items));
+    addstr(status);
 
     // re-render messages
     for (int y = 0; y < MAX_MESSAGES; ++y)

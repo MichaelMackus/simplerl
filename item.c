@@ -18,6 +18,16 @@ char item_symbol(int itemType)
     }
 }
 
+int total_gold(Items items)
+{
+    int total = 0;
+    for (int i = 0; i < items.count; ++i)
+        if (items.content[i]->type == ITEM_GOLD)
+            total += items.content[i]->amount;
+
+    return total;
+}
+
 Item *generate_gold(int depth);
 Item *generate_weapon(int depth);
 Item *create_item(int depth, int type)

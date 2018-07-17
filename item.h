@@ -53,6 +53,9 @@ const char **knownItems;
 
 char item_symbol(int itemType);
 
+// calculate total amount of gold in inventory
+int total_gold(Items items);
+
 // return a random item for the specified dungeon depth
 Item *create_item(int depth, int type);
 
