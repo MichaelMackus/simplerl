@@ -145,14 +145,6 @@ int gameloop(Dungeon *dungeon, char input)
     if (player->hp <= 0)
         return GAME_DEATH;
 
-    // update seen tiles
-    // TODO make more efficient
-    if (!is_resting(player))
-        for (int y = 0; y < MAX_HEIGHT; ++y)
-            for (int x = 0; x < MAX_WIDTH; ++x)
-                if (can_see(player->coords, xy(x, y), level->tiles))
-                    level->tiles[y][x].seen = 1;
-
     return GAME_PLAYING;
 }
 
@@ -424,6 +416,14 @@ int handle_input(Dungeon *dungeon)
 {
     Mob *player = dungeon->player;
     Level *level = dungeon->level;
+
+    // update seen tiles (done here to update before first turn)
+    // TODO make more efficient
+    if (!is_resting(player))
+        for (int y = 0; y < MAX_HEIGHT; ++y)
+            for (int x = 0; x < MAX_WIDTH; ++x)
+                if (can_see(player->coords, xy(x, y), level->tiles))
+                    level->tiles[y][x].seen = 1;
 
     if (is_resting(player))
     {
