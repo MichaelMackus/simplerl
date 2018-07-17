@@ -51,17 +51,22 @@ typedef struct {
 const char **unknownItems;
 const char **knownItems;
 
+char item_symbol(int itemType);
+
 // return a random item for the specified dungeon depth
 Item *create_item(int depth, int type);
 
 // initialize our item list
 Items initialize_items();
 
-// free our item list
-void free_items(Items items);
-
 // insert item into variable-length list
 int insert_item(Item *item, Items *items);
+
+// copy item contents from one container to another
+int copy_items(Items src, Items *target);
+
+// free our item list
+void free_items(Items items);
 
 // TODO need to sort items by type for inventory management
 

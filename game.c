@@ -314,8 +314,13 @@ void cleanup(Level *level)
             Mob *mob = level->mobs[i];
             if (mob->hp <= 0)
             {
-                // TODO transfer items to floor
-                free_mob(mob);
+                // transfer items to floor
+                Tile *t = get_tile(level, mob->coords);
+                if (t != NULL) copy_items(mob->items, &t->items);
+                else free_items(mob->items);
+
+                // free allocated mob & reward exp
+                free(mob);
                 reward_exp(player, mob);
                 level->mobs[i] = NULL;
             }

@@ -63,13 +63,6 @@ Mob *create_mob(int depth, Coords coords)
     return m;
 }
 
-// free mob & items
-void free_mob(Mob *mob)
-{
-    free_items(mob->items);
-    free(mob);
-}
-
 // try to attack x, y
 // if no mob found at x, y do nothing
 int attack(Mob *attacker, Mob *target)

@@ -81,7 +81,14 @@ void render_level(Level *level, const Mob *player)
             // draw tile symbol if the player can see it
             if (can_see(player->coords, xy(x, y), level->tiles) ||
                     level->tiles[y][x].seen)
-                drawBuffer[y][x] = tile_symbol(level->tiles[y][x]);
+            {
+                Tile t = level->tiles[y][x];
+                if (t.items.count > 0)
+                    // draw top item
+                    drawBuffer[y][x] = item_symbol(t.items.content[t.items.count - 1]->type);
+                else
+                    drawBuffer[y][x] = tile_symbol(t);
+            }
             else
                 drawBuffer[y][x] = tile_symbol(create_tile(TILE_NONE));
         }

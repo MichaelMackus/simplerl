@@ -1,6 +1,23 @@
 #include "item.h"
 #include "random.h"
 
+char item_symbol(int itemType)
+{
+    switch (itemType)
+    {
+        case ITEM_WEAPON:
+            return ')';
+        case ITEM_GOLD:
+            return '$';
+        case ITEM_SCROLL:
+            return '?';
+        case ITEM_POTION:
+            return '!';
+        default:
+            return '{'; // something is obviously wrong
+    }
+}
+
 Item *generate_gold(int depth);
 Item *generate_weapon(int depth);
 Item *create_item(int depth, int type)
@@ -46,6 +63,15 @@ int insert_item(Item *item, Items *items)
 
     items->content[count] = item;
     ++items->count;
+
+    return 1;
+}
+
+int copy_items(Items src, Items *target)
+{
+    for (int i = 0; i < src.count; ++i)
+        if (!insert_item(src.content[i], target))
+            return 0;
 
     return 1;
 }
