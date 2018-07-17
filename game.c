@@ -279,8 +279,6 @@ void reward_exp(Mob *player, Mob *mob)
     {
         ++player->attrs.level;
         // TODO figure out better stat system
-        ++player->minDamage;
-        ++player->maxDamage;
         player->maxHP += 5;
         player->hp = player->maxHP;
     }
