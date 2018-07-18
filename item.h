@@ -63,13 +63,15 @@ Item *create_item(int depth, int type);
 Items initialize_items();
 
 // insert item into variable-length list
-int insert_item(Item *item, Items *items);
+// *NOTE*: this will free the item if it already exists
+int move_item(Item *item, Items *items);
 
 // take top item from list
 Item *take_item(Items *items);
 
 // copy item contents from one container to another
-int copy_items(Items src, Items *target);
+// *NOTE*: this will free the item(s) from src if they already exists
+int move_items(Items src, Items *target);
 
 // free our item list
 void free_items(Items items);

@@ -88,7 +88,7 @@ int gameloop(Dungeon *dungeon, char input)
             {
                 Item *item;
                 while ((item = take_item(&tile->items)) != NULL)
-                    insert_item(item, &player->items);
+                    move_item(item, &player->items);
             }
 
             break;
@@ -331,7 +331,7 @@ void cleanup(Dungeon *dungeon)
             {
                 // transfer items to floor
                 Tile *t = get_tile(level, mob->coords);
-                if (t != NULL) copy_items(mob->items, &t->items);
+                if (t != NULL) move_items(mob->items, &t->items);
                 else free_items(mob->items);
 
                 // add to killed mobs

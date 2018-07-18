@@ -52,7 +52,7 @@ Items initialize_items()
     return items;
 }
 
-int insert_item(Item *item, Items *items)
+int move_item(Item *item, Items *items)
 {
     if (item == NULL)
         return 0;
@@ -64,7 +64,9 @@ int insert_item(Item *item, Items *items)
     for (int i = 0; i < count; ++i)
         if (items->content[i]->name == item->name)
         {
+            free(item);
             ++items->content[i]->amount;
+
             return 1;
         }
 
@@ -97,10 +99,10 @@ Item *take_item(Items *items)
     return item;
 }
 
-int copy_items(Items src, Items *target)
+int move_items(Items src, Items *target)
 {
     for (int i = 0; i < src.count; ++i)
-        if (!insert_item(src.content[i], target))
+        if (!move_item(src.content[i], target))
             return 0;
 
     return 1;

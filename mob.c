@@ -54,8 +54,8 @@ Mob *create_mob(int depth, Coords coords)
         return NULL;
 
     // give mob some gold and a weapon
-    insert_item(create_item(depth, ITEM_GOLD), &m->items);
-    insert_item(create_item(depth, ITEM_WEAPON), &m->items);
+    move_item(create_item(depth, ITEM_GOLD), &m->items);
+    move_item(create_item(depth, ITEM_WEAPON), &m->items);
 
     m->difficulty = difficulty;
     m->coords = coords;
