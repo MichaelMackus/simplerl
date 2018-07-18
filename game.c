@@ -47,7 +47,7 @@ int gameloop(Dungeon *dungeon, char input)
         const Tile *t;
         const Mob *m;
 
-        case 'q':
+        case 'Q':
             return GAME_QUIT;
 
         case 'h':
