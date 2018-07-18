@@ -17,6 +17,9 @@ Dungeon *create_dungeon()
 
     dungeon->turn = 0;
 
+    // allocate killed list
+    dungeon->killed = initialize_mobs();
+
     // allocate player
     Mob *player;
     player = malloc(sizeof(Mob));

@@ -33,6 +33,12 @@ typedef struct {
     };
 } Mob;
 
+typedef struct {
+    size_t count;
+    size_t size;
+    Mob **content;
+} Mobs;
+
 // return a random mob for the specified dungeon depth
 Mob *create_mob(int depth, Coords coords);
 
@@ -43,6 +49,12 @@ int attack(Mob *attacker, Mob *target);
 
 // insert mob into mobs list
 void insert_mob(Mob *mob, Mob **mobs);
+
+// insert into killed mobs array
+int kill_mob(Mob *mob, Mobs *mobs);
+
+// allocate mobs list
+Mobs initialize_mobs();
 
 // helper functions to determine player status
 

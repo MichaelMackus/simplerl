@@ -108,6 +108,40 @@ void insert_mob(Mob *mob, Mob **mobs)
     mobs[mobIndex] = mob;
 }
 
+int kill_mob(Mob *mob, Mobs *mobs)
+{
+    if (mob == NULL)
+        return 1;
+
+    size_t count = mobs->count;
+    size_t size = mobs->size;
+
+    if (count >= size)
+    {
+        Mob **tmp = realloc(mobs->content, sizeof(Mob*) * MAX_MOBS);
+
+        if (tmp == NULL)
+            return 0;
+
+        mobs->size += MAX_MOBS;
+        mobs->content = tmp;
+    }
+
+    mobs->content[count] = mob;
+    ++mobs->count;
+
+    return 1;
+}
+
+Mobs initialize_mobs()
+{
+    Mobs mobs;
+    mobs.size = mobs.count = 0;
+    mobs.content = NULL;
+
+    return mobs;
+}
+
 int is_resting(Mob *player)
 {
     if (player == NULL || player->type != MOB_PLAYER)

@@ -12,7 +12,7 @@
 typedef struct {
     Mob *player;
     Level *level;
-    Mob **killed; // killed monsters (for scorekeeping)
+    Mobs killed; // killed monsters (for scorekeeping)
     int turn; // turn number
 } Dungeon;
 

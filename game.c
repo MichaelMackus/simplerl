@@ -33,7 +33,7 @@ void move_player(Mob *player, Coords coords, Level *level);
 void run_player(Mob *player, Direction dir, Level *level);
 void tick(Dungeon *dungeon);
 void tick_mobs(Level *level);
-void cleanup(Level *level);
+void cleanup(Dungeon *dungeon);
 int gameloop(Dungeon *dungeon, char input)
 {
     Level *level = dungeon->level;
@@ -131,7 +131,7 @@ int gameloop(Dungeon *dungeon, char input)
         return GAME_DEATH;
 
     // cleanup dead mobs
-    cleanup(level);
+    cleanup(dungeon);
 
     // heal player, increase turn count, and decrement smell
     tick(dungeon);
@@ -306,8 +306,9 @@ void tick(Dungeon *dungeon)
 }
 
 // cleanup dead mobs
-void cleanup(Level *level)
+void cleanup(Dungeon *dungeon)
 {
+    Level *level = dungeon->level;
     Mob *player = level->player;
 
     for (int i = 0; i < MAX_MOBS; ++i)
@@ -322,8 +323,10 @@ void cleanup(Level *level)
                 if (t != NULL) copy_items(mob->items, &t->items);
                 else free_items(mob->items);
 
-                // free allocated mob & reward exp
-                free(mob);
+                // add to killed mobs
+                kill_mob(mob, &dungeon->killed);
+
+                // clear mob in level & reward exp
                 reward_exp(player, mob);
                 level->mobs[i] = NULL;
             }
