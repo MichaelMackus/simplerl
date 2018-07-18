@@ -79,11 +79,14 @@ int gameloop(Dungeon *dungeon, char input)
         case ',':
         case 'g':
             ;
-            // get top item from floor
+            // get all items from floor
             Tile *tile = get_tile(level, player->coords);
-            Item *item = tile ? take_item(&tile->items) : NULL;
-            if (item != NULL)
-                insert_item(item, &player->items);
+            if (tile != NULL)
+            {
+                Item *item;
+                while ((item = take_item(&tile->items)) != NULL)
+                    insert_item(item, &player->items);
+            }
 
             break;
 
