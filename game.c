@@ -42,6 +42,9 @@ int gameloop(Dungeon *dungeon, char input)
     if (is_resting(player) || is_running(player))
         input = '.'; // do nothing
 
+    // close inventory menu each turn, TODO inventory management
+    dungeon->player->attrs.inMenu = 0;
+
     switch (input)
     {
         const Tile *t;
@@ -88,6 +91,11 @@ int gameloop(Dungeon *dungeon, char input)
                     insert_item(item, &player->items);
             }
 
+            break;
+
+        case 'i':
+            // open inventory menu
+            dungeon->player->attrs.inMenu = 1;
             break;
 
         case 'R':

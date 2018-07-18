@@ -15,6 +15,7 @@
 
 typedef struct {
     int resting; // boolean
+    int inMenu; // boolean (true if looking at inventory)
     Direction running;
     int exp;
     int level;

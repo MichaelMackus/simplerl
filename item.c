@@ -60,6 +60,8 @@ int insert_item(Item *item, Items *items)
     size_t count = items ? items->count : 0;
     size_t size = items ? items->size : 0;
 
+    // TODO search for item in list & increase count of item to simplify inventory management
+
     if (size <= count)
     {
         Item **tmp = realloc(items->content, sizeof(Item*) * (size + ITEM_SIZE_INCREMENT));
@@ -225,6 +227,7 @@ Item *generate_weapon(int depth)
 
     // weapon defaults
     item->type = ITEM_WEAPON;
+    item->amount = 1;
     item->damage.type = DAMAGE_SLASH;
     item->damage.min = 1;
     item->damage.twoHanded = 0;

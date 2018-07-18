@@ -33,10 +33,10 @@ typedef struct {
 
 typedef struct {
     int type; // one of ITEM consts
+    int amount; // amount of items
     const char *name; // real (identified) name
     const char *unknownName; // random (unidentified) name
     union {
-        int amount;
         ItemAttributes attributes;
         WeaponAttributes damage;
     };

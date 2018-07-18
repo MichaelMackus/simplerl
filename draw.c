@@ -31,6 +31,7 @@ char drawBuffer[MAX_HEIGHT][MAX_WIDTH];
 
 void render_mob(const Mob *mob);
 void render_messages();
+void render_message(const char *message, int y, int x); // TODO use this for other messages
 void render_level(Level *level, const Mob *player);
 void draw(const char drawBuffer[][MAX_WIDTH], const char prevDrawBuffer[][MAX_WIDTH]);
 void draw_status(const Dungeon *dungeon);
@@ -58,7 +59,35 @@ void render(const Dungeon *dungeon)
     // render player last (should always be seen)
     render_mob(dungeon->player);
 
-    // draw difference from old map & new map, and messages
+    if (player->attrs.inMenu)
+    {
+        if (player->items.count)
+        {
+            // render inventory, TODO paginate
+            char *buffer = malloc(sizeof(char) * (MAX_WIDTH + 1)); // width + 1 for null byte
+            int y = 0;
+            if (buffer != NULL)
+                for (int i = 0; i < player->items.count; ++i)
+                {
+                    Item *item = player->items.content[i];
+
+                    if (item->type == ITEM_GOLD)
+                        continue;
+
+                    if (item->amount == 1)
+                        snprintf(buffer, MAX_WIDTH + 1, "%d %s", item->amount, item->name);
+                    else // pluralize
+                        snprintf(buffer, MAX_WIDTH + 1, "%d %ss", item->amount, item->name);
+
+                    render_message((const char*) buffer, y++, 0);
+                }
+            free(buffer);
+        }
+        else
+            render_message("No items in inventory.", 0, 0);
+    }
+
+    // draw difference from old map & new map
     draw(drawBuffer, prevDrawBuffer);
 
     // draw status area & messages
@@ -98,6 +127,12 @@ void render_level(Level *level, const Mob *player)
 void render_mob(const Mob *mob)
 {
     drawBuffer[mob->coords.y][mob->coords.x] = mob->symbol;
+}
+
+void render_message(const char *message, int y, int x)
+{
+    for (int i = 0; i < strlen(message); ++i)
+        drawBuffer[y][x + i] = message[i];
 }
 
 // only draw difference in map to curses window
