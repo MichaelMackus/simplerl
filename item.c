@@ -60,7 +60,13 @@ int insert_item(Item *item, Items *items)
     size_t count = items ? items->count : 0;
     size_t size = items ? items->size : 0;
 
-    // TODO search for item in list & increase count of item to simplify inventory management
+    // search for item in list & increase count of item to simplify inventory management
+    for (int i = 0; i < count; ++i)
+        if (items->content[i]->name == item->name)
+        {
+            ++items->content[i]->amount;
+            return 1;
+        }
 
     if (size <= count)
     {
