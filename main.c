@@ -63,5 +63,16 @@ int main()
     else
         printf("Undefined game loop result...\n");
 
+    printf("Do you want to see the mobs you killed? [Y/n] ");
+    input = getchar();
+
+    if (input == 'y' || input == 'Y' || input == '\n')
+        print_mob_list(dungeon->killed);
+
+    printf("You reached dungeon level %d. Your player was level %d and collected %d gold.\n\n",
+            max_depth(dungeon),
+            dungeon->player->attrs.level,
+            total_gold(dungeon->player->items));
+
     return 0;
 }

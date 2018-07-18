@@ -151,3 +151,37 @@ void draw_status(const Dungeon *dungeon)
 
     refresh();
 }
+
+void print_mob_list(Mobs mobs)
+{
+    // mob counts, indexed by the ASCII code of the mob symbol for now
+    int maxCount = (int) 'z' + 1;
+    int count[maxCount];
+
+    // reset the array to all zeros
+    memset(count, 0, sizeof(int)*maxCount);
+
+    for (int i = 0; i < mobs.count; ++i)
+    {
+        Mob *mob = mobs.content[i];
+        if (mob == NULL)
+            continue;
+
+        // increment count based on ascii code of mob
+        int code = (int) mob->symbol;
+        ++count[code];
+    }
+
+    printf("\n");
+    for (int i = 0; i < maxCount; ++i)
+        if (count[i] > 0)
+        {
+            const char *name = mob_name((char) i);
+            if (count[i] == 1)
+                printf("%d %s\n", count[i], name);
+            else
+                // simple plural check
+                printf("%d %ss\n", count[i], name);
+        }
+    printf("\n");
+}

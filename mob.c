@@ -159,3 +159,31 @@ int is_running(Mob *player)
 
     return runDir.xdir != 0 || runDir.ydir != 0;
 }
+
+const char* mob_name(char symbol)
+{
+    switch (symbol)
+    {
+        case 'r':
+            return "rat";
+        case 'k':
+            return "kobold";
+        case 'g':
+            return "goblin";
+        case 'o':
+            return "orc";
+        case 'O':
+            return "ogre";
+        case 'd':
+            return "drake";
+        case 'H':
+            return "mind flayer";
+        case 'D':
+            return "dragon";
+        case '&':
+            return "demon";
+
+        default:
+            return "unknown";
+    }
+}

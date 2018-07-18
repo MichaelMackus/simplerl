@@ -56,6 +56,9 @@ int kill_mob(Mob *mob, Mobs *mobs);
 // allocate mobs list
 Mobs initialize_mobs();
 
+// return mob name for symbol
+const char* mob_name(char symbol);
+
 // helper functions to determine player status
 
 int is_resting(Mob *player);

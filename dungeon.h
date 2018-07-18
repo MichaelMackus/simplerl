@@ -21,6 +21,9 @@ typedef struct {
 // dungeon members
 Dungeon *create_dungeon();
 
+// get max dungeon depth
+int max_depth(Dungeon *dungeon);
+
 // return random coordinates that are passable and
 // do not have a mob
 Coords random_passable_coords(Level *level);

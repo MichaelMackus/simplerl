@@ -61,6 +61,15 @@ Dungeon *create_dungeon()
     return dungeon;
 }
 
+int max_depth(Dungeon *dungeon)
+{
+    Level *cur = dungeon->level;
+    while (cur->next)
+        ++cur;
+
+    return cur->depth;
+}
+
 /*************/
 /**         **/
 /** private **/
