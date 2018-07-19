@@ -5,8 +5,9 @@
 
 #define ITEM_GOLD   0
 #define ITEM_WEAPON 1
-#define ITEM_POTION 2
-#define ITEM_SCROLL 3
+#define ITEM_ARMOR  2
+#define ITEM_POTION 3
+#define ITEM_SCROLL 4
 
 #define DAMAGE_BLUNT 0
 #define DAMAGE_SLASH 1
@@ -64,14 +65,14 @@ Item *create_item(int depth, int type);
 Items initialize_items();
 
 // insert item into variable-length list
-// *NOTE*: this will free the item if it already exists
+// *NOTE*: this will free the item if it already exists, hence "move"
 int move_item(Item *item, Items *items);
 
 // take top item from list
 Item *take_item(Items *items);
 
 // copy item contents from one container to another
-// *NOTE*: this will free the item(s) from src if they already exists
+// *NOTE*: this will free the item(s) from src if they already exists, hence "move"
 int move_items(Items src, Items *target);
 
 // free our item list
