@@ -70,8 +70,16 @@ int attack(Mob *attacker, Mob *target)
     if (attacker == NULL || target == NULL)
         return 0;
 
-    // calculate damage based on attacker's stats
-    int damage = generate(attacker->minDamage, attacker->maxDamage);
+    int damage;
+    if (attacker->equipment.weapon != NULL)
+    {
+        // calculate based on equipped item
+        damage = generate(
+                attacker->equipment.weapon->damage.min,
+                attacker->equipment.weapon->damage.max);
+    }
+    else
+        damage = generate(attacker->minDamage, attacker->maxDamage);
 
     target->hp -= damage;
 
@@ -90,6 +98,8 @@ Mob *enemy(unsigned int hp, unsigned int minDamage, unsigned int maxDamage, char
     m->symbol = symbol;
     m->type = MOB_ENEMY;
     m->items = initialize_items();
+    m->equipment.weapon = NULL;
+    m->equipment.armor = NULL;
 
     return m;
 }

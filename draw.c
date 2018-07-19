@@ -63,7 +63,7 @@ void render(const Dungeon *dungeon)
     {
         if (player->items.count)
         {
-            PlayerEquipment equipment = player->attrs.equipment;
+            Equipment equipment = player->equipment;
 
             // render inventory, TODO paginate
             char *buffer = malloc(sizeof(char) * (MAX_WIDTH + 1)); // width + 1 for null byte

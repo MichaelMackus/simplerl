@@ -584,7 +584,7 @@ void inventory_management(char input, Mob *player)
             if (inventory_symbol(item, inventory) == input)
             {
                 if (item->type == ITEM_WEAPON)
-                    player->attrs.equipment.weapon = item;
+                    player->equipment.weapon = item;
                 else
                     message("That is not a weapon!");
 

@@ -17,20 +17,17 @@
 #include "path.h"
 
 typedef struct {
-    Item *weapon;
-    Item *armor;
-} PlayerEquipment;
-
-typedef struct {
     int resting; // boolean
-    Direction running;
-
+    Direction running; // direction player is running, or (0,0)
     int inMenu; // one of MENU consts if in menu
-    PlayerEquipment equipment;
-
     int exp;
     int level;
 } PlayerAttributes;
+
+typedef struct {
+    Item *weapon;
+    Item *armor;
+} Equipment;
 
 typedef struct {
     int hp, maxHP;
@@ -39,6 +36,7 @@ typedef struct {
     int type;
     char symbol;
     Items items;
+    Equipment equipment;
     union {
         PlayerAttributes attrs;
         int difficulty;

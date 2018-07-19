@@ -38,12 +38,12 @@ Dungeon *create_dungeon()
     player->symbol = '@';
     player->hp = 10;
     player->maxHP = 10;
-    player->minDamage = 3;
-    player->maxDamage = 5;
+    player->minDamage = 1;
+    player->maxDamage = 3;
     player->attrs.resting = 0;
     player->attrs.inMenu = 0;
-    player->attrs.equipment.weapon = NULL;
-    player->attrs.equipment.armor = NULL;
+    player->equipment.weapon = NULL;
+    player->equipment.armor = NULL;
     player->attrs.exp = 0;
     player->attrs.level = 1;
     player->attrs.running = direction(0, 0);
