@@ -43,9 +43,7 @@ int gameloop(Dungeon *dungeon, char input)
     if (in_menu(player))
     {
         inventory_management(input, player);
-
-        // don't process turn if in inventory
-        return GAME_PLAYING;
+        input = '.'; // do nothing
     }
 
     if (is_resting(player) || is_running(player))
@@ -102,13 +100,12 @@ int gameloop(Dungeon *dungeon, char input)
         case 'i':
             // open inventory menu
             dungeon->player->attrs.inMenu = MENU_INVENTORY;
+            break;
 
-            return GAME_PLAYING;
         case 'w':
             // open inventory menu
             dungeon->player->attrs.inMenu = MENU_WIELD;
-
-            return GAME_PLAYING;
+            break;
 
         case 'R':
             dungeon->player->attrs.resting = 1;
@@ -148,6 +145,10 @@ int gameloop(Dungeon *dungeon, char input)
         case 'E':
             return GAME_OOM;
     }
+
+    // skip turn if we're still in the inventory menu
+    if (in_menu(player))
+        return GAME_PLAYING;
 
     // check for player death (i.e. damaged self)
     if (player->hp <= 0)
@@ -572,11 +573,24 @@ int can_smell(Coords coords, Level *level)
 
 void inventory_management(char input, Mob *player)
 {
-    // TODO handle input
+    Items inventory = player->items;
 
     if (player->attrs.inMenu == MENU_WIELD)
     {
-        // TODO wield chosen weapon
+        // wield chosen weapon
+        for (int i = 0; i < inventory.count; ++i)
+        {
+            Item *item = inventory.content[i];
+            if (inventory_symbol(item, inventory) == input)
+            {
+                if (item->type == ITEM_WEAPON)
+                    player->attrs.equipment.weapon = item;
+                else
+                    message("That is not a weapon!");
+
+                break;
+            }
+        }
     }
 
     // turn off inventory management

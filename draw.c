@@ -63,8 +63,11 @@ void render(const Dungeon *dungeon)
     {
         if (player->items.count)
         {
+            PlayerEquipment equipment = player->attrs.equipment;
+
             // render inventory, TODO paginate
             char *buffer = malloc(sizeof(char) * (MAX_WIDTH + 1)); // width + 1 for null byte
+            char equippedStr[MAX_WIDTH + 1];
             int y = 0;
             if (buffer != NULL)
                 for (int i = 0; i < player->items.count; ++i)
@@ -74,17 +77,25 @@ void render(const Dungeon *dungeon)
                     if (item->type == ITEM_GOLD)
                         continue;
 
+                    if (item->type == ITEM_WEAPON &&
+                            equipment.weapon != NULL &&
+                            equipment.weapon->name == item->name)
+                        strcpy(equippedStr, " (equipped)");
+                    else
+                        strcpy(equippedStr, "");
+
                     if (item->amount == 1)
-                        snprintf(buffer, MAX_WIDTH + 1, "%c - %d %s",
+                        snprintf(buffer, MAX_WIDTH + 1, "%c - %d %s%s",
                                 inventory_symbol(item, player->items),
                                 item->amount,
-                                item->name);
+                                item->name,
+                                equippedStr);
                     else // pluralize
-                        snprintf(buffer,
-                                MAX_WIDTH + 1, "%c - %d %ss",
+                        snprintf(buffer, MAX_WIDTH + 1, "%c - %d %ss%s",
                                 inventory_symbol(item, player->items),
                                 item->amount,
-                                item->name);
+                                item->name,
+                                equippedStr);
 
                     render_message((const char*) buffer, y++, 0);
                 }

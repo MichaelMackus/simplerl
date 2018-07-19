@@ -17,9 +17,17 @@
 #include "path.h"
 
 typedef struct {
+    Item *weapon;
+    Item *armor;
+} PlayerEquipment;
+
+typedef struct {
     int resting; // boolean
-    int inMenu; // boolean (true if looking at inventory)
     Direction running;
+
+    int inMenu; // one of MENU consts if in menu
+    PlayerEquipment equipment;
+
     int exp;
     int level;
 } PlayerAttributes;

@@ -42,6 +42,8 @@ Dungeon *create_dungeon()
     player->maxDamage = 5;
     player->attrs.resting = 0;
     player->attrs.inMenu = 0;
+    player->attrs.equipment.weapon = NULL;
+    player->attrs.equipment.armor = NULL;
     player->attrs.exp = 0;
     player->attrs.level = 1;
     player->attrs.running = direction(0, 0);
