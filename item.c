@@ -117,11 +117,21 @@ Item *take_item(Items *items)
     return item;
 }
 
-int move_items(Items src, Items *target)
+int move_items(Items *src, Items *target)
 {
-    for (int i = 0; i < src.count; ++i)
-        if (!move_item(src.content[i], target))
+    for (int i = 0; i < src->count; ++i)
+    {
+        if (move_item(src->content[i], target))
+        {
+            src->content[i] = NULL;
+        }
+        else
+        {
             return 0;
+        }
+    }
+
+    src->count = 0;
 
     return 1;
 }

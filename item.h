@@ -84,7 +84,7 @@ Item *take_item(Items *items);
 
 // copy item contents from one container to another
 // *NOTE*: this will free the item(s) from src if they already exists, hence "move"
-int move_items(Items src, Items *target);
+int move_items(Items *src, Items *target);
 
 // free our item list
 void free_items(Items items);
