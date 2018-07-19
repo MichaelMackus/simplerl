@@ -52,6 +52,7 @@ const char **unknownItems;
 const char **knownItems;
 
 char item_symbol(int itemType);
+char inventory_symbol(const Item *item, Items items); // signifies selection spot in inventory
 
 // calculate total amount of gold in inventory
 int total_gold(Items items);

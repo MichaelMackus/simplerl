@@ -59,7 +59,7 @@ void render(const Dungeon *dungeon)
     // render player last (should always be seen)
     render_mob(dungeon->player);
 
-    if (player->attrs.inMenu)
+    if (in_menu(dungeon->player))
     {
         if (player->items.count)
         {
@@ -75,9 +75,16 @@ void render(const Dungeon *dungeon)
                         continue;
 
                     if (item->amount == 1)
-                        snprintf(buffer, MAX_WIDTH + 1, "%d %s", item->amount, item->name);
+                        snprintf(buffer, MAX_WIDTH + 1, "%c - %d %s",
+                                inventory_symbol(item, player->items),
+                                item->amount,
+                                item->name);
                     else // pluralize
-                        snprintf(buffer, MAX_WIDTH + 1, "%d %ss", item->amount, item->name);
+                        snprintf(buffer,
+                                MAX_WIDTH + 1, "%c - %d %ss",
+                                inventory_symbol(item, player->items),
+                                item->amount,
+                                item->name);
 
                     render_message((const char*) buffer, y++, 0);
                 }

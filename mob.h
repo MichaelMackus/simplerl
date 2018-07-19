@@ -10,6 +10,9 @@
 #define MOB_MIND_FLAYER 4
 #define MOB_DEMON 5
 
+#define MENU_INVENTORY 1
+#define MENU_WIELD 2
+
 #include "item.h"
 #include "path.h"
 
@@ -64,5 +67,6 @@ const char* mob_name(char symbol);
 
 int is_resting(Mob *player);
 int is_running(Mob *player);
+int in_menu(Mob *player);
 
 #endif

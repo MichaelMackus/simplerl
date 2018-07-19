@@ -160,6 +160,14 @@ int is_running(Mob *player)
     return runDir.xdir != 0 || runDir.ydir != 0;
 }
 
+int in_menu(Mob *player)
+{
+    if (player == NULL || player->type != MOB_PLAYER)
+        return 0;
+
+    return player->attrs.inMenu > 0;
+}
+
 const char* mob_name(char symbol)
 {
     switch (symbol)

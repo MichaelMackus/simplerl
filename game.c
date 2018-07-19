@@ -34,16 +34,22 @@ void run_player(Mob *player, Direction dir, Level *level);
 void tick(Dungeon *dungeon);
 void tick_mobs(Level *level);
 void cleanup(Dungeon *dungeon);
+void inventory_management(char input, Mob *player);
 int gameloop(Dungeon *dungeon, char input)
 {
     Level *level = dungeon->level;
     Mob *player = dungeon->player;
 
+    if (in_menu(player))
+    {
+        inventory_management(input, player);
+
+        // don't process turn if in inventory
+        return GAME_PLAYING;
+    }
+
     if (is_resting(player) || is_running(player))
         input = '.'; // do nothing
-
-    // close inventory menu each turn, TODO inventory management
-    dungeon->player->attrs.inMenu = 0;
 
     switch (input)
     {
@@ -95,8 +101,14 @@ int gameloop(Dungeon *dungeon, char input)
 
         case 'i':
             // open inventory menu
-            dungeon->player->attrs.inMenu = 1;
-            break;
+            dungeon->player->attrs.inMenu = MENU_INVENTORY;
+
+            return GAME_PLAYING;
+        case 'w':
+            // open inventory menu
+            dungeon->player->attrs.inMenu = MENU_WIELD;
+
+            return GAME_PLAYING;
 
         case 'R':
             dungeon->player->attrs.resting = 1;
@@ -556,4 +568,17 @@ int can_smell(Coords coords, Level *level)
         return 1;
 
     return 0;
+}
+
+void inventory_management(char input, Mob *player)
+{
+    // TODO handle input
+
+    if (player->attrs.inMenu == MENU_WIELD)
+    {
+        // TODO wield chosen weapon
+    }
+
+    // turn off inventory management
+    player->attrs.inMenu = 0;
 }

@@ -18,6 +18,21 @@ char item_symbol(int itemType)
     }
 }
 
+char inventory_symbol(const Item *item, Items items)
+{
+    int start = (int) 'a';
+    int max = (int) 'z' + 1;
+    for (int i = 0; i < max; ++i)
+    {
+        Item *cur = items.content[i];
+        if (item->name == cur->name)
+            return (char) (start + i);
+    }
+
+    // invalid input
+    return '\0';
+}
+
 int total_gold(Items items)
 {
     int total = 0;
