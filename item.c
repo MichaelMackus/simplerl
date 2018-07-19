@@ -163,45 +163,45 @@ Item *generate_gold(int depth)
 Item *leather(Item *item)
 {
     item->name = item->unknownName = "leather armor";
-    item->armor.damageReduction = 10;
+    item->armor.damageReduction = 1;
     item->armor.material = MATERIAL_LEATHER;
 }
 
 Item *ring_mail(Item *item)
 {
     item->name = item->unknownName = "ring mail";
-    item->armor.damageReduction = 20;
+    item->armor.damageReduction = 2;
 }
 
 Item *splint_mail(Item *item)
 {
     item->name = item->unknownName = "splint mail";
-    item->armor.damageReduction = 30;
+    item->armor.damageReduction = 3;
 }
 
 Item *plate_mail(Item *item)
 {
     item->name = item->unknownName = "plate mail";
-    item->armor.damageReduction = 40;
+    item->armor.damageReduction = 4;
 }
 
 Item *full_plate(Item *item)
 {
     item->name = item->unknownName = "full plate";
-    item->armor.damageReduction = 50;
+    item->armor.damageReduction = 5;
 }
 
 Item *dragon_hide(Item *item)
 {
     item->name = item->unknownName = "dragon hide";
-    item->armor.damageReduction = 60;
+    item->armor.damageReduction = 6;
     item->armor.material = MATERIAL_DRAGON;
 }
 
 Item *dragon_plate(Item *item)
 {
     item->name = item->unknownName = "dragon plate";
-    item->armor.damageReduction = 75;
+    item->armor.damageReduction = 10;
     item->armor.material = MATERIAL_DRAGON;
 }
 

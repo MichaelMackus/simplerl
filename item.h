@@ -38,7 +38,7 @@ typedef struct {
 
 // for armor
 typedef struct {
-    int damageReduction; // simple number 1-100 of DR percent
+    int damageReduction; // simple damage reduction value
     int material; // one of MATERIAL consts
 } ArmorAttributes;
 

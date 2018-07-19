@@ -25,26 +25,26 @@ Mob *create_mob(int depth, Coords coords)
     else if (difficulty == 3)
         m = enemy(5, 3, 5, 'g'); // goblin
     else if (difficulty <= 5)
-        m = enemy(5, 3, 5, 'o'); // orc
+        m = enemy(5, 4, 7, 'o'); // orc
     else if (difficulty <= 7)
-        m = enemy(10, 6, 9, 'O'); // ogre
+        m = enemy(10, 7, 10, 'O'); // ogre
     else if (difficulty <= 9)
-        m = enemy(12, 7, 10, 'd'); // drake
+        m = enemy(12, 10, 12, 'd'); // drake
     else if (difficulty <= 11)
     {
-        m = enemy(12, 7, 10, 'H'); // mind flayer
+        m = enemy(12, 10, 12, 'H'); // mind flayer
         m->type = MOB_MIND_FLAYER;
         // TODO drain effect
     }
     else if (difficulty <= 15)
     {
-        m = enemy(20, 10, 15, 'D'); // dragon
+        m = enemy(20, 13, 17, 'D'); // dragon
         m->type = MOB_DRAGON;
         // TODO breath effects
     }
     else
     {
-        m = enemy(30, 13, 17, '&'); // demon
+        m = enemy(30, 15, 20, '&'); // demon
         m->type = MOB_DEMON;
         // TODO drain effects
     }
@@ -74,13 +74,21 @@ int attack(Mob *attacker, Mob *target)
     int damage;
     if (attacker->equipment.weapon != NULL)
     {
-        // calculate based on equipped item
+        // calculate based on equipped weapon
         damage = generate(
                 attacker->equipment.weapon->damage.min,
                 attacker->equipment.weapon->damage.max);
     }
     else
         damage = generate(attacker->minDamage, attacker->maxDamage);
+
+    // calculate DR based on equipped armor
+    if (target->equipment.armor != NULL)
+    {
+        damage -= target->equipment.armor->armor.damageReduction;
+        // always hit for a minimum of 1 damage
+        if (damage <= 0) damage = 1;
+    }
 
     target->hp -= damage;
 
