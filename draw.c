@@ -214,7 +214,6 @@ void print_mob_list(Mobs mobs)
         ++count[code];
     }
 
-    printf("\n");
     for (int i = 0; i < maxCount; ++i)
         if (count[i] > 0)
         {
@@ -225,5 +224,4 @@ void print_mob_list(Mobs mobs)
                 // simple plural check
                 printf("%d %ss\n", count[i], name);
         }
-    printf("\n");
 }
