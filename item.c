@@ -133,7 +133,9 @@ int move_items(Items *src, Items *target)
         }
     }
 
-    src->count = 0;
+    free(src->content);
+    src->content = NULL;
+    src->count = src->size = 0;
 
     return 1;
 }
