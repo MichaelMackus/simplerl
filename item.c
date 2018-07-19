@@ -127,6 +127,8 @@ int move_items(Items *src, Items *target)
         }
         else
         {
+            src->count = i + 1;
+
             return 0;
         }
     }
