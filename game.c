@@ -103,8 +103,13 @@ int gameloop(Dungeon *dungeon, char input)
             break;
 
         case 'w':
-            // open inventory menu
+            // open wield menu
             dungeon->player->attrs.inMenu = MENU_WIELD;
+            break;
+
+        case 'W':
+            // open wear menu
+            dungeon->player->attrs.inMenu = MENU_WEAR;
             break;
 
         case 'R':
@@ -137,13 +142,6 @@ int gameloop(Dungeon *dungeon, char input)
                     return GAME_OOM;
 
             break;
-
-        case 'D':
-            return GAME_DEATH;
-        case 'W':
-            return GAME_WON;
-        case 'E':
-            return GAME_OOM;
     }
 
     // skip turn if we're still in the inventory menu
@@ -587,6 +585,24 @@ void inventory_management(char input, Mob *player)
                     player->equipment.weapon = item;
                 else
                     message("That is not a weapon!");
+
+                break;
+            }
+        }
+    }
+
+    if (player->attrs.inMenu == MENU_WEAR)
+    {
+        // wear chosen armor
+        for (int i = 0; i < inventory.count; ++i)
+        {
+            Item *item = inventory.content[i];
+            if (inventory_symbol(item, inventory) == input)
+            {
+                if (item->type == ITEM_ARMOR)
+                    player->equipment.armor = item;
+                else
+                    message("That is not wearable!");
 
                 break;
             }

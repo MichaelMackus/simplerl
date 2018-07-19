@@ -13,6 +13,10 @@
 #define DAMAGE_SLASH 1
 #define DAMAGE_SILVER 2
 
+#define MATERIAL_METAL 0
+#define MATERIAL_LEATHER 1
+#define MATERIAL_DRAGON 2
+
 #define ITEM_EFFECT_NONE 0
 #define ITEM_EFFECT_HEAL 1
 #define ITEM_EFFECT_TELEPORT 2
@@ -32,6 +36,12 @@ typedef struct {
     int twoHanded; // boolean if this is two handed
 } WeaponAttributes;
 
+// for armor
+typedef struct {
+    int damageReduction; // simple number 1-100 of DR percent
+    int material; // one of MATERIAL consts
+} ArmorAttributes;
+
 typedef struct {
     int type; // one of ITEM consts
     int amount; // amount of items
@@ -40,6 +50,7 @@ typedef struct {
     union {
         ItemAttributes attributes;
         WeaponAttributes damage;
+        ArmorAttributes armor;
     };
 } Item;
 

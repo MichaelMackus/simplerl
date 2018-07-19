@@ -45,12 +45,15 @@ int total_gold(Items items)
 
 Item *generate_gold(int depth);
 Item *generate_weapon(int depth);
+Item *generate_armor(int depth);
 Item *create_item(int depth, int type)
 {
     if (type == ITEM_GOLD)
         return generate_gold(depth);
     else if (type == ITEM_WEAPON)
         return generate_weapon(depth);
+    else if (type == ITEM_ARMOR)
+        return generate_armor(depth);
     // TODO rest of item types
 
     return NULL;
@@ -151,7 +154,119 @@ Item *generate_gold(int depth)
 }
 
 
-// weapons
+/*************/
+/**         **/
+/**  armor  **/
+/**         **/
+/*************/
+
+Item *leather(Item *item)
+{
+    item->name = item->unknownName = "leather armor";
+    item->armor.damageReduction = 10;
+    item->armor.material = MATERIAL_LEATHER;
+}
+
+Item *ring_mail(Item *item)
+{
+    item->name = item->unknownName = "ring mail";
+    item->armor.damageReduction = 20;
+}
+
+Item *splint_mail(Item *item)
+{
+    item->name = item->unknownName = "splint mail";
+    item->armor.damageReduction = 30;
+}
+
+Item *plate_mail(Item *item)
+{
+    item->name = item->unknownName = "plate mail";
+    item->armor.damageReduction = 40;
+}
+
+Item *full_plate(Item *item)
+{
+    item->name = item->unknownName = "full plate";
+    item->armor.damageReduction = 50;
+}
+
+Item *dragon_hide(Item *item)
+{
+    item->name = item->unknownName = "dragon hide";
+    item->armor.damageReduction = 60;
+    item->armor.material = MATERIAL_DRAGON;
+}
+
+Item *dragon_plate(Item *item)
+{
+    item->name = item->unknownName = "dragon plate";
+    item->armor.damageReduction = 75;
+    item->armor.material = MATERIAL_DRAGON;
+}
+
+Item *generate_armor(int depth)
+{
+    Item *item = malloc(sizeof(Item));
+
+    if (item == NULL)
+        return NULL;
+
+    // weapon defaults
+    item->type = ITEM_ARMOR;
+    item->amount = 1;
+    item->armor.material = MATERIAL_METAL;
+
+    // percentile roll
+    int percent = generate(1, 100);
+
+    // TODO probably want to actually generate dragonhide on dragons
+
+    // generate different armor based on depth
+    if (depth <= 2)
+    {
+        if (percent <= 75)
+            return leather(item);
+        else
+            return ring_mail(item);
+    }
+    else if (depth <= 5)
+    {
+        if (percent <= 25)
+            return leather(item);
+        else if (percent <= 75)
+            return ring_mail(item);
+        else
+            return splint_mail(item);
+    }
+    else
+    {
+        if (percent <= 20)
+            return ring_mail(item);
+        else if (percent <= 35)
+            return splint_mail(item);
+        else if (percent <= 75)
+            return plate_mail(item);
+        else if (percent <= 85)
+            return full_plate(item);
+        else if (percent <= 95)
+            return dragon_hide(item);
+        else
+            return dragon_plate(item);
+    }
+
+    free(item);
+
+    return NULL;
+}
+
+
+/*************/
+/**         **/
+/** weapons **/
+/**         **/
+/*************/
+
 
 Item *club(Item *weapon)
 {

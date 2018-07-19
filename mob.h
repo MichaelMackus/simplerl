@@ -12,6 +12,7 @@
 
 #define MENU_INVENTORY 1
 #define MENU_WIELD 2
+#define MENU_WEAR 3
 
 #include "item.h"
 #include "path.h"

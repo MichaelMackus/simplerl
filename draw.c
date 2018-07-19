@@ -81,6 +81,10 @@ void render(const Dungeon *dungeon)
                             equipment.weapon != NULL &&
                             equipment.weapon->name == item->name)
                         strcpy(equippedStr, " (equipped)");
+                    else if (item->type == ITEM_ARMOR &&
+                            equipment.armor != NULL &&
+                            equipment.armor->name == item->name)
+                        strcpy(equippedStr, " (equipped)");
                     else
                         strcpy(equippedStr, "");
 
