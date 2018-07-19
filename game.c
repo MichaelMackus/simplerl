@@ -122,24 +122,27 @@ int gameloop(Dungeon *dungeon, char input)
             if (t == NULL)
                 return GAME_ERROR;
             if (t->type == TILE_STAIR_DOWN)
+            {
                 if (dungeon->level->depth == MAX_LEVEL)
                     return GAME_WON;
                 if (!increase_depth(dungeon))
                     return GAME_OOM;
+            }
 
             break;
 
         case '<': // check for upstair
-
             t = get_tile(level, player->coords);
 
             if (t == NULL)
                 return GAME_ERROR;
             if (t->type == TILE_STAIR_UP)
+            {
                 if (dungeon->level->depth == 1)
                     return GAME_QUIT;
                 if (!decrease_depth(dungeon))
                     return GAME_OOM;
+            }
 
             break;
     }
