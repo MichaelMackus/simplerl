@@ -27,16 +27,12 @@ Mob *create_mob(int depth, Coords coords)
     else if (difficulty <= 5)
         m = enemy(5, 4, 7, 'o'); // orc
     else if (difficulty <= 7)
-        m = enemy(10, 7, 10, 'O'); // ogre
+        m = enemy(6, 5, 8, 'h'); // hobgoblin
     else if (difficulty <= 9)
-        m = enemy(12, 10, 12, 'd'); // drake
-    else if (difficulty <= 11)
-    {
-        m = enemy(12, 10, 12, 'H'); // mind flayer
-        m->type = MOB_MIND_FLAYER;
-        // TODO drain effect
-    }
-    else if (difficulty <= 15)
+        m = enemy(10, 7, 10, 'O'); // ogre
+    else if (difficulty <= 14)
+        m = enemy(15, 10, 15, 'd'); // drake
+    else if (difficulty <= 18)
     {
         m = enemy(20, 13, 17, 'D'); // dragon
         m->type = MOB_DRAGON;
