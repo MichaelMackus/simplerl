@@ -113,7 +113,7 @@ Mob *enemy(unsigned int hp, unsigned int minDamage, unsigned int maxDamage, char
     return m;
 }
 
-void insert_mob(Mob *mob, Mob **mobs)
+int insert_mob(Mob *mob, Mob **mobs)
 {
     // seek to available mob index
     int mobIndex = 0;
@@ -121,10 +121,12 @@ void insert_mob(Mob *mob, Mob **mobs)
     {
         ++mobIndex;
         if (mobIndex >= MAX_MOBS)
-            return; // out of range!
+            return 0; // out of range!
     }
 
     mobs[mobIndex] = mob;
+
+    return 1;
 }
 
 int kill_mob(Mob *mob, Mobs *mobs)

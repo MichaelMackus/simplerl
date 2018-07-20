@@ -127,6 +127,8 @@ int gameloop(Dungeon *dungeon, char input)
                     return GAME_WON;
                 if (!increase_depth(dungeon))
                     return GAME_OOM;
+
+                return GAME_PLAYING;
             }
 
             break;
@@ -142,6 +144,8 @@ int gameloop(Dungeon *dungeon, char input)
                     return GAME_QUIT;
                 if (!decrease_depth(dungeon))
                     return GAME_OOM;
+
+                return GAME_PLAYING;
             }
 
             break;
@@ -245,7 +249,8 @@ void tick_mobs(Level *level)
         if (mob == NULL)
             return;
 
-        insert_mob(mob, level->mobs);
+        if (!insert_mob(mob, level->mobs))
+            free(mob);
     }
 }
 

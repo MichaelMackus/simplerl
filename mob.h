@@ -59,7 +59,7 @@ Mob *create_mob(int depth, Coords coords);
 int attack(Mob *attacker, Mob *target);
 
 // insert mob into mobs list
-void insert_mob(Mob *mob, Mob **mobs);
+int insert_mob(Mob *mob, Mob **mobs);
 
 // insert into killed mobs array
 int kill_mob(Mob *mob, Mobs *mobs);
