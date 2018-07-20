@@ -165,13 +165,27 @@ void randomly_fill_tiles(Level *level)
     level->tiles[down.y][down.x].type = TILE_STAIR_DOWN;
 
     // free cells & prune non-connecting cells
+    int validCells = 0;
     for (i = 0; i < cellCount; ++i)
     {
         if (branches(cells[i], level) == 0)
             fill_cell(cells[i], level, 0);
+        else
+            ++validCells;
         free(cells[i]);
     }
     free(cells);
+
+    if (validCells < MIN_CELLS)
+    {
+        // try to re-generate dungeon
+        Box map;
+        map.coords.x = map.coords.y = 0;
+        map.dimensions.w = MAX_WIDTH;
+        map.dimensions.h = MAX_HEIGHT;
+        fill_cell(&map, level, 0);
+        randomly_fill_tiles(level);
+    }
 }
 
 void randomly_fill_mobs(Level *level, int max)
