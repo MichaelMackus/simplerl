@@ -7,6 +7,8 @@ char item_symbol(int itemType)
     {
         case ITEM_WEAPON:
             return ')';
+        case ITEM_ARMOR:
+            return '[';
         case ITEM_GOLD:
             return '$';
         case ITEM_SCROLL:
