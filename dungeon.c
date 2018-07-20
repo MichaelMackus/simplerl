@@ -322,7 +322,7 @@ void draw_line(const Coords a, const Coords b, Level *level)
     Coords current;
     current.x = a.x;
     current.y = a.y;
-    while (current.x != b.x || current.y != b.y)
+    do
     {
         if (get_tile(level, current) == NULL)
             return;
@@ -392,6 +392,7 @@ void draw_line(const Coords a, const Coords b, Level *level)
         current.y += dy;
         current.x += dx;
     }
+    while (current.x != b.x || current.y != b.y);
 }
 
 Coords random_coords(Level *level)
