@@ -233,8 +233,12 @@ void tick_mobs(Level *level)
         // get random coordinates for new mob, must not be near player
         Coords coords = random_passable_coords(level);
         while (can_see(coords, level->player->coords, level->tiles) ||
-                can_smell(coords, level))
+                can_smell(coords, level) ||
+                get_tile(level, coords)->type == TILE_STAIR_UP ||
+                get_tile(level, coords)->type == TILE_STAIR_DOWN)
+        {
             coords = random_passable_coords(level);
+        }
 
         Mob *mob = create_mob(level->depth, coords);
 
