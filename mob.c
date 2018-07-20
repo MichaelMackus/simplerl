@@ -137,7 +137,7 @@ int kill_mob(Mob *mob, Mobs *mobs)
 
     if (count >= size)
     {
-        Mob **tmp = realloc(mobs->content, sizeof(Mob*) * MAX_MOBS);
+        Mob **tmp = realloc(mobs->content, sizeof(Mob*) * (size + MAX_MOBS));
 
         if (tmp == NULL)
             return 0;
