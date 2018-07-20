@@ -188,6 +188,13 @@ void randomly_fill_mobs(Level *level, int max)
         if (mob == NULL)
             return;
 
+        // don't spawn mobs on stairs
+        while (get_tile(level, coords)->type == TILE_STAIR_UP ||
+                get_tile(level, coords)->type == TILE_STAIR_DOWN)
+        {
+            coords = random_passable_coords(level);
+        }
+
         insert_mob(mob, mobs);
     }
 }
