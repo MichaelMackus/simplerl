@@ -85,7 +85,7 @@ int move_item(Item *item, Items *items)
         if (items->content[i]->name == item->name)
         {
             free(item);
-            ++items->content[i]->amount;
+            items->content[i]->amount += item->amount;
 
             return 1;
         }
