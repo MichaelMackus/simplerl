@@ -2,7 +2,7 @@
 #define MOB_H
 
 #define MAX_MOBS   20
-#define MAX_PLAYER_LEVEL 10
+#define MAX_PLAYER_LEVEL 20
 
 #define MOB_PLAYER 1
 #define MOB_ENEMY  2
