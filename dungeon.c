@@ -199,7 +199,7 @@ void randomly_fill_mobs(Level *level, int max)
     }
 }
 
-int is_neighbor(const Box *start, const Box *target, const Box **cells, int cellCount);
+int is_path_clear(const Coords start, const Coords target, const Box **cells, int cellCount);
 void draw_line(const Box *start, const Box *target, Level *level);
 void randomly_fill_corridors(Level *level, const Box **cells, int startIndex, int cellCount)
 {
@@ -235,9 +235,37 @@ void randomly_fill_corridors(Level *level, const Box **cells, int startIndex, in
     int maxNeighbors = 0;
     for (int i = startIndex + 1; i < cellCount; ++i) // check cells other than start cell
     {
-        // check for clear line from center of start to center of neighbor
-        // TODO we should probably do this from a wall, and pick the wall here
-        if (is_neighbor(cells[startIndex], cells[i], cells, cellCount))
+        // pick a random wall
+        Coords start = cells[startIndex]->coords;
+        switch (generate(1, 4))
+        {
+            case 1:
+                // left wall
+                start.y += (cells[startIndex]->dimensions.h / 2);
+                break;
+            case 2:
+                // top wall
+                start.x += (cells[startIndex]->dimensions.w / 2);
+                break;
+            case 3:
+                // right wall
+                start.y += (cells[startIndex]->dimensions.h / 2);
+                start.x += cells[startIndex]->dimensions.w - 1;
+                break;
+            case 4:
+                // bottom wall
+                start.x += (cells[startIndex]->dimensions.w / 2);
+                start.y += cells[startIndex]->dimensions.h - 1;
+                break;
+        }
+
+        Coords target;
+        target.x = cells[i]->coords.x + ((cells[i]->dimensions.w - cells[i]->coords.x) / 2);
+        target.y = cells[i]->coords.y + ((cells[i]->dimensions.h - cells[i]->coords.y) / 2);
+
+        // check for clear line from start to center of neighbor
+        // TODO choose neighbors closest wall
+        if (is_path_clear(start, target, cells, cellCount))
         {
             // neighbor can have at most 1 branch
             if (branches(cells[i], level) <= 1)
@@ -508,25 +536,17 @@ Dimensions random_dimensions()
 int within_cell(const Coords c, const Box cell);
 const Coords **get_line(const Coords a, const Coords b);
 void free_path(const Coords **line);
-int is_neighbor(const Box *start, const Box *target, const Box **cells, int cellCount)
+int is_path_clear(const Coords start, const Coords target, const Box **cells, int cellCount)
 {
-    Coords startCenter;
-    startCenter.x = start->coords.x + ((start->dimensions.w - start->coords.x) / 2);
-    startCenter.y = start->coords.y + ((start->dimensions.h - start->coords.y) / 2);
-
-    Coords targetCenter = target->coords;
-    targetCenter.x = target->coords.x + ((target->dimensions.w - target->coords.x) / 2);
-    targetCenter.y = target->coords.y + ((target->dimensions.h - target->coords.y) / 2);
-
     // draw straight line from start -> target
-    const Coords **line = get_line(startCenter, targetCenter);
+    const Coords **line = get_line(start, target);
 
     // check for any coord that passes through another cell
     int i = 0;
     while (line[i] != NULL)
     {
         // ensure we're not comparing start or target
-        if (!within_cell(*line[i], *start) && !within_cell(*line[i], *target))
+        if (!(line[i]->x == start.x && line[i]->y == start.y) && !(line[i]->x == target.x && line[i]->y == target.y))
         {
             // check within cells for intersection *not* start & *not* target
             for (int j = 0; j < cellCount; ++j)
@@ -534,7 +554,7 @@ int is_neighbor(const Box *start, const Box *target, const Box **cells, int cell
                 const Box *cell = cells[j];
 
                 // ensure we're not comparing start or target cell
-                if (within_cell(cell->coords, *start) || within_cell(cell->coords, *target))
+                if (within_cell(start, *cell) || within_cell(target, *cell))
                     continue;
 
                 // if we're within *another* cell, this is no neighbor
