@@ -361,8 +361,6 @@ void cleanup(Dungeon *dungeon)
 
                 // transfer items & equipment to floor
                 move_items(&mob->items, &t->items);
-                move_item(mob->equipment.weapon, &t->items);
-                move_item(mob->equipment.armor, &t->items);
 
                 // add to killed mobs
                 kill_mob(mob, &dungeon->killed);

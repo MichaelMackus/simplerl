@@ -49,8 +49,12 @@ Dungeon *create_dungeon()
     player->attrs.running = direction(0, 0);
 
     // give player some simple equipment
-    player->equipment.armor = leather();
-    player->equipment.weapon = quarterstaff();
+    Item *armor = leather();
+    Item *weapon = quarterstaff();
+    move_item(armor, &player->items); // TODO this only works since this is first time
+    move_item(weapon, &player->items); // TODO this only works since this is first time
+    player->equipment.armor = armor;
+    player->equipment.weapon = weapon;
 
     // initialize first level
     Level *level = create_level(1);
