@@ -316,7 +316,7 @@ Item *mace(Item *weapon)
 
 Item *quarterstaff(Item *weapon)
 {
-    weapon->damage.max = 8;
+    weapon->damage.max = 6;
     weapon->damage.type = DAMAGE_BLUNT;
     weapon->damage.twoHanded = 1;
     weapon->name = weapon->unknownName = "quarterstaff";
