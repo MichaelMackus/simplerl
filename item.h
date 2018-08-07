@@ -91,4 +91,26 @@ void free_items(Items items);
 
 // TODO need to sort items by type for inventory management
 
+// specific armor generation functions
+Item *leather();
+Item *ring_mail();
+Item *splint_mail();
+Item *plate_mail();
+Item *full_plate();
+Item *dragon_hide();
+Item *dragon_plate();
+
+// specific weapon generation functions
+Item *club();
+Item *dagger();
+Item *short_sword();
+Item *mace();
+Item *quarterstaff();
+Item *long_sword();
+Item *bastard_sword();
+Item *flail();
+Item *masterwork_sword();
+Item *masterwork_bastard_sword();
+Item *silver_sword();
+
 #endif

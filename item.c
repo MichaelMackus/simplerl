@@ -176,52 +176,7 @@ Item *generate_gold(int depth)
 /**         **/
 /*************/
 
-Item *leather(Item *item)
-{
-    item->name = item->unknownName = "leather armor";
-    item->armor.damageReduction = 1;
-    item->armor.material = MATERIAL_LEATHER;
-}
-
-Item *ring_mail(Item *item)
-{
-    item->name = item->unknownName = "ring mail";
-    item->armor.damageReduction = 2;
-}
-
-Item *splint_mail(Item *item)
-{
-    item->name = item->unknownName = "splint mail";
-    item->armor.damageReduction = 3;
-}
-
-Item *plate_mail(Item *item)
-{
-    item->name = item->unknownName = "plate mail";
-    item->armor.damageReduction = 4;
-}
-
-Item *full_plate(Item *item)
-{
-    item->name = item->unknownName = "full plate";
-    item->armor.damageReduction = 5;
-}
-
-Item *dragon_hide(Item *item)
-{
-    item->name = item->unknownName = "dragon hide";
-    item->armor.damageReduction = 6;
-    item->armor.material = MATERIAL_DRAGON;
-}
-
-Item *dragon_plate(Item *item)
-{
-    item->name = item->unknownName = "dragon plate";
-    item->armor.damageReduction = 10;
-    item->armor.material = MATERIAL_DRAGON;
-}
-
-Item *generate_armor(int depth)
+Item *init_armor()
 {
     Item *item = malloc(sizeof(Item));
 
@@ -233,6 +188,77 @@ Item *generate_armor(int depth)
     item->amount = 1;
     item->armor.material = MATERIAL_METAL;
 
+    return item;
+}
+
+Item *leather()
+{
+    Item *item = init_armor();
+    item->name = item->unknownName = "leather armor";
+    item->armor.damageReduction = 1;
+    item->armor.material = MATERIAL_LEATHER;
+
+    return item;
+}
+
+Item *ring_mail()
+{
+    Item *item = init_armor();
+    item->name = item->unknownName = "ring mail";
+    item->armor.damageReduction = 2;
+    
+    return item;
+}
+
+Item *splint_mail()
+{
+    Item *item = init_armor();
+    item->name = item->unknownName = "splint mail";
+    item->armor.damageReduction = 3;
+    
+    return item;
+}
+
+Item *plate_mail()
+{
+    Item *item = init_armor();
+    item->name = item->unknownName = "plate mail";
+    item->armor.damageReduction = 4;
+    
+    return item;
+}
+
+Item *full_plate()
+{
+    Item *item = init_armor();
+    item->name = item->unknownName = "full plate";
+    item->armor.damageReduction = 5;
+    
+    return item;
+}
+
+Item *dragon_hide()
+{
+    Item *item = init_armor();
+    item->name = item->unknownName = "dragon hide";
+    item->armor.damageReduction = 6;
+    item->armor.material = MATERIAL_DRAGON;
+    
+    return item;
+}
+
+Item *dragon_plate()
+{
+    Item *item = init_armor();
+    item->name = item->unknownName = "dragon plate";
+    item->armor.damageReduction = 10;
+    item->armor.material = MATERIAL_DRAGON;
+    
+    return item;
+}
+
+Item *generate_armor(int depth)
+{
     // percentile roll
     int percent = generate(1, 100);
 
@@ -242,36 +268,34 @@ Item *generate_armor(int depth)
     if (depth <= 2)
     {
         if (percent <= 75)
-            return leather(item);
+            return leather();
         else
-            return ring_mail(item);
+            return ring_mail();
     }
     else if (depth <= 5)
     {
         if (percent <= 25)
-            return leather(item);
+            return leather();
         else if (percent <= 75)
-            return ring_mail(item);
+            return ring_mail();
         else
-            return splint_mail(item);
+            return splint_mail();
     }
     else
     {
         if (percent <= 20)
-            return ring_mail(item);
+            return ring_mail();
         else if (percent <= 35)
-            return splint_mail(item);
+            return splint_mail();
         else if (percent <= 75)
-            return plate_mail(item);
+            return plate_mail();
         else if (percent <= 85)
-            return full_plate(item);
+            return full_plate();
         else if (percent <= 95)
-            return dragon_hide(item);
+            return dragon_hide();
         else
-            return dragon_plate(item);
+            return dragon_plate();
     }
-
-    free(item);
 
     return NULL;
 }
@@ -283,96 +307,7 @@ Item *generate_armor(int depth)
 /**         **/
 /*************/
 
-
-Item *club(Item *weapon)
-{
-    weapon->damage.max = 4;
-    weapon->damage.type = DAMAGE_BLUNT;
-    weapon->name = weapon->unknownName = "club";
-    return weapon;
-}
-
-Item *dagger(Item *weapon)
-{
-    weapon->damage.max = 4;
-    weapon->name = weapon->unknownName = "dagger";
-    return weapon;
-}
-
-Item *short_sword(Item *weapon)
-{
-    weapon->damage.max = 6;
-    weapon->name = weapon->unknownName = "short sword";
-    return weapon;
-}
-
-Item *mace(Item *weapon)
-{
-    weapon->damage.max = 6;
-    weapon->damage.type = DAMAGE_BLUNT;
-    weapon->name = weapon->unknownName = "club";
-    return weapon;
-}
-
-Item *quarterstaff(Item *weapon)
-{
-    weapon->damage.max = 6;
-    weapon->damage.type = DAMAGE_BLUNT;
-    weapon->damage.twoHanded = 1;
-    weapon->name = weapon->unknownName = "quarterstaff";
-    return weapon;
-}
-
-Item *long_sword(Item *weapon)
-{
-    weapon->damage.max = 8;
-    weapon->name = weapon->unknownName = "long sword";
-    return weapon;
-}
-
-Item *bastard_sword(Item *weapon)
-{
-    weapon->damage.max = 10;
-    weapon->damage.twoHanded = 1;
-    weapon->name = weapon->unknownName = "bastard sword";
-    return weapon;
-}
-
-Item *flail(Item *weapon)
-{
-    weapon->damage.max = 8;
-    weapon->damage.type = DAMAGE_BLUNT;
-    weapon->name = weapon->unknownName = "flail";
-    return weapon;
-}
-
-Item *masterwork_sword(Item *weapon)
-{
-    weapon->damage.min = 2;
-    weapon->damage.max = 10;
-    weapon->name = weapon->unknownName = "masterwork sword";
-    return weapon;
-}
-
-Item *masterwork_bastard_sword(Item *weapon)
-{
-    weapon->damage.min = 2;
-    weapon->damage.max = 12;
-    weapon->name = weapon->unknownName = "masterwork bastard sword";
-    return weapon;
-}
-
-Item *silver_sword(Item *weapon)
-{
-    weapon->damage.min = 2;
-    weapon->damage.max = 10;
-    weapon->damage.type = DAMAGE_SILVER;
-    weapon->name = weapon->unknownName = "silver sword";
-    return weapon;
-}
-
-
-Item *generate_weapon(int depth)
+Item *init_weapon()
 {
     Item *item = malloc(sizeof(Item));
 
@@ -386,6 +321,121 @@ Item *generate_weapon(int depth)
     item->damage.min = 1;
     item->damage.twoHanded = 0;
 
+    return item;
+}
+
+Item *club()
+{
+    Item *weapon = init_weapon();
+    weapon->damage.max = 4;
+    weapon->damage.type = DAMAGE_BLUNT;
+    weapon->name = weapon->unknownName = "club";
+
+    return weapon;
+}
+
+Item *dagger()
+{
+    Item *weapon = init_weapon();
+    weapon->damage.max = 4;
+    weapon->name = weapon->unknownName = "dagger";
+
+    return weapon;
+}
+
+Item *short_sword()
+{
+    Item *weapon = init_weapon();
+    weapon->damage.max = 6;
+    weapon->name = weapon->unknownName = "short sword";
+
+    return weapon;
+}
+
+Item *mace()
+{
+    Item *weapon = init_weapon();
+    weapon->damage.max = 6;
+    weapon->damage.type = DAMAGE_BLUNT;
+    weapon->name = weapon->unknownName = "club";
+
+    return weapon;
+}
+
+Item *quarterstaff()
+{
+    Item *weapon = init_weapon();
+    weapon->damage.max = 6;
+    weapon->damage.type = DAMAGE_BLUNT;
+    weapon->damage.twoHanded = 1;
+    weapon->name = weapon->unknownName = "quarterstaff";
+
+    return weapon;
+}
+
+Item *long_sword()
+{
+    Item *weapon = init_weapon();
+    weapon->damage.max = 8;
+    weapon->name = weapon->unknownName = "long sword";
+
+    return weapon;
+}
+
+Item *bastard_sword()
+{
+    Item *weapon = init_weapon();
+    weapon->damage.max = 10;
+    weapon->damage.twoHanded = 1;
+    weapon->name = weapon->unknownName = "bastard sword";
+
+    return weapon;
+}
+
+Item *flail()
+{
+    Item *weapon = init_weapon();
+    weapon->damage.max = 8;
+    weapon->damage.type = DAMAGE_BLUNT;
+    weapon->name = weapon->unknownName = "flail";
+
+    return weapon;
+}
+
+Item *masterwork_sword()
+{
+    Item *weapon = init_weapon();
+    weapon->damage.min = 2;
+    weapon->damage.max = 10;
+    weapon->name = weapon->unknownName = "masterwork sword";
+
+    return weapon;
+}
+
+Item *masterwork_bastard_sword()
+{
+    Item *weapon = init_weapon();
+    weapon->damage.min = 2;
+    weapon->damage.max = 12;
+    weapon->name = weapon->unknownName = "masterwork bastard sword";
+
+    return weapon;
+}
+
+Item *silver_sword()
+{
+    Item *weapon = init_weapon();
+    weapon->damage.min = 2;
+    weapon->damage.max = 10;
+    weapon->damage.type = DAMAGE_SILVER;
+    weapon->name = weapon->unknownName = "silver sword";
+
+    return weapon;
+}
+
+
+Item *generate_weapon(int depth)
+{
     // percentile roll
     int percent = generate(1, 100);
 
@@ -395,44 +445,42 @@ Item *generate_weapon(int depth)
     if (depth <= 2)
     {
         if (percent <= 25)
-            return club(item);
+            return club();
         else if (percent <= 50)
-            return dagger(item);
+            return dagger();
         else if (percent <= 75)
-            return short_sword(item);
+            return short_sword();
         else
-            return quarterstaff(item);
+            return quarterstaff();
     }
     else if (depth <= 5)
     {
         if (percent <= 20)
-            return dagger(item);
+            return dagger();
         else if (percent <= 35)
-            return quarterstaff(item);
+            return quarterstaff();
         else if (percent <= 50)
-            return mace(item);
+            return mace();
         else if (percent <= 75)
-            return long_sword(item);
+            return long_sword();
         else
-            return bastard_sword(item);
+            return bastard_sword();
     }
     else
     {
         if (percent <= 20)
-            return long_sword(item);
+            return long_sword();
         else if (percent <= 35)
-            return bastard_sword(item);
+            return bastard_sword();
         else if (percent <= 75)
-            return flail(item);
+            return flail();
         else if (percent <= 85)
-            return masterwork_sword(item);
+            return masterwork_sword();
         else if (percent <= 95)
-            return masterwork_bastard_sword(item);
+            return masterwork_bastard_sword();
         else
-            return silver_sword(item);
+            return silver_sword();
     }
-
-    free(item);
 
     return NULL;
 }
