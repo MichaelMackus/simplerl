@@ -354,8 +354,15 @@ void cleanup(Dungeon *dungeon)
             {
                 // transfer items to floor
                 Tile *t = get_tile(level, mob->coords);
-                if (t != NULL) move_items(&mob->items, &t->items);
-                else free_items(mob->items);
+
+                if (t == NULL)
+                    // OOM error
+                    exit(1);
+
+                // transfer items & equipment to floor
+                move_items(&mob->items, &t->items);
+                move_item(mob->equipment.weapon, &t->items);
+                move_item(mob->equipment.armor, &t->items);
 
                 // add to killed mobs
                 kill_mob(mob, &dungeon->killed);

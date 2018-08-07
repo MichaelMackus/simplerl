@@ -10,6 +10,10 @@
 #define MOB_MIND_FLAYER 4
 #define MOB_DEMON 5
 
+#define MOB_FORM_BIPED 1
+#define MOB_FORM_QUADRAPED 2
+#define MOB_FORM_FLYING 4
+
 #define MENU_INVENTORY 1
 #define MENU_WIELD 2
 #define MENU_WEAR 3
@@ -35,6 +39,7 @@ typedef struct {
     Coords coords;
     unsigned int minDamage, maxDamage;
     int type;
+    int form;
     char symbol;
     Items items;
     Equipment equipment;
