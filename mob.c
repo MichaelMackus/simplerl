@@ -78,9 +78,7 @@ Mob *create_mob(int depth, Coords coords)
                 if (m == NULL)
                     return NULL;
 
-                move_item(item, &m->items); // TODO this only works since this is first time
-
-                m->equipment.weapon = item;
+                m->equipment.weapon = move_item(item, &m->items);
             }
         }
 
@@ -96,9 +94,7 @@ Mob *create_mob(int depth, Coords coords)
                 if (m == NULL)
                     return NULL;
 
-                move_item(item, &m->items); // TODO this only works since this is first time
-
-                m->equipment.armor = item;
+                m->equipment.armor = move_item(item, &m->items);
             }
         }
     }

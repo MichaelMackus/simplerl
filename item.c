@@ -72,23 +72,13 @@ Items initialize_items()
     return items;
 }
 
-int move_item(Item *item, Items *items)
+int insert_item(Item *item, Items *items)
 {
     if (item == NULL)
         return 0;
 
     size_t count = items ? items->count : 0;
     size_t size = items ? items->size : 0;
-
-    // search for item in list & increase count of item to simplify inventory management
-    for (int i = 0; i < count; ++i)
-        if (items->content[i]->name == item->name)
-        {
-            items->content[i]->amount += item->amount;
-            free(item);
-
-            return 1;
-        }
 
     if (size <= count)
     {
@@ -105,6 +95,29 @@ int move_item(Item *item, Items *items)
     ++items->count;
 
     return 1;
+}
+
+Item *move_item(Item *item, Items *items)
+{
+    if (item == NULL)
+        return NULL;
+
+    size_t count = items ? items->count : 0;
+
+    // search for item in list & increase count of item to simplify inventory management
+    for (int i = 0; i < count; ++i)
+        if (items->content[i]->name == item->name)
+        {
+            items->content[i]->amount += item->amount;
+            free(item);
+
+            return items->content[i];
+        }
+
+    if (insert_item(item, items) == 0)
+        return NULL;
+
+    return item;
 }
 
 Item *take_item(Items *items)

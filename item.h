@@ -77,7 +77,7 @@ Items initialize_items();
 
 // insert item into variable-length list
 // *NOTE*: this will free the item if it already exists, hence "move"
-int move_item(Item *item, Items *items);
+Item *move_item(Item *item, Items *items);
 
 // take top item from list
 Item *take_item(Items *items);
