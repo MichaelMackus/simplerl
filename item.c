@@ -136,14 +136,13 @@ int move_items(Items *src, Items *target)
 {
     for (int i = 0; i < src->count; ++i)
     {
-        if (move_item(src->content[i], target))
+        if (move_item(src->content[i], target) != NULL)
         {
             src->content[i] = NULL;
         }
         else
         {
-            src->count = i + 1;
-
+            // OOM error
             return 0;
         }
     }
