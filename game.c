@@ -308,9 +308,10 @@ void reward_exp(Mob *player, Mob *mob)
         return;
 
     // level up condition
-    if (player->attrs.exp / 1000 > (player->attrs.level - 1))
+    if (player->attrs.exp >= player->attrs.expNext)
     {
         ++player->attrs.level;
+        player->attrs.expNext = player->attrs.expNext + player->attrs.level*1000;
         // TODO figure out better stat system
         player->maxHP += 5;
         player->hp = player->maxHP;

@@ -26,6 +26,7 @@ typedef struct {
     Direction running; // direction player is running, or (0,0)
     int inMenu; // one of MENU consts if in menu
     int exp;
+    int expNext;
     int level;
 } PlayerAttributes;
 
