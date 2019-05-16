@@ -185,32 +185,30 @@ int gameloop(Dungeon *dungeon, char input)
 /**         **/
 /*************/
 
-// returns -1 on move, 0 or more damage on attack
-int move_or_attack(Mob *attacker, Coords coords, Level *level)
+void move_player(Mob *player, Coords coords, Level *level)
 {
     // first, check for mob
     Mob *target = get_mob(level, coords);
 
     if (target != NULL)
-        return attack(attacker, target);
+    {
+        // there was an enemy there!
+        int dmg = attack(player, target);
+
+        if (dmg > 0)
+            message("You hit the %s for %d damage!",
+                    mob_name(target->symbol),
+                    dmg);
+        else if (dmg == 0)
+            message("You missed the %s!",
+                    mob_name(target->symbol));
+    }
     else
-        move_mob(attacker, coords, level);
-
-    return -1;
-}
-
-void move_player(Mob *player, Coords coords, Level *level)
-{
-    int dmg = move_or_attack(player, coords, level);
-
-    // there was an enemy there!
-    if (dmg > 0)
-        message("You hit it for %d damage!", dmg); // TODO mob name
-    else if (dmg == 0)
-        message("You missed!");
-    else
-        // movement - set the smell of the player again
+    {
+        // move & set the smell of the player again
+        move_mob(player, coords, level);
         taint(player->coords, level);
+    }
 }
 
 void run_player(Mob *player, Direction dir, Level *level)
@@ -254,6 +252,20 @@ void tick_mobs(Level *level)
     }
 }
 
+// returns -1 on move, 0 or more damage on attack
+int move_or_attack(Mob *attacker, Coords coords, Level *level)
+{
+    // first, check for mob
+    Mob *target = get_mob(level, coords);
+
+    if (target != NULL)
+        return attack(attacker, target);
+    else
+        move_mob(attacker, coords, level);
+
+    return -1;
+}
+
 void tick_mob(Mob *mob, Level *level)
 {
     Mob *player = level->player;
@@ -283,9 +295,11 @@ void tick_mob(Mob *mob, Level *level)
             return;
 
         if (dmg > 0)
-            message("You got hit for %d damage!", dmg); // TODO mob name
+            message("You got hit by the %s for %d damage!", 
+                    mob_name(mob->symbol),
+                    dmg);
         else if (dmg == 0)
-            message("It missed!");
+            message("The %s missed!", mob_name(mob->symbol));
     }
     else
     {
