@@ -5,7 +5,7 @@ CCFLAGS = -lcurses
 simplerl: $(OBJS)
 	gcc -o $(PROGRAM) $(CCFLAGS) $(OBJS)
 
-%.o: %.c %.h
+%.o: %.c
 	gcc -c $<
 
 clean:
