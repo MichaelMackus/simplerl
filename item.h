@@ -5,13 +5,19 @@
 
 #define ITEM_GOLD   0
 #define ITEM_WEAPON 1
-#define ITEM_ARMOR  2
-#define ITEM_POTION 3
-#define ITEM_SCROLL 4
+#define ITEM_PROJECTILE 2
+#define ITEM_ARMOR  3
+#define ITEM_POTION 4
+#define ITEM_SCROLL 5
+#define ITEM_ROCK   6
 
-#define DAMAGE_BLUNT 0
-#define DAMAGE_SLASH 1
-#define DAMAGE_SILVER 2
+// weapon damage types
+#define WEAPON_BLUNT 0
+#define WEAPON_SLASH 1
+#define WEAPON_SILVER 2
+// weapon flags
+#define WEAPON_RANGED 64
+#define WEAPON_TWOHANDED 128
 
 #define MATERIAL_METAL 0
 #define MATERIAL_LEATHER 1
@@ -21,6 +27,9 @@
 #define ITEM_EFFECT_HEAL 1
 #define ITEM_EFFECT_TELEPORT 2
 #define ITEM_EFFECT_DAMAGE 3
+
+#define PROJECTILE_ARROW 1
+#define PROJECTILE_ROCK 2
 
 // for potions & scrolls
 typedef struct {
@@ -32,8 +41,8 @@ typedef struct {
 typedef struct {
     int min;
     int max;
-    int type; // one of DAMAGE consts
-    int twoHanded; // boolean if this is two handed
+    int type; // one of WEAPON damage types anded with weapon flags
+    int projectile; // one of PROJECTILE consts (for ranged weapons)
 } WeaponAttributes;
 
 // for armor

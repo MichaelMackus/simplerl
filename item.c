@@ -6,6 +6,7 @@ char item_symbol(int itemType)
     switch (itemType)
     {
         case ITEM_WEAPON:
+        case ITEM_PROJECTILE:
             return ')';
         case ITEM_ARMOR:
             return '[';
@@ -15,6 +16,8 @@ char item_symbol(int itemType)
             return '?';
         case ITEM_POTION:
             return '!';
+        case ITEM_ROCK:
+            return '*';
         default:
             return '{'; // something is obviously wrong
     }
@@ -329,9 +332,8 @@ Item *init_weapon()
     // weapon defaults
     item->type = ITEM_WEAPON;
     item->amount = 1;
-    item->damage.type = DAMAGE_SLASH;
+    item->damage.type = WEAPON_SLASH;
     item->damage.min = 1;
-    item->damage.twoHanded = 0;
 
     return item;
 }
@@ -340,7 +342,7 @@ Item *club()
 {
     Item *weapon = init_weapon();
     weapon->damage.max = 4;
-    weapon->damage.type = DAMAGE_BLUNT;
+    weapon->damage.type = WEAPON_BLUNT;
     weapon->name = weapon->unknownName = "club";
 
     return weapon;
@@ -368,7 +370,7 @@ Item *mace()
 {
     Item *weapon = init_weapon();
     weapon->damage.max = 6;
-    weapon->damage.type = DAMAGE_BLUNT;
+    weapon->damage.type = WEAPON_BLUNT;
     weapon->name = weapon->unknownName = "club";
 
     return weapon;
@@ -378,8 +380,7 @@ Item *quarterstaff()
 {
     Item *weapon = init_weapon();
     weapon->damage.max = 6;
-    weapon->damage.type = DAMAGE_BLUNT;
-    weapon->damage.twoHanded = 1;
+    weapon->damage.type = WEAPON_BLUNT & WEAPON_TWOHANDED;
     weapon->name = weapon->unknownName = "quarterstaff";
 
     return weapon;
@@ -389,6 +390,7 @@ Item *long_sword()
 {
     Item *weapon = init_weapon();
     weapon->damage.max = 8;
+    weapon->damage.type &= WEAPON_TWOHANDED;
     weapon->name = weapon->unknownName = "long sword";
 
     return weapon;
@@ -398,7 +400,7 @@ Item *bastard_sword()
 {
     Item *weapon = init_weapon();
     weapon->damage.max = 10;
-    weapon->damage.twoHanded = 1;
+    weapon->damage.type &= WEAPON_TWOHANDED;
     weapon->name = weapon->unknownName = "bastard sword";
 
     return weapon;
@@ -408,7 +410,7 @@ Item *flail()
 {
     Item *weapon = init_weapon();
     weapon->damage.max = 8;
-    weapon->damage.type = DAMAGE_BLUNT;
+    weapon->damage.type = WEAPON_BLUNT;
     weapon->name = weapon->unknownName = "flail";
 
     return weapon;
@@ -439,7 +441,7 @@ Item *silver_sword()
     Item *weapon = init_weapon();
     weapon->damage.min = 2;
     weapon->damage.max = 10;
-    weapon->damage.type = DAMAGE_SILVER;
+    weapon->damage.type = WEAPON_SILVER;
     weapon->name = weapon->unknownName = "silver sword";
 
     return weapon;
