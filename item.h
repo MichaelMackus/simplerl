@@ -9,12 +9,13 @@
 #define ITEM_ARMOR  3
 #define ITEM_POTION 4
 #define ITEM_SCROLL 5
-#define ITEM_ROCK   6
+#define ITEM_ROCK   64 | 2
 
 // weapon damage types
 #define WEAPON_BLUNT 0
 #define WEAPON_SLASH 1
-#define WEAPON_SILVER 2
+#define WEAPON_PIERCE 2
+#define WEAPON_SILVER 3
 // weapon flags
 #define WEAPON_RANGED 64
 #define WEAPON_TWOHANDED 128

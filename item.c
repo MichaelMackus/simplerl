@@ -447,6 +447,33 @@ Item *silver_sword()
     return weapon;
 }
 
+Item *arrow()
+{
+    Item *weapon = init_weapon();
+    weapon->type = ITEM_PROJECTILE;
+    weapon->damage.min = 1;
+    weapon->damage.max = 4;
+    weapon->damage.type = WEAPON_PIERCE;
+    weapon->damage.projectile = PROJECTILE_ARROW;
+    weapon->name = weapon->unknownName = "arrow";
+
+    return weapon;
+}
+
+Item *rock()
+{
+    Item *weapon = init_weapon();
+    weapon->type = ITEM_ROCK;
+    weapon->damage.min = 1;
+    weapon->damage.max = 4;
+    weapon->damage.type = WEAPON_BLUNT;
+    weapon->damage.projectile = PROJECTILE_ROCK;
+    weapon->name = weapon->unknownName = "arrow";
+
+    return weapon;
+}
+
+
 
 Item *generate_weapon(int depth)
 {
@@ -459,7 +486,7 @@ Item *generate_weapon(int depth)
     if (depth <= 2)
     {
         if (percent <= 25)
-            return club();
+            return rock();
         else if (percent <= 50)
             return dagger();
         else if (percent <= 75)
@@ -471,8 +498,10 @@ Item *generate_weapon(int depth)
     {
         if (percent <= 20)
             return dagger();
-        else if (percent <= 35)
-            return quarterstaff();
+        else if (percent <= 30)
+            return arrow();
+        else if (percent <= 45)
+            return rock();
         else if (percent <= 50)
             return mace();
         else if (percent <= 75)
@@ -483,7 +512,7 @@ Item *generate_weapon(int depth)
     else
     {
         if (percent <= 20)
-            return long_sword();
+            return arrow();
         else if (percent <= 35)
             return bastard_sword();
         else if (percent <= 75)
