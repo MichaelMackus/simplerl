@@ -195,6 +195,7 @@ int is_path_clear(const Coords start, const Coords target, const Box **cells, in
 void draw_line(const Coords a, const Coords b, Level *level);
 int branches(const Box *cell, const Level *level);
 Coords find_random_section(const Box *cell);
+Coords get_section(const Box *cell, Direction dir);
 void randomly_fill_corridors(Level *level, const Box **cells, int cellCount)
 {
     // ensure at least 1 cell has no branches
@@ -215,8 +216,22 @@ void randomly_fill_corridors(Level *level, const Box **cells, int cellCount)
     int b = generate(0, cellCount - 1);
 
     if (a != b) {
-        Coords start = find_random_section(cells[a]);
-        Coords target = find_random_section(cells[b]);
+        Direction dir = { 0, 0 };
+        if (abs(cells[a]->coords.x - cells[b]->coords.x) > abs(cells[a]->coords.y - cells[b]->coords.y))
+            if (cells[b]->coords.x > cells[a]->coords.x)
+                dir.xdir = 1;
+            else
+                dir.xdir = -1;
+        else
+            if (cells[b]->coords.y > cells[a]->coords.y)
+                dir.ydir = 1;
+            else
+                dir.ydir = -1;
+
+        Coords start = get_section(cells[a], dir);
+        dir.xdir *= -1;
+        dir.ydir *= -1;
+        Coords target = get_section(cells[b], dir);
 
         draw_line(start, target, level);
     }
@@ -336,6 +351,41 @@ Coords find_random_section(const Box *cell)
             result.x = cell->coords.x + (cell->dimensions.w / 2);
             result.y = cell->coords.y + cell->dimensions.h - 1;
             break;
+    }
+
+    return result;
+}
+
+Coords get_section(const Box *cell, Direction dir)
+{
+    Coords result;
+
+    if (dir.xdir < 0)
+    {
+        // left wall
+        result.x = cell->coords.x;
+        result.y = cell->coords.y + (cell->dimensions.h / 2);
+    }
+
+    if (dir.xdir > 0)
+    {
+        // right wall
+        result.x = cell->coords.x + cell->dimensions.w - 1;
+        result.y = cell->coords.y + (cell->dimensions.h / 2);
+    }
+
+    if (dir.ydir < 0)
+    {
+        // top wall
+        result.x = cell->coords.x + (cell->dimensions.w / 2);
+        result.y = cell->coords.y;
+    }
+
+    if (dir.ydir > 0)
+    {
+        // bottom wall
+        result.x = cell->coords.x + (cell->dimensions.w / 2);
+        result.y = cell->coords.y + cell->dimensions.h - 1;
     }
 
     return result;
