@@ -434,12 +434,14 @@ Box *random_cell(Level *level)
 
         dimensions = random_dimensions();
 
-        // check all tiles if passable from coords -> dimension
+        // check all tiles if passable from coords -> dimension, with space of 1 on each side
         impassable = 0;
-        for (int y = coords.y; y < coords.y + dimensions.h; ++y)
+        for (int y = coords.y - 1; y < coords.y + dimensions.h + 1; ++y)
         {
-            for (int x = coords.x; x < coords.x + dimensions.w; ++x)
+            for (int x = coords.x - 1; x < coords.x + dimensions.w + 1; ++x)
             {
+                if (y < 0 || x < 0)
+                    continue;
                 const Tile *t = get_tile(level, xy(x, y));
                 if (t == NULL || t->type != TILE_NONE)
                 {
