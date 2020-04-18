@@ -279,12 +279,8 @@ void draw_line(const Coords a, const Coords b, Level *level)
         if (get_tile(level, current) == NULL)
             return;
 
-        int oldTile = -1;
         if (level->tiles[current.y][current.x].type != TILE_FLOOR)
-        {
-            oldTile = level->tiles[current.y][current.x].type;
             level->tiles[current.y][current.x].type = TILE_CAVERN;
-        }
 
         if (current.x == b.x && current.y == b.y)
             return;
@@ -308,17 +304,6 @@ void draw_line(const Coords a, const Coords b, Level *level)
 
         current.y += dy;
         current.x += dx;
-
-        // undo changes if we're carving through a wall
-        if ((level->tiles[current.y][current.x].type == TILE_WALL || level->tiles[current.y][current.x].type == TILE_WALL_SIDE) &&
-            (oldTile == TILE_WALL || oldTile == TILE_WALL_SIDE))
-        {
-            current.y -= dy;
-            current.x -= dx;
-            level->tiles[current.y][current.x].type = oldTile;
-
-            return;
-        }
     }
 }
 
