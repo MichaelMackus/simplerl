@@ -325,12 +325,12 @@ void draw_line(const Coords a, const Coords b, Level *level)
         if (get_tile(level, current) == NULL)
             return;
 
-        if (current.x == b.x && current.y == b.y)
-            return;
-
         // go around the corner or other impassable feature
         if (level->tiles[current.y][current.x].generatorFlags & GENERATOR_IMPASSABLE)
         {
+            if (current.x == b.x && current.y == b.y)
+                return;
+
             // TODO what about when there's a turn?
             // TODO perhaps switch directions here & let code in next
             // TODO block properly handle all direction corrections
@@ -380,6 +380,9 @@ void draw_line(const Coords a, const Coords b, Level *level)
 
             if (level->tiles[current.y][current.x].type != TILE_FLOOR)
                 level->tiles[current.y][current.x].type = TILE_CAVERN;
+
+            if (current.x == b.x && current.y == b.y)
+                return;
 
             if (current.y == b.y && dy != 0)
             {
