@@ -378,8 +378,10 @@ void draw_line(const Coords a, const Coords b, Level *level)
                     level->tiles[current.y - 1][current.x].generatorFlags = GENERATOR_IMPASSABLE;
             }
 
-            if (level->tiles[current.y][current.x].type != TILE_FLOOR)
+            if (level->tiles[current.y][current.x].type == TILE_NONE)
                 level->tiles[current.y][current.x].type = TILE_CAVERN;
+            else if (is_wall(level->tiles[current.y][current.x].type))
+                level->tiles[current.y][current.x].type = TILE_FLOOR;
 
             if (current.x == b.x && current.y == b.y)
                 return;
