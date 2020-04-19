@@ -13,6 +13,9 @@
 
 #define INITIAL_SMELL   10
 
+#define GENERATOR_PASSABLE   0
+#define GENERATOR_IMPASSABLE 1
+
 #include "item.h"
 
 typedef struct {
@@ -20,6 +23,7 @@ typedef struct {
     int type; // one of TILE consts
     int seen; // seen by player?
     int smell; // when player passes onto tile, set this to INITIAL_SMELL and decrement each turn
+    int generatorFlags; // flags for map generation
 } Tile;
 
 // return tile symbol for display

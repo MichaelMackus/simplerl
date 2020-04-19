@@ -287,6 +287,11 @@ int is_next_to_cavern(const Level *level, const Coords coords)
     return 0;
 }
 
+static inline int is_wall(int type)
+{
+    return type == TILE_WALL || type == TILE_WALL_SIDE;
+}
+
 // draws a line using straight lines (just a simple right angle for now)
 void draw_line(const Coords a, const Coords b, Level *level)
 {
@@ -315,22 +320,16 @@ void draw_line(const Coords a, const Coords b, Level *level)
     current.x = a.x;
     current.y = a.y;
 
-    // ensure we don't carve out wall
-    if (get_tile(level, current) &&
-        (level->tiles[current.y][current.x].type == TILE_WALL || level->tiles[current.y][current.x].type == TILE_WALL_SIDE) &&
-        get_tile(level, (Coords) { current.x + dx, current.y + dy }) &&
-        (level->tiles[current.y + dy][current.x + dx].type == TILE_WALL || level->tiles[current.y + dy][current.x + dx].type == TILE_WALL_SIDE))
-    {
-        return;
-    }
-
     while (1 == 1)
     {
         if (get_tile(level, current) == NULL)
             return;
 
-        // go around the corner
-        if (is_corner(level, current))
+        if (current.x == b.x && current.y == b.y)
+            return;
+
+        // go around the corner or other impassable feature
+        if (level->tiles[current.y][current.x].generatorFlags & GENERATOR_IMPASSABLE)
         {
             // TODO what about when there's a turn?
             // TODO perhaps switch directions here & let code in next
@@ -341,16 +340,21 @@ void draw_line(const Coords a, const Coords b, Level *level)
                 if (get_tile(level, (Coords) { current.x, current.y + 1 }) && 
                     (level->tiles[current.y + 1][current.x].type == TILE_NONE || level->tiles[current.y + 1][current.x].type == TILE_CAVERN))
                     newdy = 1;
-                else
+                else if (get_tile(level, (Coords) { current.x, current.y - 1 }) && 
+                    (level->tiles[current.y - 1][current.x].type == TILE_NONE || level->tiles[current.y - 1][current.x].type == TILE_CAVERN))
                     newdy = -1;
+                else return;
             }
             else if (dx == 0)
             {
                 if (get_tile(level, (Coords) { current.x + 1, current.y }) && 
                     (level->tiles[current.y][current.x + 1].type == TILE_NONE || level->tiles[current.y][current.x + 1].type == TILE_CAVERN))
                     newdx = 1;
-                else
+                else if (get_tile(level, (Coords) { current.x - 1, current.y }) && 
+                    (level->tiles[current.y][current.x - 1].type == TILE_NONE || level->tiles[current.y][current.x - 1].type == TILE_CAVERN))
                     newdx = -1;
+                else
+                    return; // error, abort
             }
 
             current.x -= dx;
@@ -360,11 +364,22 @@ void draw_line(const Coords a, const Coords b, Level *level)
         }
         else
         {
+            // if this is a wall, mark the walls *next* to it impassable
+            // (so we don't carve double wide doorways)
+            if (is_wall(level->tiles[current.y][current.x].type))
+            {
+                if (get_tile(level, (Coords) { current.x + 1, current.y }) && is_wall(level->tiles[current.y][current.x + 1].type))
+                    level->tiles[current.y][current.x + 1].generatorFlags = GENERATOR_IMPASSABLE;
+                if (get_tile(level, (Coords) { current.x - 1, current.y }) && is_wall(level->tiles[current.y][current.x - 1].type))
+                    level->tiles[current.y][current.x - 1].generatorFlags = GENERATOR_IMPASSABLE;
+                if (get_tile(level, (Coords) { current.x, current.y + 1 }) && is_wall(level->tiles[current.y + 1][current.x].type))
+                    level->tiles[current.y + 1][current.x].generatorFlags = GENERATOR_IMPASSABLE;
+                if (get_tile(level, (Coords) { current.x, current.y - 1 }) && is_wall(level->tiles[current.y - 1][current.x].type))
+                    level->tiles[current.y - 1][current.x].generatorFlags = GENERATOR_IMPASSABLE;
+            }
+
             if (level->tiles[current.y][current.x].type != TILE_FLOOR)
                 level->tiles[current.y][current.x].type = TILE_CAVERN;
-
-            if (current.x == b.x && current.y == b.y)
-                return;
 
             if (current.y == b.y && dy != 0)
             {
@@ -564,12 +579,19 @@ void fill_cell(Box *cell, Level *level, int fill)
 
             Tile t;
             if (fill)
+            {
                 if (y == cell->coords.y || y == cell->coords.y + cell->dimensions.h - 1)
                     t = create_tile(TILE_WALL);
                 else if (x == cell->coords.x || x == cell->coords.x + cell->dimensions.w - 1)
                     t = create_tile(TILE_WALL_SIDE);
                 else
                     t = create_tile(TILE_FLOOR);
+
+                // if this is a corner, mark impassable for generation
+                if ((y == cell->coords.y || y == cell->coords.y + cell->dimensions.h - 1) &&
+                    (x == cell->coords.x || x == cell->coords.x + cell->dimensions.w - 1))
+                    t.generatorFlags = GENERATOR_IMPASSABLE;
+            }
             else
                 t = create_tile(TILE_NONE);
 

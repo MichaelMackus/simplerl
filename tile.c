@@ -42,6 +42,7 @@ Tile create_tile(int tileType)
     t.seen = 0;
     t.smell = 0;
     t.items = initialize_items();
+    t.generatorFlags = GENERATOR_PASSABLE;
 
     return t;
 }
