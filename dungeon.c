@@ -245,6 +245,7 @@ void randomly_fill_corridors(Level *level, const Box **cells, int cellCount)
 /**         **/
 /*************/
 
+// TODO doesn't work *after* walls are carved
 int is_corner(const Level *level, const Coords coords)
 {
     Tile *current = get_tile(level, coords);
@@ -313,42 +314,78 @@ void draw_line(const Coords a, const Coords b, Level *level)
     Coords current;
     current.x = a.x;
     current.y = a.y;
+
+    // ensure we don't carve out wall
+    if (get_tile(level, current) &&
+        (level->tiles[current.y][current.x].type == TILE_WALL || level->tiles[current.y][current.x].type == TILE_WALL_SIDE) &&
+        get_tile(level, (Coords) { current.x + dx, current.y + dy }) &&
+        (level->tiles[current.y + dy][current.x + dx].type == TILE_WALL || level->tiles[current.y + dy][current.x + dx].type == TILE_WALL_SIDE))
+    {
+        return;
+    }
+
     while (1 == 1)
     {
         if (get_tile(level, current) == NULL)
             return;
 
-        // ensure this isn't a corner here or next to a cavern
+        // go around the corner
         if (is_corner(level, current))
-            return;
-        if ((level->tiles[current.y][current.x].type == TILE_WALL || level->tiles[current.y][current.x].type == TILE_WALL_SIDE) && is_next_to_cavern(level, current))
-            return;
-
-        if (level->tiles[current.y][current.x].type != TILE_FLOOR)
-            level->tiles[current.y][current.x].type = TILE_CAVERN;
-
-        if (current.x == b.x && current.y == b.y)
-            return;
-
-        if (current.y == b.y && dy != 0)
         {
-            dy = 0;
-            if (current.x > b.x)
-                dx = -1; // go left
-            else if (current.x < b.x)
-                dx = 1; // go right
-        }
-        else if (current.x == b.x && dx != 0)
-        {
-            dx = 0;
-            if (current.y > b.y)
-                dy = -1; // go up
-            else if (current.y < b.y)
-                dy = 1; // go down
-        }
+            // TODO what about when there's a turn?
+            // TODO perhaps switch directions here & let code in next
+            // TODO block properly handle all direction corrections
+            int newdy = 0, newdx = 0;
+            if (dy == 0)
+            {
+                if (get_tile(level, (Coords) { current.x, current.y + 1 }) && 
+                    (level->tiles[current.y + 1][current.x].type == TILE_NONE || level->tiles[current.y + 1][current.x].type == TILE_CAVERN))
+                    newdy = 1;
+                else
+                    newdy = -1;
+            }
+            else if (dx == 0)
+            {
+                if (get_tile(level, (Coords) { current.x + 1, current.y }) && 
+                    (level->tiles[current.y][current.x + 1].type == TILE_NONE || level->tiles[current.y][current.x + 1].type == TILE_CAVERN))
+                    newdx = 1;
+                else
+                    newdx = -1;
+            }
 
-        current.y += dy;
-        current.x += dx;
+            current.x -= dx;
+            current.y -= dy;
+            current.x += newdx;
+            current.y += newdy;
+        }
+        else
+        {
+            if (level->tiles[current.y][current.x].type != TILE_FLOOR)
+                level->tiles[current.y][current.x].type = TILE_CAVERN;
+
+            if (current.x == b.x && current.y == b.y)
+                return;
+
+            if (current.y == b.y && dy != 0)
+            {
+                dy = 0;
+                if (current.x > b.x)
+                    dx = -1; // go left
+                else if (current.x < b.x)
+                    dx = 1; // go right
+            }
+            else if (current.x == b.x && dx != 0)
+            {
+                dx = 0;
+                if (current.y > b.y)
+                    dy = -1; // go up
+                else if (current.y < b.y)
+                    dy = 1; // go down
+            }
+
+            current.y += dy;
+            current.x += dx;
+        }
     }
 }
 
