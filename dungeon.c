@@ -245,9 +245,48 @@ void randomly_fill_corridors(Level *level, const Box **cells, int cellCount)
 /**         **/
 /*************/
 
+int is_corner(const Level *level, const Coords coords)
+{
+    Tile *current = get_tile(level, coords);
+
+    if (!current || !(current->type == TILE_WALL || current->type == TILE_WALL_SIDE))
+        return 0;
+
+    Tile *above = get_tile(level, (Coords) { coords.x, coords.y - 1 });
+    Tile *below = get_tile(level, (Coords) { coords.x, coords.y + 1 });
+    if ((above && (above->type == TILE_WALL || above->type == TILE_WALL_SIDE)) ||
+        (below && (below->type == TILE_WALL || below->type == TILE_WALL_SIDE)))
+    {
+        Tile *left = get_tile(level, (Coords) { coords.x - 1, coords.y });
+        Tile *right = get_tile(level, (Coords) { coords.x + 1, coords.y });
+        if ((right && (right->type == TILE_WALL || right->type == TILE_WALL_SIDE)) ||
+            (left && (left->type == TILE_WALL || left->type == TILE_WALL_SIDE)))
+        {
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
+int is_next_to_cavern(const Level *level, const Coords coords)
+{
+    Tile *above = get_tile(level, (Coords) { coords.x, coords.y - 1 });
+    Tile *below = get_tile(level, (Coords) { coords.x, coords.y + 1 });
+    Tile *left = get_tile(level, (Coords) { coords.x - 1, coords.y });
+    Tile *right = get_tile(level, (Coords) { coords.x + 1, coords.y });
+    if ((above && above->type == TILE_CAVERN) ||
+        (below && below->type == TILE_CAVERN) ||
+        (right && right->type == TILE_CAVERN) ||
+        (left && left->type == TILE_CAVERN))
+    {
+        return 1;
+    }
+
+    return 0;
+}
+
 // draws a line using straight lines (just a simple right angle for now)
-// TODO should probably avoid carving into walls
-// TODO should probably avoid close corridors
 void draw_line(const Coords a, const Coords b, Level *level)
 {
     // x & y direction
@@ -277,6 +316,12 @@ void draw_line(const Coords a, const Coords b, Level *level)
     while (1 == 1)
     {
         if (get_tile(level, current) == NULL)
+            return;
+
+        // ensure this isn't a corner here or next to a cavern
+        if (is_corner(level, current))
+            return;
+        if ((level->tiles[current.y][current.x].type == TILE_WALL || level->tiles[current.y][current.x].type == TILE_WALL_SIDE) && is_next_to_cavern(level, current))
             return;
 
         if (level->tiles[current.y][current.x].type != TILE_FLOOR)
