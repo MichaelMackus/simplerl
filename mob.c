@@ -235,24 +235,31 @@ const char* mob_name(char symbol)
 {
     switch (symbol)
     {
-        case 'r':
-            return "rat";
+        // TODO small weapon(s)
         case 'k':
             return "kobold";
         case 'g':
             return "goblin";
         case 'o':
             return "orc";
+        case 'h':
+            return "hobgoblin";
+        // TODO large weapon, maybe boulder(s)
         case 'O':
             return "ogre";
+        // TODO no weapons *or* pockets
+        case 'r':
+            return "rat";
         case 'd':
             return "drake";
+        // TODO best weapon(s)
+        case '&':
+            return "demon";
+        // TODO no weapons, lots of gold, possibly other items
         case 'H':
             return "mind flayer";
         case 'D':
-            return "dragon";
-        case '&':
-            return "demon";
+            return "dragon"; // TODO bonus gold
 
         default:
             return "unknown";
