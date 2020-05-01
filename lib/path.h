@@ -22,4 +22,7 @@ const RL_Coords *rl_walk_path(RL_Path *path);
 // reset path back to start point
 void rl_reset_path(RL_Path *path);
 
+// reverse the path
+void rl_reverse_path(RL_Path *path);
+
 #endif

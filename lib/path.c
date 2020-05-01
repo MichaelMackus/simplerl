@@ -17,6 +17,7 @@ struct _RL_Path {
     RL_Coords loc; // location in the path
     struct _RL_Path *next; // next part of the linked list
     struct _RL_Path *current; // current part of path (used during iteration after the path is generated)
+    struct _RL_Path *head; // head of list (used for reset & reversal)
 };
 
 RL_Path *rl_get_line(const RL_Coords a, const RL_Coords b)
@@ -28,6 +29,7 @@ RL_Path *rl_get_line(const RL_Coords a, const RL_Coords b)
 
     head->next = NULL;
     head->current = head;
+    head->head = head;
 
     int deltaX = abs(a.x - b.x);
     int xIncrement = b.x > a.x ? 1 : -1;
@@ -105,7 +107,28 @@ const RL_Coords *rl_walk_path(RL_Path *path)
 
 void rl_reset_path(RL_Path *path)
 {
-    path->current = path;
+    path->current = path->head;
+}
+
+void rl_reverse_path(RL_Path *path)
+{
+    RL_Path *prev = NULL; 
+    RL_Path *current = path->head;
+    RL_Path *next = NULL;
+    while (current != NULL) { 
+        // Store next 
+        next = current->next; 
+
+        // Reverse current node's pointer 
+        current->next = prev; 
+
+        // Move pointers one position ahead. 
+        prev = current; 
+        current = next; 
+    }
+
+    path->head = prev;
+    path->current = prev;
 }
 
 /**
