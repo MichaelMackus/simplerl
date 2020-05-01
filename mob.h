@@ -30,7 +30,7 @@ typedef struct {
 
 typedef struct {
     int hp, maxHP;
-    Coords coords;
+    RL_Coords coords;
     unsigned int minDamage, maxDamage;
     int type;
     int form;
@@ -50,7 +50,7 @@ typedef struct {
 } Mobs;
 
 // return a random mob for the specified dungeon depth
-Mob *create_mob(int depth, Coords coords);
+Mob *create_mob(int depth, RL_Coords coords);
 
 // try to attack x, y
 // if no mob found at x, y do nothing

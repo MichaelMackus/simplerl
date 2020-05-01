@@ -3,20 +3,20 @@
 #include <stdlib.h>
 #include <memory.h>
 
-Coords xy(int x, int y)
+RL_Coords rl_coords(int x, int y)
 {
-    Coords c;
+    RL_Coords c;
     c.x = x;
     c.y = y;
 
     return c;
 }
 
-const Coords **get_line(const Coords a, const Coords b, int maxLength)
+const RL_Coords **rl_get_line(const RL_Coords a, const RL_Coords b, int maxLength)
 {
-    Coords **line;
-    line = malloc(sizeof(Coords*)*maxLength);
-    memset(line, 0, sizeof(Coords*)*maxLength);
+    RL_Coords **line;
+    line = malloc(sizeof(RL_Coords*)*maxLength);
+    memset(line, 0, sizeof(RL_Coords*)*maxLength);
 
     int deltaX = abs(a.x - b.x);
     int xIncrement = b.x > a.x ? 1 : -1;
@@ -25,10 +25,10 @@ const Coords **get_line(const Coords a, const Coords b, int maxLength)
     double error = 0.0;
     double slope = deltaX ? (double)deltaY / (double)deltaX : 0.0;
 
-    Coords currentCoords = a;
+    RL_Coords currentCoords = a;
     for (int i = 0; i < maxLength; ++i)
     {
-        line[i] = malloc(sizeof(Coords));
+        line[i] = malloc(sizeof(RL_Coords));
         line[i]->x = currentCoords.x;
         line[i]->y = currentCoords.y;
 
@@ -59,32 +59,32 @@ const Coords **get_line(const Coords a, const Coords b, int maxLength)
         }
     }
 
-    return (const Coords **) line;
+    return (const RL_Coords **) line;
 }
 
-void free_path(const Coords **line, int maxLength)
+void free_path(const RL_Coords **line, int maxLength)
 {
     int i = 0;
     for (int i = 0; i < maxLength; ++i)
     {
         if (line[i] != NULL)
-            free((Coords*) line[i]);
+            free((RL_Coords*) line[i]);
     }
-    free((Coords**) line);
+    free((RL_Coords**) line);
 }
 
 /**
  * Legacy code below, need to convert it into platform-agnostic code.
 
-int pathfind(const Coords start, const Coords end, const Tile **tiles, int **walked, int **path);
+int pathfind(const RL_Coords start, const RL_Coords end, const Tile **tiles, int **walked, int **path);
 int **create_walked(int **previous);
 void free_walked(int **walked);
-const Coords **find_path(const Coords start, const Coords end, const Tile **tiles)
+const RL_Coords **find_path(const RL_Coords start, const RL_Coords end, const Tile **tiles)
 {
     int **walked = create_walked(NULL);
     int **path = create_walked(NULL);
 
-    if (!pathfind(xy(start.x, start.y), end, tiles, walked, path))
+    if (!pathfind(rl_coords(start.x, start.y), end, tiles, walked, path))
     {
         free_walked(walked);
         free_walked(path);
@@ -95,18 +95,18 @@ const Coords **find_path(const Coords start, const Coords end, const Tile **tile
     free_walked(walked);
 
     // allocate memory for result path
-    Coords **result;
-    result = malloc(sizeof(Coords*)*MAX_WIDTH*MAX_HEIGHT);
-    memset(result, 0, sizeof(Coords*)*MAX_WIDTH*MAX_HEIGHT);
+    RL_Coords **result;
+    result = malloc(sizeof(RL_Coords*)*MAX_WIDTH*MAX_HEIGHT);
+    memset(result, 0, sizeof(RL_Coords*)*MAX_WIDTH*MAX_HEIGHT);
 
-    // create Coords from path
-    Coords **cur = result;
+    // create RL_Coords from path
+    RL_Coords **cur = result;
     for (int y = 0; y < MAX_HEIGHT; ++y)
         for (int x = 0; x < MAX_WIDTH; ++x)
         {
             if (path[y][x])
             {
-                *cur = malloc(sizeof(Coords));
+                *cur = malloc(sizeof(RL_Coords));
                 (*cur)->x = x;
                 (*cur)->y = y;
                 ++cur;
@@ -115,12 +115,12 @@ const Coords **find_path(const Coords start, const Coords end, const Tile **tile
 
     free_walked(path);
 
-    return (const Coords **) result;
+    return (const RL_Coords **) result;
 }
 
 // core pathfinding function, updates walked with newly walked coords
 // returns 0 if no path, or 1 if path found
-int pathfind(const Coords start, const Coords end, const Tile **tiles, int **walked, int **path)
+int pathfind(const RL_Coords start, const RL_Coords end, const Tile **tiles, int **walked, int **path)
 {
     // out of bounds check
     if (start.y >= MAX_HEIGHT || start.x >= MAX_WIDTH || start.y < 0 || start.x < 0)
@@ -142,18 +142,18 @@ int pathfind(const Coords start, const Coords end, const Tile **tiles, int **wal
         return 1;
 
     // check path in 4 directions to end
-    Coords cur;
+    RL_Coords cur;
     for (int i = 0; i < 4; ++i)
     {
         // set current coordinate
         if (i == 0)
-            cur = xy(start.x + 1, start.y);
+            cur = rl_coords(start.x + 1, start.y);
         else if (i == 1)
-            cur = xy(start.x - 1, start.y);
+            cur = rl_coords(start.x - 1, start.y);
         else if (i == 2)
-            cur = xy(start.x, start.y + 1);
+            cur = rl_coords(start.x, start.y + 1);
         else
-            cur = xy(start.x, start.y - 1);
+            cur = rl_coords(start.x, start.y - 1);
 
         int **nextPath = create_walked(path);
 

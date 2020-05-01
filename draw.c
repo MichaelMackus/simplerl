@@ -130,7 +130,7 @@ void render_level(Level *level, const Mob *player)
         for (int x = 0; x < MAX_WIDTH; ++x)
         {
             // draw tile symbol if the player can see it
-            if (can_see(player->coords, xy(x, y), level->tiles) ||
+            if (can_see(player->coords, rl_coords(x, y), level->tiles) ||
                     level->tiles[y][x].seen)
             {
                 Tile t = level->tiles[y][x];

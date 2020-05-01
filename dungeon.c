@@ -96,21 +96,21 @@ typedef struct {
 } Dimensions;
 
 typedef struct {
-    Coords coords;  // starting at top left corner of box
+    RL_Coords coords;  // starting at top left corner of box
     Dimensions dimensions;
 } Box;
 
 
 // FIXME these two functions are a quick fix
-Coords empty_coords()
+RL_Coords empty_coords()
 {
-    Coords coords;
+    RL_Coords coords;
     coords.x = MAX_WIDTH;
     coords.y = MAX_HEIGHT;
 
     return coords;
 }
-int is_empty(Coords coords)
+int is_empty(RL_Coords coords)
 {
     return coords.x == MAX_WIDTH && coords.y == MAX_HEIGHT;
 }
@@ -146,7 +146,7 @@ void randomly_fill_tiles(Level *level)
 
     // randomly place upstairs
     i = generate(0, cellCount - 1);
-    Coords up;
+    RL_Coords up;
     up.x = cells[i]->coords.x + cells[i]->dimensions.w/2;
     up.y = cells[i]->coords.y + cells[i]->dimensions.h/2;
     level->tiles[up.y][up.x].type = TILE_STAIR_UP;
@@ -157,7 +157,7 @@ void randomly_fill_tiles(Level *level)
     int j = i;
     while (i == j)
         i = generate(0, cellCount - 1);
-    Coords down;
+    RL_Coords down;
     down.x = cells[i]->coords.x + cells[i]->dimensions.w/2;
     down.y = cells[i]->coords.y + cells[i]->dimensions.h/2;
     level->tiles[down.y][down.x].type = TILE_STAIR_DOWN;
@@ -176,7 +176,7 @@ void randomly_fill_mobs(Level *level, int max)
     int amount = generate(0, max);
     for (int i = 0; i < amount; ++i)
     {
-        Coords coords = random_passable_coords(level);
+        RL_Coords coords = random_passable_coords(level);
         Mob *mob = create_mob(level->depth, coords);
 
         if (mob == NULL)
@@ -193,11 +193,11 @@ void randomly_fill_mobs(Level *level, int max)
     }
 }
 
-int is_path_clear(const Coords start, const Coords target, const Box **cells, int cellCount);
-void draw_line(const Coords a, const Coords b, Level *level);
+int is_path_clear(const RL_Coords start, const RL_Coords target, const Box **cells, int cellCount);
+void draw_line(const RL_Coords a, const RL_Coords b, Level *level);
 int branches(const Box *cell, const Level *level);
-Coords find_random_section(const Box *cell);
-Coords get_section(const Box *cell, Direction dir);
+RL_Coords find_random_section(const Box *cell);
+RL_Coords get_section(const Box *cell, Direction dir);
 void randomly_fill_corridors(Level *level, const Box **cells, int cellCount)
 {
     // ensure at least 1 cell has no branches
@@ -230,10 +230,10 @@ void randomly_fill_corridors(Level *level, const Box **cells, int cellCount)
             else
                 dir.ydir = -1;
 
-        Coords start = get_section(cells[a], dir);
+        RL_Coords start = get_section(cells[a], dir);
         dir.xdir *= -1;
         dir.ydir *= -1;
-        Coords target = get_section(cells[b], dir);
+        RL_Coords target = get_section(cells[b], dir);
 
         draw_line(start, target, level);
     }
@@ -253,7 +253,7 @@ static inline int is_wall(int type)
 }
 
 // draws a line using straight lines (just a simple right angle for now)
-void draw_line(const Coords a, const Coords b, Level *level)
+void draw_line(const RL_Coords a, const RL_Coords b, Level *level)
 {
     // x & y direction
     int dy = 0, dx = 0;
@@ -276,7 +276,7 @@ void draw_line(const Coords a, const Coords b, Level *level)
     }
 
     // draw caverns in direction of b
-    Coords current;
+    RL_Coords current;
     current.x = a.x;
     current.y = a.y;
 
@@ -297,20 +297,20 @@ void draw_line(const Coords a, const Coords b, Level *level)
             int newdy = 0, newdx = 0;
             if (dy == 0)
             {
-                if (get_tile(level, (Coords) { current.x, current.y + 1 }) && 
+                if (get_tile(level, (RL_Coords) { current.x, current.y + 1 }) && 
                     (level->tiles[current.y + 1][current.x].type == TILE_NONE || level->tiles[current.y + 1][current.x].type == TILE_CAVERN))
                     newdy = 1;
-                else if (get_tile(level, (Coords) { current.x, current.y - 1 }) && 
+                else if (get_tile(level, (RL_Coords) { current.x, current.y - 1 }) && 
                     (level->tiles[current.y - 1][current.x].type == TILE_NONE || level->tiles[current.y - 1][current.x].type == TILE_CAVERN))
                     newdy = -1;
                 else return;
             }
             else if (dx == 0)
             {
-                if (get_tile(level, (Coords) { current.x + 1, current.y }) && 
+                if (get_tile(level, (RL_Coords) { current.x + 1, current.y }) && 
                     (level->tiles[current.y][current.x + 1].type == TILE_NONE || level->tiles[current.y][current.x + 1].type == TILE_CAVERN))
                     newdx = 1;
-                else if (get_tile(level, (Coords) { current.x - 1, current.y }) && 
+                else if (get_tile(level, (RL_Coords) { current.x - 1, current.y }) && 
                     (level->tiles[current.y][current.x - 1].type == TILE_NONE || level->tiles[current.y][current.x - 1].type == TILE_CAVERN))
                     newdx = -1;
                 else
@@ -328,13 +328,13 @@ void draw_line(const Coords a, const Coords b, Level *level)
             // (so we don't carve double wide doorways)
             if (is_wall(level->tiles[current.y][current.x].type))
             {
-                if (get_tile(level, (Coords) { current.x + 1, current.y }) && is_wall(level->tiles[current.y][current.x + 1].type))
+                if (get_tile(level, (RL_Coords) { current.x + 1, current.y }) && is_wall(level->tiles[current.y][current.x + 1].type))
                     level->tiles[current.y][current.x + 1].generatorFlags = GENERATOR_IMPASSABLE;
-                if (get_tile(level, (Coords) { current.x - 1, current.y }) && is_wall(level->tiles[current.y][current.x - 1].type))
+                if (get_tile(level, (RL_Coords) { current.x - 1, current.y }) && is_wall(level->tiles[current.y][current.x - 1].type))
                     level->tiles[current.y][current.x - 1].generatorFlags = GENERATOR_IMPASSABLE;
-                if (get_tile(level, (Coords) { current.x, current.y + 1 }) && is_wall(level->tiles[current.y + 1][current.x].type))
+                if (get_tile(level, (RL_Coords) { current.x, current.y + 1 }) && is_wall(level->tiles[current.y + 1][current.x].type))
                     level->tiles[current.y + 1][current.x].generatorFlags = GENERATOR_IMPASSABLE;
-                if (get_tile(level, (Coords) { current.x, current.y - 1 }) && is_wall(level->tiles[current.y - 1][current.x].type))
+                if (get_tile(level, (RL_Coords) { current.x, current.y - 1 }) && is_wall(level->tiles[current.y - 1][current.x].type))
                     level->tiles[current.y - 1][current.x].generatorFlags = GENERATOR_IMPASSABLE;
             }
 
@@ -369,9 +369,9 @@ void draw_line(const Coords a, const Coords b, Level *level)
     }
 }
 
-Coords find_random_section(const Box *cell)
+RL_Coords find_random_section(const Box *cell)
 {
-    Coords result;
+    RL_Coords result;
 
     // pick random wall
     int j = generate(1, 4);
@@ -403,9 +403,9 @@ Coords find_random_section(const Box *cell)
     return result;
 }
 
-Coords get_section(const Box *cell, Direction dir)
+RL_Coords get_section(const Box *cell, Direction dir)
 {
-    Coords result;
+    RL_Coords result;
 
     if (dir.xdir < 0)
     {
@@ -438,22 +438,22 @@ Coords get_section(const Box *cell, Direction dir)
     return result;
 }
 
-Coords random_coords(Level *level)
+RL_Coords random_coords(Level *level)
 {
-    Coords coords;
+    RL_Coords coords;
     coords.x = generate(0, MAX_WIDTH - 1);
     coords.y = generate(0, MAX_HEIGHT - 1);
 
     return coords;
 }
 
-Coords random_open_coords(Level *level)
+RL_Coords random_open_coords(Level *level)
 {
     // do simple brute force attempt to get an open coord
     int i = 0;
     while (i < MAX_RANDOM_RECURSION)
     {
-        Coords coords = random_coords(level);
+        RL_Coords coords = random_coords(level);
         const Tile *t = get_tile(level, coords);
         if (t != NULL && t->type == TILE_NONE)
             return coords;
@@ -463,13 +463,13 @@ Coords random_open_coords(Level *level)
     return empty_coords();
 }
 
-Coords random_passable_coords(Level *level)
+RL_Coords random_passable_coords(Level *level)
 {
     // do simple brute force attempt to get a passable coord
     int i = 0;
     while (i < MAX_RANDOM_RECURSION)
     {
-        Coords coords = random_coords(level);
+        RL_Coords coords = random_coords(level);
         const Tile *t = get_tile(level, coords);
         Mob *m = get_mob(level, coords);
         if (t != NULL && is_passable(*t) && m == NULL)
@@ -483,7 +483,7 @@ Coords random_passable_coords(Level *level)
 Dimensions random_dimensions();
 Box *random_cell(Level *level)
 {
-    Coords coords;
+    RL_Coords coords;
     int impassable, i;
     Dimensions dimensions;
 
@@ -504,7 +504,7 @@ Box *random_cell(Level *level)
             {
                 if (y < 0 || x < 0)
                     continue;
-                const Tile *t = get_tile(level, xy(x, y));
+                const Tile *t = get_tile(level, rl_coords(x, y));
                 if (t == NULL || t->type != TILE_NONE)
                 {
                     ++impassable;
@@ -607,7 +607,7 @@ int branches(const Box *cell, const Level *level)
                     (x == cell->coords.x || x == cell->coords.x + cell->dimensions.w - 1))
             {
                 // increment branches count if this is *not* a wall
-                const Tile *t = get_tile(level, xy(x, y));
+                const Tile *t = get_tile(level, rl_coords(x, y));
                 if (t != NULL && t->type != TILE_NONE && t->type != TILE_WALL && t->type != TILE_WALL_SIDE)
                     ++count;
             }
