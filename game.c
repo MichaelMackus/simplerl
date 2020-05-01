@@ -3,6 +3,12 @@
 #include <stdlib.h>
 #include <memory.h>
 
+typedef struct {
+    int xdir;
+    int ydir;
+} Direction;
+Direction direction(int xdir, int ydir) { return (Direction) { xdir, ydir }; }
+
 int resting = 0; // 1 if player resting
 
 int inMenu = 0; // one of MENU consts if in menu

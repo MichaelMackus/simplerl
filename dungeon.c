@@ -2,6 +2,11 @@
 #include <stdlib.h>
 #include <memory.h>
 
+typedef struct {
+    int xdir;
+    int ydir;
+} Direction;
+
 Dungeon *create_dungeon()
 {
     // do this otherwise initial seed will always be the same

@@ -2,24 +2,6 @@
 #include <memory.h>
 #include <stdlib.h>
 
-Coords xy(int x, int y)
-{
-    Coords c;
-    c.x = x;
-    c.y = y;
-
-    return c;
-}
-
-Direction direction(int xdir, int ydir)
-{
-    Direction dir;
-    dir.xdir = xdir;
-    dir.ydir = ydir;
-
-    return dir;
-}
-
 int pathfind(const Coords start, const Coords end, const Tile **tiles, int **walked, int **path);
 int **create_walked(int **previous);
 void free_walked(int **walked);
@@ -119,40 +101,6 @@ int pathfind(const Coords start, const Coords end, const Tile **tiles, int **wal
     return 0;
 }
 
-// get straight line from a to b
-const Coords **get_line(const Coords a, const Coords b)
-{
-    Coords **line;
-    line = malloc(sizeof(Coords*)*MAX_WIDTH*MAX_HEIGHT);
-    memset(line, 0, sizeof(Coords*)*MAX_WIDTH*MAX_HEIGHT);
-
-    Coords currentCoords = a;
-    for (int i = 0; i < MAX_WIDTH*MAX_HEIGHT; ++i)
-    {
-        line[i] = malloc(sizeof(Coords));
-
-        // calculate x difference
-        if (b.x - currentCoords.x > 0)
-            ++currentCoords.x;
-        else if (b.x - currentCoords.x < 0)
-            --currentCoords.x;
-        // calculate y difference
-        if (b.y - currentCoords.y > 0)
-            ++currentCoords.y;
-        else if (b.y - currentCoords.y < 0)
-            --currentCoords.y;
-
-        line[i]->x = currentCoords.x;
-        line[i]->y = currentCoords.y;
-
-        // we're done if we are at the end
-        if (currentCoords.x == b.x && currentCoords.y == b.y)
-            break;
-    }
-
-    return (const Coords **) line;
-}
-
 int **create_walked(int **previous)
 {
     int **walked = malloc(sizeof(int*) * MAX_HEIGHT);
@@ -178,22 +126,11 @@ void free_walked(int **walked)
     free(walked);
 }
 
-void free_path(const Coords **line)
-{
-    int i = 0;
-    for (int i = 0; i < MAX_WIDTH*MAX_HEIGHT; ++i)
-    {
-        if (line[i] != NULL)
-            free((Coords*) line[i]);
-    }
-    free((Coords**) line);
-}
-
 int can_see(Coords from, Coords to, Tile **tiles)
 {
     int ret = 0;
 
-    const Coords **line = get_line(from, to);
+    const Coords **line = get_line(from, to, MAX_WIDTH*MAX_HEIGHT);
     const Coords **current = line;
     while (*current != NULL)
     {
@@ -212,7 +149,7 @@ int can_see(Coords from, Coords to, Tile **tiles)
 
         ++current;
     }
-    free_path(line);
+    free_path(line, MAX_WIDTH*MAX_HEIGHT);
 
     return ret;
 }
