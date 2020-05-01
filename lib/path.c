@@ -1,5 +1,4 @@
 #include "path.h"
-#include "list.h"
 
 #include <stdlib.h>
 #include <memory.h>
