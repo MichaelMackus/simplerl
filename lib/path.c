@@ -103,6 +103,11 @@ const RL_Coords *rl_walk_path(RL_Path *path)
     return &(current->loc);
 }
 
+void rl_reset_path(RL_Path *path)
+{
+    path->current = path;
+}
+
 /**
  * Legacy code below, need to convert it into platform-agnostic code.
 

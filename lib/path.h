@@ -19,4 +19,7 @@ void rl_clear_path(RL_Path *path);
 // walk along the path once and return the coords if found
 const RL_Coords *rl_walk_path(RL_Path *path);
 
+// reset path back to start point
+void rl_reset_path(RL_Path *path);
+
 #endif
