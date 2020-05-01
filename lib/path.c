@@ -3,15 +3,6 @@
 #include <stdlib.h>
 #include <memory.h>
 
-RL_Coords rl_coords(int x, int y)
-{
-    RL_Coords c;
-    c.x = x;
-    c.y = y;
-
-    return c;
-}
-
 struct _RL_Path {
     RL_Coords loc; // location in the path
     struct _RL_Path *next; // next part of the linked list

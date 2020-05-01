@@ -1,11 +1,7 @@
 #ifndef RL_LIB_PATH_H
 #define RL_LIB_PATH_H
 
-typedef struct {
-    int x;
-    int y;
-} RL_Coords;
-RL_Coords rl_coords(int x, int y);
+#include "map.h"
 
 struct _RL_Path;
 typedef struct _RL_Path RL_Path;
