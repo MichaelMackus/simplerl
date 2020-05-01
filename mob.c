@@ -1,5 +1,4 @@
 #include "mob.h"
-#include "path.h"
 #include "random.h"
 #include <stdlib.h>
 

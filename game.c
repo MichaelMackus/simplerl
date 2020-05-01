@@ -10,11 +10,10 @@ typedef struct {
 Direction direction(int xdir, int ydir) { return (Direction) { xdir, ydir }; }
 
 int resting = 0; // 1 if player resting
-
 int inMenu = 0; // one of MENU consts if in menu
-int get_menu() { return inMenu; }
-
 Direction runDir = { 0, 0 }; // direction player is running
+
+int get_menu() { return inMenu; }
 int is_running() { return runDir.xdir != 0 || runDir.ydir != 0; }
 
 void taint(const Coords playerCoords, Level *level);
@@ -619,6 +618,34 @@ int can_smell(Coords coords, Level *level)
         return 1;
 
     return 0;
+}
+
+int can_see(Coords from, Coords to, Tile **tiles)
+{
+    int ret = 0;
+
+    const Coords **line = get_line(from, to, MAX_WIDTH*MAX_HEIGHT);
+    const Coords **current = line;
+    while (*current != NULL)
+    {
+        // if the line ends at the point we're looking at, we can see it!
+        if ((*current)->x == to.x && (*current)->y == to.y)
+        {
+            ret = 1; // success!
+
+            break;
+        }
+
+        // if the current coord blocks the view, we can't see
+        int type = tiles[(*current)->y][(*current)->x].type;
+        if (type == TILE_NONE || type == TILE_WALL_SIDE || type == TILE_WALL || type == TILE_CAVERN)
+            break;
+
+        ++current;
+    }
+    free_path(line, MAX_WIDTH*MAX_HEIGHT);
+
+    return ret;
 }
 
 void inventory_management(char input, Mob *player)

@@ -8,7 +8,7 @@
 #include "item.h"
 #include "mob.h"
 #include "tile.h"
-#include "path.h"
+#include "lib/path.h"
 
 typedef struct Level_t {
     Mob *player;
