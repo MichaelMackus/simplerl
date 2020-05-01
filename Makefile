@@ -1,5 +1,5 @@
 PROGRAM = simplerl
-OBJS = main.o draw.o dungeon.o game.o item.o map.o message.o mob.o path.o random.o tile.o lib/path.o
+OBJS = main.o draw.o dungeon.o game.o item.o map.o message.o mob.o random.o tile.o lib/path.o
 CCFLAGS = -lcurses
 
 simplerl: $(OBJS)
