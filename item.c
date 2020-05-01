@@ -334,6 +334,7 @@ Item *init_weapon()
     item->amount = 1;
     item->damage.type = WEAPON_SLASH;
     item->damage.min = 1;
+    item->damage.range = 5;
 
     return item;
 }
@@ -467,8 +468,7 @@ Item *rock()
     weapon->damage.min = 1;
     weapon->damage.max = 4;
     weapon->damage.type = WEAPON_BLUNT;
-    weapon->damage.projectile = PROJECTILE_ROCK;
-    weapon->name = weapon->unknownName = "arrow";
+    weapon->name = weapon->unknownName = "rock";
 
     return weapon;
 }

@@ -3,6 +3,12 @@
 #include <stdlib.h>
 #include <memory.h>
 
+#define MENU_INVENTORY 1
+#define MENU_WIELD 2
+#define MENU_WEAR 3
+#define MENU_THROW 4
+#define MENU_DIRECTION 5
+
 void taint(const Coords playerCoords, Level *level);
 int init_level(Level *level, Mob *player)
 {
@@ -110,6 +116,12 @@ int gameloop(Dungeon *dungeon, char input)
         case 'W':
             // open wear menu
             dungeon->player->attrs.inMenu = MENU_WEAR;
+            break;
+
+        case 'f':
+        case 't':
+            // open throw menu
+            dungeon->player->attrs.inMenu = MENU_THROW;
             break;
 
         case 'R':
@@ -635,6 +647,27 @@ void inventory_management(char input, Mob *player)
                     player->equipment.armor = item;
                 else
                     message("That is not wearable!");
+
+                break;
+            }
+        }
+    }
+
+    if (player->attrs.inMenu == MENU_THROW)
+    {
+        // throw chosen projectile
+        for (int i = 0; i < inventory.count; ++i)
+        {
+            Item *item = inventory.content[i];
+            if (inventory_symbol(item, inventory) == input)
+            {
+                if (item->type == ITEM_WEAPON || item->type == ITEM_PROJECTILE)
+                {
+                    player->attrs.inMenu = MENU_DIRECTION;
+                }
+                else
+                    // TODO let them throw it anyway?
+                    message("That is not throwable!");
 
                 break;
             }

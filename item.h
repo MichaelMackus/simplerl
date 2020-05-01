@@ -30,7 +30,6 @@
 #define ITEM_EFFECT_DAMAGE 3
 
 #define PROJECTILE_ARROW 1
-#define PROJECTILE_ROCK 2
 
 // for potions & scrolls
 typedef struct {
@@ -44,6 +43,7 @@ typedef struct {
     int max;
     int type; // one of WEAPON damage types anded with weapon flags
     int projectile; // one of PROJECTILE consts (for ranged weapons)
+    int range; // range for projectile
 } WeaponAttributes;
 
 // for armor
@@ -98,6 +98,9 @@ int move_items(Items *src, Items *target);
 
 // free our item list
 void free_items(Items items);
+
+// TODO only stack certain items?
+/* int is_stackable(Item item); */
 
 // TODO need to sort items by type for inventory management
 
