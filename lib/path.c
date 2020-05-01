@@ -12,28 +12,45 @@ Coords xy(int x, int y)
     return c;
 }
 
-// get straight line from a to b
 const Coords **get_line(const Coords a, const Coords b, int maxLength)
 {
     Coords **line;
     line = malloc(sizeof(Coords*)*maxLength);
     memset(line, 0, sizeof(Coords*)*maxLength);
 
+    int deltaX = abs(a.x - b.x);
+    int xIncrement = b.x > a.x ? 1 : -1;
+    int deltaY = abs(a.y - b.y);
+    int yIncrement = b.y > a.y ? 1 : -1;
+    double error = 0.0;
+    double slope = deltaX ? (double)deltaY / (double)deltaX : 0.0;
+
     Coords currentCoords = a;
     for (int i = 0; i < maxLength; ++i)
     {
         line[i] = malloc(sizeof(Coords));
 
-        // calculate x difference
-        if (b.x - currentCoords.x > 0)
-            ++currentCoords.x;
-        else if (b.x - currentCoords.x < 0)
-            --currentCoords.x;
-        // calculate y difference
-        if (b.y - currentCoords.y > 0)
-            ++currentCoords.y;
-        else if (b.y - currentCoords.y < 0)
-            --currentCoords.y;
+        error += slope;
+        if (deltaX > deltaY)
+        {
+            if (error > 0.5 && currentCoords.y != b.y)
+            {
+                error -= 1.0;
+                currentCoords.y += yIncrement;
+            }
+
+            currentCoords.x += xIncrement;
+        }
+        else
+        {
+            if (error > 0.5 && currentCoords.x != b.x)
+            {
+                error -= 1.0;
+                currentCoords.x += xIncrement;
+            }
+
+            currentCoords.y += yIncrement;
+        }
 
         line[i]->x = currentCoords.x;
         line[i]->y = currentCoords.y;
