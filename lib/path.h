@@ -7,10 +7,19 @@ typedef struct {
 } RL_Coords;
 RL_Coords rl_coords(int x, int y);
 
-// get straight line from a to b using Bresenham's
-const RL_Coords **rl_get_line(const RL_Coords a, const RL_Coords b, int maxLength);
+struct _RL_Path;
+typedef struct _RL_Path RL_Path;
 
-// free the result from rl_get_line
-void free_path(const RL_Coords **line, int maxLength);
+// get straight line from a to b using Bresenham's
+RL_Path *rl_get_line(const RL_Coords a, const RL_Coords b);
+
+// free & clear the path
+void rl_clear_path(RL_Path *path);
+
+// walk along the path once
+RL_Path *rl_walk_path(RL_Path *path);
+
+// get the current location
+RL_Coords rl_path_location(RL_Path *path);
 
 #endif

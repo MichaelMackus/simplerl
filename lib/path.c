@@ -1,4 +1,5 @@
 #include "path.h"
+#include "list.h"
 
 #include <stdlib.h>
 #include <memory.h>
@@ -12,11 +13,15 @@ RL_Coords rl_coords(int x, int y)
     return c;
 }
 
-const RL_Coords **rl_get_line(const RL_Coords a, const RL_Coords b, int maxLength)
+struct _RL_Path {
+    RL_Coords loc;
+    struct _RL_Path *next;
+};
+
+RL_Path *rl_get_line(const RL_Coords a, const RL_Coords b)
 {
-    RL_Coords **line;
-    line = malloc(sizeof(RL_Coords*)*maxLength);
-    memset(line, 0, sizeof(RL_Coords*)*maxLength);
+    RL_Path *head = malloc(sizeof(struct _RL_Path));
+    head->next = NULL;
 
     int deltaX = abs(a.x - b.x);
     int xIncrement = b.x > a.x ? 1 : -1;
@@ -25,12 +30,11 @@ const RL_Coords **rl_get_line(const RL_Coords a, const RL_Coords b, int maxLengt
     double error = 0.0;
     double slope = deltaX ? (double)deltaY / (double)deltaX : 0.0;
 
+    RL_Path *path = head;
     RL_Coords currentCoords = a;
-    for (int i = 0; i < maxLength; ++i)
+    while (1 == 1) // TODO no more endless loop
     {
-        line[i] = malloc(sizeof(RL_Coords));
-        line[i]->x = currentCoords.x;
-        line[i]->y = currentCoords.y;
+        path->loc = currentCoords;
 
         // we're done if we are at the end
         if (currentCoords.x == b.x && currentCoords.y == b.y)
@@ -57,20 +61,36 @@ const RL_Coords **rl_get_line(const RL_Coords a, const RL_Coords b, int maxLengt
 
             currentCoords.y += yIncrement;
         }
+
+        // add new member to linked list & advance
+        path->next = malloc(sizeof(struct _RL_Path));
+        path->next->next = NULL;
+        path = path->next;
     }
 
-    return (const RL_Coords **) line;
+    return head;
 }
 
-void free_path(const RL_Coords **line, int maxLength)
+void rl_clear_path(RL_Path *path)
 {
-    int i = 0;
-    for (int i = 0; i < maxLength; ++i)
+    RL_Path *current = path;
+    RL_Path *next;
+    while (current != NULL)
     {
-        if (line[i] != NULL)
-            free((RL_Coords*) line[i]);
+        next = current->next;
+        free(current);
+        current = next;
     }
-    free((RL_Coords**) line);
+}
+
+RL_Path *rl_walk_path(RL_Path *path)
+{
+    return path->next;
+}
+
+RL_Coords rl_path_location(RL_Path *path)
+{
+    return path->loc;
 }
 
 /**
