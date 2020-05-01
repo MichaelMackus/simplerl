@@ -29,6 +29,12 @@ const Coords **get_line(const Coords a, const Coords b, int maxLength)
     for (int i = 0; i < maxLength; ++i)
     {
         line[i] = malloc(sizeof(Coords));
+        line[i]->x = currentCoords.x;
+        line[i]->y = currentCoords.y;
+
+        // we're done if we are at the end
+        if (currentCoords.x == b.x && currentCoords.y == b.y)
+            break;
 
         error += slope;
         if (deltaX > deltaY)
@@ -51,13 +57,6 @@ const Coords **get_line(const Coords a, const Coords b, int maxLength)
 
             currentCoords.y += yIncrement;
         }
-
-        line[i]->x = currentCoords.x;
-        line[i]->y = currentCoords.y;
-
-        // we're done if we are at the end
-        if (currentCoords.x == b.x && currentCoords.y == b.y)
-            break;
     }
 
     return (const Coords **) line;

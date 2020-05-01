@@ -626,21 +626,23 @@ int can_see(Coords from, Coords to, Tile **tiles)
 
     const Coords **line = get_line(from, to, MAX_WIDTH*MAX_HEIGHT);
     const Coords **current = line;
+    int length = 0;
     while (*current != NULL)
     {
         // if the line ends at the point we're looking at, we can see it!
         if ((*current)->x == to.x && (*current)->y == to.y)
         {
-            ret = 1; // success!
-
+            ret = 1;
             break;
         }
 
-        // if the current coord blocks the view, we can't see
+        // if the current coord blocks the view and is at least 1 space
+        // away, we can't see it
         int type = tiles[(*current)->y][(*current)->x].type;
-        if (type == TILE_NONE || type == TILE_WALL_SIDE || type == TILE_WALL || type == TILE_CAVERN)
+        if ((type == TILE_NONE || type == TILE_WALL_SIDE || type == TILE_WALL || type == TILE_CAVERN) && length)
             break;
 
+        ++length;
         ++current;
     }
     free_path(line, MAX_WIDTH*MAX_HEIGHT);
