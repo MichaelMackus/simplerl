@@ -18,9 +18,6 @@
 #include "path.h"
 
 typedef struct {
-    int resting; // boolean
-    Direction running; // direction player is running, or (0,0)
-    int inMenu; // one of MENU consts if in menu
     int exp;
     int expNext;
     int level;
@@ -71,11 +68,5 @@ Mobs initialize_mobs();
 
 // return mob name for symbol
 const char* mob_name(char symbol);
-
-// helper functions to determine player status
-
-int is_resting(Mob *player);
-int is_running(Mob *player);
-int in_menu(Mob *player);
 
 #endif

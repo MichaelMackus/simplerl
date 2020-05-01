@@ -205,32 +205,6 @@ Mobs initialize_mobs()
     return mobs;
 }
 
-int is_resting(Mob *player)
-{
-    if (player == NULL || player->type != MOB_PLAYER)
-        return 0;
-
-    return player->attrs.resting;
-}
-
-int is_running(Mob *player)
-{
-    if (player == NULL || player->type != MOB_PLAYER)
-        return 0;
-
-    Direction runDir = player->attrs.running;
-
-    return runDir.xdir != 0 || runDir.ydir != 0;
-}
-
-int in_menu(Mob *player)
-{
-    if (player == NULL || player->type != MOB_PLAYER)
-        return 0;
-
-    return player->attrs.inMenu > 0;
-}
-
 const char* mob_name(char symbol)
 {
     switch (symbol)

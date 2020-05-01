@@ -3,11 +3,13 @@
 #include <stdlib.h>
 #include <memory.h>
 
-#define MENU_INVENTORY 1
-#define MENU_WIELD 2
-#define MENU_WEAR 3
-#define MENU_THROW 4
-#define MENU_DIRECTION 5
+int resting = 0; // 1 if player resting
+
+int inMenu = 0; // one of MENU consts if in menu
+int get_menu() { return inMenu; }
+
+Direction runDir = { 0, 0 }; // direction player is running
+int is_running() { return runDir.xdir != 0 || runDir.ydir != 0; }
 
 void taint(const Coords playerCoords, Level *level);
 int init_level(Level *level, Mob *player)
@@ -46,13 +48,13 @@ int gameloop(Dungeon *dungeon, char input)
     Level *level = dungeon->level;
     Mob *player = dungeon->player;
 
-    if (in_menu(player))
+    if (inMenu)
     {
         inventory_management(input, player);
         input = '.'; // do nothing
     }
 
-    if (is_resting(player) || is_running(player))
+    if (resting || is_running())
         input = '.'; // do nothing
 
     switch (input)
@@ -105,27 +107,27 @@ int gameloop(Dungeon *dungeon, char input)
 
         case 'i':
             // open inventory menu
-            dungeon->player->attrs.inMenu = MENU_INVENTORY;
+            inMenu = MENU_INVENTORY;
             break;
 
         case 'w':
             // open wield menu
-            dungeon->player->attrs.inMenu = MENU_WIELD;
+            inMenu = MENU_WIELD;
             break;
 
         case 'W':
             // open wear menu
-            dungeon->player->attrs.inMenu = MENU_WEAR;
+            inMenu = MENU_WEAR;
             break;
 
         case 'f':
         case 't':
             // open throw menu
-            dungeon->player->attrs.inMenu = MENU_THROW;
+            inMenu = MENU_THROW;
             break;
 
         case 'R':
-            dungeon->player->attrs.resting = 1;
+            resting = 1;
             break;
 
         case '>': // check for downstair
@@ -164,7 +166,7 @@ int gameloop(Dungeon *dungeon, char input)
     }
 
     // skip turn if we're still in the inventory menu
-    if (in_menu(player))
+    if (inMenu)
         return GAME_PLAYING;
 
     // check for player death (i.e. damaged self)
@@ -225,7 +227,7 @@ void move_player(Mob *player, Coords coords, Level *level)
 
 void run_player(Mob *player, Direction dir, Level *level)
 {
-    player->attrs.running = dir;
+    runDir = dir;
     move_player(player, xy(player->coords.x + dir.xdir, player->coords.y + dir.ydir), level);
 }
 
@@ -490,31 +492,31 @@ int handle_input(Dungeon *dungeon)
 
     // update seen tiles (done here to update before first turn)
     // TODO make more efficient
-    if (!is_resting(player))
+    if (!resting)
         for (int y = 0; y < MAX_HEIGHT; ++y)
             for (int x = 0; x < MAX_WIDTH; ++x)
                 if (can_see(player->coords, xy(x, y), level->tiles))
                     level->tiles[y][x].seen = 1;
 
-    if (is_resting(player))
+    if (resting)
     {
         if (player->hp >= player->maxHP)
-            dungeon->player->attrs.resting = 0;
+            resting = 0;
 
         // if player can see any mobs, reset resting flag
         for (int i = 0; i < MAX_MOBS; ++i)
             if (level->mobs[i] != NULL &&
                 can_see(player->coords, level->mobs[i]->coords, level->tiles))
-                    dungeon->player->attrs.resting = 0;
+                    resting = 0;
 
         // if we're still resting, don't handle input
-        if (is_resting(player))
+        if (resting)
             return 0;
     }
 
-    if (is_running(player))
+    if (is_running())
     {
-        Direction dir = player->attrs.running;
+        Direction dir = runDir;
         Coords target = xy(player->coords.x + dir.xdir, player->coords.y + dir.ydir);
         Tile *tile = get_tile(level, target);
 
@@ -522,14 +524,14 @@ int handle_input(Dungeon *dungeon)
         for (int i = 0; i < MAX_MOBS; ++i)
             if (level->mobs[i] != NULL &&
                     can_see(player->coords, level->mobs[i]->coords, level->tiles))
-                dungeon->player->attrs.running = direction(0, 0);
+                runDir = direction(0, 0);
 
         if (tile == NULL || !is_passable(*tile) ||
                 get_enemy(level, target) != NULL)
-            player->attrs.running = direction(0, 0);
+            runDir = direction(0, 0);
 
         // if we're still running, move the player and don't handle input
-        if (is_running(player))
+        if (is_running())
         {
             move_player(player, target, level);
 
@@ -617,7 +619,7 @@ void inventory_management(char input, Mob *player)
 {
     Items inventory = player->items;
 
-    if (player->attrs.inMenu == MENU_WIELD)
+    if (inMenu == MENU_WIELD)
     {
         // wield chosen weapon
         for (int i = 0; i < inventory.count; ++i)
@@ -635,7 +637,7 @@ void inventory_management(char input, Mob *player)
         }
     }
 
-    if (player->attrs.inMenu == MENU_WEAR)
+    if (inMenu == MENU_WEAR)
     {
         // wear chosen armor
         for (int i = 0; i < inventory.count; ++i)
@@ -653,7 +655,7 @@ void inventory_management(char input, Mob *player)
         }
     }
 
-    if (player->attrs.inMenu == MENU_THROW)
+    if (inMenu == MENU_THROW)
     {
         // throw chosen projectile
         for (int i = 0; i < inventory.count; ++i)
@@ -663,7 +665,7 @@ void inventory_management(char input, Mob *player)
             {
                 if (item->type == ITEM_WEAPON || item->type == ITEM_PROJECTILE)
                 {
-                    player->attrs.inMenu = MENU_DIRECTION;
+                    inMenu = MENU_DIRECTION;
                 }
                 else
                     // TODO let them throw it anyway?
@@ -675,5 +677,6 @@ void inventory_management(char input, Mob *player)
     }
 
     // turn off inventory management
-    player->attrs.inMenu = 0;
+    inMenu = 0;
 }
+

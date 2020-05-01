@@ -40,14 +40,11 @@ Dungeon *create_dungeon()
     player->maxHP = 10;
     player->minDamage = 1;
     player->maxDamage = 3;
-    player->attrs.resting = 0;
-    player->attrs.inMenu = 0;
     player->equipment.weapon = NULL;
     player->equipment.armor = NULL;
     player->attrs.exp = 0;
     player->attrs.expNext = 1000;
     player->attrs.level = 1;
-    player->attrs.running = direction(0, 0);
 
     // give player some simple equipment
     Item *armor = leather();
