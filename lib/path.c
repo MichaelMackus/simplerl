@@ -14,14 +14,16 @@ RL_Coords rl_coords(int x, int y)
 }
 
 struct _RL_Path {
-    RL_Coords loc;
-    struct _RL_Path *next;
+    RL_Coords loc; // location in the path
+    struct _RL_Path *next; // next part of the linked list
+    struct _RL_Path *current; // current part of path (used during iteration after the path is generated)
 };
 
 RL_Path *rl_get_line(const RL_Coords a, const RL_Coords b)
 {
     RL_Path *head = malloc(sizeof(struct _RL_Path));
     head->next = NULL;
+    head->current = head;
 
     int deltaX = abs(a.x - b.x);
     int xIncrement = b.x > a.x ? 1 : -1;
@@ -81,14 +83,16 @@ void rl_clear_path(RL_Path *path)
     }
 }
 
-RL_Path *rl_walk_path(RL_Path *path)
+const RL_Coords *rl_walk_path(RL_Path *path)
 {
-    return path->next;
-}
+    RL_Path *current = path->current;
 
-RL_Coords rl_path_location(RL_Path *path)
-{
-    return path->loc;
+    if (current == NULL)
+        return NULL;
+
+    path->current = current->next;
+
+    return &(current->loc);
 }
 
 /**

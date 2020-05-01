@@ -623,16 +623,13 @@ int can_smell(RL_Coords coords, Level *level)
 int can_see(RL_Coords from, RL_Coords to, Tile **tiles)
 {
     int ret = 0;
-
-    RL_Path *head = rl_get_line(from, to);
-    RL_Path *path = head;
     int length = 0;
-    while (path != NULL)
+    RL_Path *path = rl_get_line(from, to);
+    const RL_Coords *loc;
+    while ((loc = rl_walk_path(path)) != NULL)
     {
-        RL_Coords loc = rl_path_location(path);
-
         // if the line ends at the point we're looking at, we can see it!
-        if (loc.x == to.x && loc.y == to.y)
+        if (loc->x == to.x && loc->y == to.y)
         {
             ret = 1;
             break;
@@ -640,14 +637,13 @@ int can_see(RL_Coords from, RL_Coords to, Tile **tiles)
 
         // if the current coord blocks the view and is at least 1 space
         // away, we can't see it
-        int type = tiles[loc.y][loc.x].type;
+        int type = tiles[loc->y][loc->x].type;
         if ((type == TILE_NONE || type == TILE_WALL_SIDE || type == TILE_WALL || type == TILE_CAVERN) && length)
             break;
 
         ++length;
-        path = rl_walk_path(path);
     }
-    rl_clear_path(head);
+    rl_clear_path(path);
 
     return ret;
 }

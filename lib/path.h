@@ -16,10 +16,7 @@ RL_Path *rl_get_line(const RL_Coords a, const RL_Coords b);
 // free & clear the path
 void rl_clear_path(RL_Path *path);
 
-// walk along the path once
-RL_Path *rl_walk_path(RL_Path *path);
-
-// get the current location
-RL_Coords rl_path_location(RL_Path *path);
+// walk along the path once and return the coords if found
+const RL_Coords *rl_walk_path(RL_Path *path);
 
 #endif
