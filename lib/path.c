@@ -31,14 +31,10 @@ RL_Path *rl_get_line(const RL_Coords a, const RL_Coords b)
     double slope = deltaX ? (double)deltaY / (double)deltaX : 0.0;
 
     RL_Path *path = head;
-    RL_Coords currentCoords = a;
-    while (1 == 1) // TODO no more endless loop
+    path->loc = a;
+    while (path->loc.x != b.x || path->loc.y != b.y)
     {
-        path->loc = currentCoords;
-
-        // we're done if we are at the end
-        if (currentCoords.x == b.x && currentCoords.y == b.y)
-            break;
+        RL_Coords currentCoords = path->loc;
 
         error += slope;
         if (deltaX > deltaY)
@@ -64,6 +60,7 @@ RL_Path *rl_get_line(const RL_Coords a, const RL_Coords b)
 
         // add new member to linked list & advance
         path->next = malloc(sizeof(struct _RL_Path));
+        path->next->loc = currentCoords;
         path->next->next = NULL;
         path = path->next;
     }
