@@ -36,9 +36,9 @@ RL_Path *rl_get_line(const RL_Coords a, const RL_Coords b)
     {
         RL_Coords currentCoords = path->loc;
 
-        error += slope;
         if (deltaX > deltaY)
         {
+            error += slope;
             if (error > 0.5 && currentCoords.y != b.y)
             {
                 error -= 1.0;
@@ -49,6 +49,7 @@ RL_Path *rl_get_line(const RL_Coords a, const RL_Coords b)
         }
         else
         {
+            error += 1/slope;
             if (error > 0.5 && currentCoords.x != b.x)
             {
                 error -= 1.0;
