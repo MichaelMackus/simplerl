@@ -22,6 +22,10 @@ struct _RL_Path {
 RL_Path *rl_get_line(const RL_Coords a, const RL_Coords b)
 {
     RL_Path *head = malloc(sizeof(struct _RL_Path));
+
+    if (head == NULL)
+        return NULL;
+
     head->next = NULL;
     head->current = head;
 
@@ -63,6 +67,10 @@ RL_Path *rl_get_line(const RL_Coords a, const RL_Coords b)
 
         // add new member to linked list & advance
         path->next = malloc(sizeof(struct _RL_Path));
+
+        if (path->next == NULL)
+            return head;
+
         path->next->loc = currentCoords;
         path->next->next = NULL;
         path = path->next;
