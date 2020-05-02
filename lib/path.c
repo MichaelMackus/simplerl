@@ -123,131 +123,132 @@ void rl_reverse_path(RL_Path *path)
     path->current = prev;
 }
 
-/**
- * Legacy code below, need to convert it into platform-agnostic code.
+// TODO add getters for height/width
+struct _RL_Map {
+    int width;
+    int height;
+    char *tiles; // 2d array of tiles, set to 1 if tile is passable
+};
 
-int pathfind(const RL_Coords start, const RL_Coords end, const Tile **tiles, int **walked, int **path);
-int **create_walked(int **previous);
-void free_walked(int **walked);
-const RL_Coords **find_path(const RL_Coords start, const RL_Coords end, const Tile **tiles)
+int pathfind(const RL_Coords start,
+             const RL_Coords end,
+             const RL_Map *map,
+             double diagonal_distance,
+             double (*heuristic_func)(RL_Coords node),
+             double **walked, RL_Path *path);
+double **create_walked(double **previous, int width, int height);
+void free_walked(double **walked, int height);
+RL_Path *find_path(const RL_Coords start,
+                   const RL_Coords end,
+                   const RL_Map *map,
+                   double diagonal_distance,
+                   double (*heuristic_func)(RL_Coords node))
 {
-    int **walked = create_walked(NULL);
-    int **path = create_walked(NULL);
+    double **walked = create_walked(NULL, map->width, map->height);
+    RL_Path *path = malloc(sizeof(struct _RL_Path));
+    path->next = NULL;
+    path->current = path;
+    path->head = path;
 
-    if (!pathfind(rl_coords(start.x, start.y), end, tiles, walked, path))
+    if (!pathfind(start, end, map, diagonal_distance, heuristic_func, walked, path))
     {
-        free_walked(walked);
-        free_walked(path);
+        free_walked(walked, map->height);
+        rl_clear_path(path);
 
         return NULL;
     }
 
-    free_walked(walked);
+    free_walked(walked, map->height);
 
-    // allocate memory for result path
-    RL_Coords **result;
-    result = malloc(sizeof(RL_Coords*)*MAX_WIDTH*MAX_HEIGHT);
-    memset(result, 0, sizeof(RL_Coords*)*MAX_WIDTH*MAX_HEIGHT);
-
-    // create RL_Coords from path
-    RL_Coords **cur = result;
-    for (int y = 0; y < MAX_HEIGHT; ++y)
-        for (int x = 0; x < MAX_WIDTH; ++x)
-        {
-            if (path[y][x])
-            {
-                *cur = malloc(sizeof(RL_Coords));
-                (*cur)->x = x;
-                (*cur)->y = y;
-                ++cur;
-            }
-        }
-
-    free_walked(path);
-
-    return (const RL_Coords **) result;
+    return path;
 }
 
 // core pathfinding function, updates walked with newly walked coords
 // returns 0 if no path, or 1 if path found
-int pathfind(const RL_Coords start, const RL_Coords end, const Tile **tiles, int **walked, int **path)
+int pathfind(const RL_Coords start,
+             const RL_Coords end,
+             const RL_Map *map,
+             double diagonal_distance,
+             double (*heuristic_func)(RL_Coords node),
+             double **walked, RL_Path *path)
 {
     // out of bounds check
-    if (start.y >= MAX_HEIGHT || start.x >= MAX_WIDTH || start.y < 0 || start.x < 0)
+    if (start.y >= map->height || start.x >= map->width || start.y < 0 || start.x < 0)
         return 0;
 
     // return 0 if we already checked this tile or if it is impassable
-    if (walked[start.y][start.x] == 1 || !is_passable((Tile) tiles[start.y][start.x]))
+    if (walked[start.y][start.x] == 1 || !rl_is_passable(map, start.x, start.y))
         return 0;
 
     // needs paths to be initialized
     if (walked == NULL || path == NULL)
         return 0;
 
-    walked[start.y][start.x] = 1;
-    path[start.y][start.x] = 1;
+    walked[start.y][start.x] = 1.0;
+    path->loc = start;
 
     // check for success
     if (start.x == end.x && start.y == end.y)
         return 1;
 
     // check path in 4 directions to end
-    RL_Coords cur;
+    RL_Coords nextLoc;
     for (int i = 0; i < 4; ++i)
     {
         // set current coordinate
         if (i == 0)
-            cur = rl_coords(start.x + 1, start.y);
+            nextLoc = rl_coords(start.x + 1, start.y);
         else if (i == 1)
-            cur = rl_coords(start.x - 1, start.y);
+            nextLoc = rl_coords(start.x - 1, start.y);
         else if (i == 2)
-            cur = rl_coords(start.x, start.y + 1);
+            nextLoc = rl_coords(start.x, start.y + 1);
         else
-            cur = rl_coords(start.x, start.y - 1);
+            nextLoc = rl_coords(start.x, start.y - 1);
 
-        int **nextPath = create_walked(path);
+        RL_Path *nextPath = malloc(sizeof(struct _RL_Path));
+        if (nextPath == NULL)
+            return 0;
 
-        if (pathfind(cur, end, tiles, walked, nextPath))
+        nextPath->next = NULL;
+        nextPath->head = NULL;
+        nextPath->current = NULL;
+
+        if (pathfind(nextLoc, end, map, diagonal_distance, heuristic_func, walked, nextPath))
         {
             // assign nextPath values to path
-            for (int y = 0; y < MAX_HEIGHT; ++y)
-                for (int x = 0; x < MAX_WIDTH; ++x)
-                    path[y][x] = nextPath[y][x];
-
-            free_walked(nextPath);
+            path->next = nextPath;
 
             return 1;
         }
 
-        free_walked(nextPath);
+        free(nextPath);
     }
 
     return 0;
 }
 
-int **create_walked(int **previous)
+double **create_walked(double **previous, int width, int height)
 {
-    int **walked = malloc(sizeof(int*) * MAX_HEIGHT);
-    memset(walked, 0, sizeof(int*) * MAX_HEIGHT);
-    for (int y = 0; y < MAX_HEIGHT; ++y)
+    double **walked = malloc(sizeof(double*) * height);
+    memset(walked, 0, sizeof(double*) * height);
+    for (int y = 0; y < height; ++y)
     {
-        walked[y] = malloc(sizeof(int) * MAX_WIDTH);
-        memset(walked[y], 0, sizeof(int) * MAX_WIDTH);
+        walked[y] = malloc(sizeof(double) * width);
+        memset(walked[y], 0, sizeof(double) * width);
         if (previous != NULL && previous[y] != NULL)
-            for (int x = 0; x < MAX_WIDTH; ++x)
+            for (int x = 0; x < width; ++x)
                 walked[y][x] = previous[y][x];
     }
 
     return walked;
 }
 
-void free_walked(int **walked)
+void free_walked(double **walked, int height)
 {
-    for (int y = 0; y < MAX_HEIGHT; ++y)
+    if (walked == NULL) return;
+    for (int y = 0; y < height; ++y)
     {
         free(walked[y]);
     }
     free(walked);
 }
-
-*/
