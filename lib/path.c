@@ -73,7 +73,9 @@ RL_Path *rl_get_line(const RL_Coords a, const RL_Coords b)
 
 void rl_clear_path(RL_Path *path)
 {
-    RL_Path *current = path;
+    if (path == NULL)
+        return;
+    RL_Path *current = path->head;
     RL_Path *next;
     while (current != NULL)
     {
