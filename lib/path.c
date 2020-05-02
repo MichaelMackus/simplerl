@@ -87,6 +87,9 @@ void rl_clear_path(RL_Path *path)
 
 const RL_Coords *rl_walk_path(RL_Path *path)
 {
+    if (path == NULL)
+        return NULL;
+
     RL_Path *current = path->current;
 
     if (current == NULL)
