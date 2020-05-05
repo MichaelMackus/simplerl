@@ -60,8 +60,9 @@ RL_Path *rl_get_line(const RL_Coords a, const RL_Coords b)
         // add new member to linked list & advance
         path->next = malloc(sizeof(struct _RL_Path));
 
+        // TODO free
         if (path->next == NULL)
-            return head;
+            return NULL;
 
         path->next->loc = currentCoords;
         path->next->next = NULL;
@@ -128,130 +129,140 @@ void rl_reverse_path(RL_Path *path)
 
 // TODO add getters for height/width
 struct _RL_Map {
-    int width;
-    int height;
+    const int width;
+    const int height;
     char *tiles; // 2d array of tiles, set to 1 if tile is passable
 };
 
-int pathfind(const RL_Coords start,
-             const RL_Coords end,
-             const RL_Map *map,
-             double diagonal_distance,
-             double (*heuristic_func)(RL_Coords node),
-             double **walked, RL_Path *path);
-double **create_walked(double **previous, int width, int height);
-void free_walked(double **walked, int height);
-RL_Path *find_path(const RL_Coords start,
-                   const RL_Coords end,
-                   const RL_Map *map,
-                   double diagonal_distance,
-                   double (*heuristic_func)(RL_Coords node))
+typedef struct _RL_Node {
+    int active;
+    int has_parent; // 0 for root
+    int parent_x;
+    int parent_y;
+    double f, g;
+} RL_Node;
+
+RL_Path *rl_find_path(const RL_Coords start,
+                      const RL_Coords end,
+                      const RL_Map *map,
+                      double diagonal_distance,
+                      double (*heuristic_func)(RL_Coords node))
 {
-    double **walked = create_walked(NULL, map->width, map->height);
-    RL_Path *path = malloc(sizeof(struct _RL_Path));
-    path->next = NULL;
-    path->current = path;
-    path->head = path;
+    RL_Node open[map->width][map->height];
+    RL_Node closed[map->width][map->height];
 
-    if (!pathfind(start, end, map, diagonal_distance, heuristic_func, walked, path))
+    // initialize open & closed nodes to inactive (active = 0)
+    memset(open, 0, sizeof(RL_Node) * map->width * map->height);
+    memset(closed, 0, sizeof(RL_Node) * map->width * map->height);
+
+    // push start node to open set
+    RL_Coords curLoc = start;
+    open[curLoc.x][curLoc.y].active = 1;
+    while (open[curLoc.x][curLoc.y].active)
     {
-        free_walked(walked, map->height);
-        rl_clear_path(path);
+        // check for end condition
+        if (curLoc.x == end.x && curLoc.y == end.y)
+        {
+            memcpy(&closed[curLoc.x][curLoc.y], &open[curLoc.x][curLoc.y], sizeof(RL_Node));
+            break;
+        }
 
+        // add neighbors to open set
+        RL_Coords neighbors[8] = {
+            rl_coords(curLoc.x - 1, curLoc.y),
+            rl_coords(curLoc.x + 1, curLoc.y),
+            rl_coords(curLoc.x, curLoc.y - 1),
+            rl_coords(curLoc.x, curLoc.y + 1),
+            rl_coords(curLoc.x - 1, curLoc.y - 1),
+            rl_coords(curLoc.x - 1, curLoc.y + 1),
+            rl_coords(curLoc.x + 1, curLoc.y - 1),
+            rl_coords(curLoc.x + 1, curLoc.y + 1),
+        };
+        for (int i = 0; i < 8; ++i)
+        {
+            RL_Coords neighborLoc = neighbors[i];
+            if (rl_is_passable(map, neighborLoc.x, neighborLoc.y))
+            {
+                double diff = abs(curLoc.x - neighborLoc.x) + abs(curLoc.y - neighborLoc.y);
+                double g = open[curLoc.x][curLoc.y].g + 1.0;
+
+                // account for diagonal distance
+                if (diff > 1.0)
+                {
+                    g = open[curLoc.x][curLoc.y].g + diagonal_distance;
+                    if (diagonal_distance == 0.0)
+                        continue; // don't move diagonally if no distance covered
+                }
+
+                double h = heuristic_func ? abs(heuristic_func(neighborLoc)) : 0.0;
+                double f = g + h;
+
+                
+                // skip if in open set & f is larger than walked f
+                if (open[neighborLoc.x][neighborLoc.y].active && f >= open[neighborLoc.x][neighborLoc.y].f)
+                    continue;
+
+                // check if in closed set & f is larger than walked f
+                if (closed[neighborLoc.x][neighborLoc.y].active && f >= closed[neighborLoc.x][neighborLoc.y].f)
+                    continue;
+
+                open[neighborLoc.x][neighborLoc.y].active = 1;
+                open[neighborLoc.x][neighborLoc.y].has_parent = 1;
+                open[neighborLoc.x][neighborLoc.y].parent_x = curLoc.x;
+                open[neighborLoc.x][neighborLoc.y].parent_y = curLoc.y;
+                open[neighborLoc.x][neighborLoc.y].f = f;
+                open[neighborLoc.x][neighborLoc.y].g = g;
+            }
+        }
+
+        // finished checking current node, add to closed set & remove from open set
+        memcpy(&closed[curLoc.x][curLoc.y], &open[curLoc.x][curLoc.y], sizeof(RL_Node));
+        open[curLoc.x][curLoc.y].active = 0;
+
+        // find active node with lowest f value in open set
+        for (int x = 0; x < map->width; x++)
+        {
+            for (int y = 0; y < map->height; y++)
+            {
+                if (!open[x][y].active)
+                    continue;
+
+                if (!open[curLoc.x][curLoc.y].active)
+                    curLoc = rl_coords(x, y);
+                else if (open[x][y].f < open[curLoc.x][curLoc.y].f)
+                    curLoc = rl_coords(x, y);
+            }
+        }
+    }
+
+    if (curLoc.x != end.x || curLoc.y != end.y)
+    {
+        // we could not find a path to end
         return NULL;
     }
 
-    free_walked(walked, map->height);
+    // make path from start to end (this traverses up the parents of
+    // curLoc, making a linked list from end -> start)
+    RL_Path *path = malloc(sizeof(struct _RL_Path));
+    if (path == NULL)
+        return NULL;
+    RL_Path *prevPath = path;
+    path->loc = curLoc;
+    path->next = NULL;
+    while (closed[curLoc.x][curLoc.y].has_parent)
+    {
+        RL_Node curNode = closed[curLoc.x][curLoc.y];
+        curLoc.x = curNode.parent_x;
+        curLoc.y = curNode.parent_y;
+        path = malloc(sizeof(struct _RL_Path));
+        if (path == NULL)
+            return NULL; // TODO free prev paths
+        path->loc = curLoc;
+        path->next = prevPath;
+        prevPath = path;
+    }
+    path->head = path;
+    path->current = path;
 
     return path;
-}
-
-// core pathfinding function, updates walked with newly walked coords
-// returns 0 if no path, or 1 if path found
-int pathfind(const RL_Coords start,
-             const RL_Coords end,
-             const RL_Map *map,
-             double diagonal_distance,
-             double (*heuristic_func)(RL_Coords node),
-             double **walked, RL_Path *path)
-{
-    // out of bounds check
-    if (start.y >= map->height || start.x >= map->width || start.y < 0 || start.x < 0)
-        return 0;
-
-    // return 0 if we already checked this tile or if it is impassable
-    if (walked[start.y][start.x] == 1 || !rl_is_passable(map, start.x, start.y))
-        return 0;
-
-    // needs paths to be initialized
-    if (walked == NULL || path == NULL)
-        return 0;
-
-    walked[start.y][start.x] = 1.0;
-    path->loc = start;
-
-    // check for success
-    if (start.x == end.x && start.y == end.y)
-        return 1;
-
-    // check path in 4 directions to end
-    RL_Coords nextLoc;
-    for (int i = 0; i < 4; ++i)
-    {
-        // set current coordinate
-        if (i == 0)
-            nextLoc = rl_coords(start.x + 1, start.y);
-        else if (i == 1)
-            nextLoc = rl_coords(start.x - 1, start.y);
-        else if (i == 2)
-            nextLoc = rl_coords(start.x, start.y + 1);
-        else
-            nextLoc = rl_coords(start.x, start.y - 1);
-
-        RL_Path *nextPath = malloc(sizeof(struct _RL_Path));
-        if (nextPath == NULL)
-            return 0;
-
-        nextPath->next = NULL;
-        nextPath->head = NULL;
-        nextPath->current = NULL;
-
-        if (pathfind(nextLoc, end, map, diagonal_distance, heuristic_func, walked, nextPath))
-        {
-            // assign nextPath values to path
-            path->next = nextPath;
-
-            return 1;
-        }
-
-        free(nextPath);
-    }
-
-    return 0;
-}
-
-double **create_walked(double **previous, int width, int height)
-{
-    double **walked = malloc(sizeof(double*) * height);
-    memset(walked, 0, sizeof(double*) * height);
-    for (int y = 0; y < height; ++y)
-    {
-        walked[y] = malloc(sizeof(double) * width);
-        memset(walked[y], 0, sizeof(double) * width);
-        if (previous != NULL && previous[y] != NULL)
-            for (int x = 0; x < width; ++x)
-                walked[y][x] = previous[y][x];
-    }
-
-    return walked;
-}
-
-void free_walked(double **walked, int height)
-{
-    if (walked == NULL) return;
-    for (int y = 0; y < height; ++y)
-    {
-        free(walked[y]);
-    }
-    free(walked);
 }

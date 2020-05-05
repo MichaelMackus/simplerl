@@ -57,6 +57,10 @@ int rl_is_passable(RL_Map* map, int x, int y)
     if (map == NULL || map->tiles == NULL)
         return 0;
 
+    // TODO handle negative coordinate system?
+    if (x < 0 || y < 0)
+        return 0;
+
     int index = y*map->width + x;
     if (index < map->width * map->height && map->tiles[index])
         return 1;
@@ -69,6 +73,10 @@ void rl_set_passable(RL_Map* map, int x, int y)
     if (map == NULL || map->tiles == NULL)
         return;
 
+    // TODO handle negative coordinate system?
+    if (x < 0 || y < 0)
+        return;
+
     int index = y * map->width + x;
     if (index < map->width * map->height) {
         map->tiles[index] = 1;
@@ -78,6 +86,10 @@ void rl_set_passable(RL_Map* map, int x, int y)
 void rl_set_impassable(RL_Map* map, int x, int y)
 {
     if (map == NULL || map->tiles == NULL)
+        return;
+
+    // TODO handle negative coordinate system?
+    if (x < 0 || y < 0)
         return;
 
     int index = y * map->width + x;
