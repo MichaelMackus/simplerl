@@ -16,7 +16,7 @@ RL_Path *rl_find_path(const RL_Coords start,
                       const RL_Coords end,
                       const RL_Map *map,
                       double diagonal_distance,
-                      double (*heuristic_func)(RL_Coords node));
+                      double (*heuristic_func)(RL_Coords node, RL_Coords end));
 
 // free & clear the path
 void rl_clear_path(RL_Path *path);

@@ -148,7 +148,7 @@ RL_Path *rl_find_path(const RL_Coords start,
                       const RL_Coords end,
                       const RL_Map *map,
                       double diagonal_distance,
-                      double (*heuristic_func)(RL_Coords node))
+                      double (*heuristic_func)(RL_Coords node, RL_Coords end))
 {
     RL_Node open[map->width][map->height];
     RL_Node closed[map->width][map->height];
@@ -196,7 +196,7 @@ RL_Path *rl_find_path(const RL_Coords start,
                         continue; // don't move diagonally if no distance covered
                 }
 
-                double h = heuristic_func ? abs(heuristic_func(neighborLoc)) : 0.0;
+                double h = heuristic_func ? heuristic_func(neighborLoc, end) : 0.0;
                 double f = g + h;
 
                 
