@@ -129,9 +129,11 @@ void rl_reverse_path(RL_Path *path)
 
 // TODO add getters for height/width
 struct _RL_Map {
-    const int width;
-    const int height;
-    char *tiles; // 2d array of tiles, set to 1 if tile is passable
+    int width;
+    int height;
+    char *tiles; // 2d array of tiles, set to 1 if tile is passable; only used if passable_func is null
+    int (*passable_func)(RL_Coords coords, void *user_data);
+    void *user_data; // only used if passable_func
 };
 
 typedef struct _RL_Node {
