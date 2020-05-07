@@ -18,6 +18,19 @@ RL_Path *rl_find_path(const RL_Coords start,
                       double diagonal_distance,
                       double (*heuristic_func)(RL_Coords node, RL_Coords end));
 
+// A* pathfinding function, using a callback function to check for passable tiles.
+// pass 0 to diagonal distance to disable moving diagonally, else you probably want sqrt(2) (~1.4)
+// pass NULL to heuristic_func to use Drijksta's algorithm
+// the passable_func should return 1 if the tile is passable, else 0
+// any data you pass to user_data gets passed directly to passable_func
+RL_Path *rl_find_path_cb(const RL_Coords start,
+                         const RL_Coords end,
+                         double diagonal_distance,
+                         double (*heuristic_func)(RL_Coords node, RL_Coords end),
+                         int    (*passable_func) (RL_Coords node, void *user_data),
+                         void *user_data);
+
+
 // free & clear the path
 void rl_clear_path(RL_Path *path);
 

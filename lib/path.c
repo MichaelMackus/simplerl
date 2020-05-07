@@ -153,11 +153,30 @@ RL_Node *find_node(const RL_Queue *queue, RL_Coords loc)
     return NULL;
 }
 
+// default passable func that checks if a map tile is passable
+int is_map_passable(RL_Coords node, void *user_data)
+{
+    RL_Map *map = user_data;
+
+    return rl_is_passable(map, node);
+}
+
 RL_Path *rl_find_path(const RL_Coords start,
                       const RL_Coords end,
                       const RL_Map *map,
                       double diagonal_distance,
                       double (*heuristic_func)(RL_Coords node, RL_Coords end))
+{
+    return rl_find_path_cb(start, end, diagonal_distance, heuristic_func,
+                           &is_map_passable, map);
+}
+
+RL_Path *rl_find_path_cb(const RL_Coords start,
+                         const RL_Coords end,
+                         double diagonal_distance,
+                         double (*heuristic_func)(RL_Coords node, RL_Coords end),
+                         int    (*passable_func) (RL_Coords node, void *user_data),
+                         void *user_data)
 {
     // push start node to open set
     RL_Node *curNode = calloc(1, sizeof(RL_Node));
@@ -188,7 +207,7 @@ RL_Path *rl_find_path(const RL_Coords start,
         for (int i = 0; i < 8; ++i)
         {
             RL_Coords neighborLoc = neighbors[i];
-            if (rl_is_passable(map, neighborLoc.x, neighborLoc.y))
+            if (passable_func(neighborLoc, user_data))
             {
                 double diff = abs(curNode->loc.x - neighborLoc.x) + abs(curNode->loc.y - neighborLoc.y);
                 double g = curNode->g + 1.0;
