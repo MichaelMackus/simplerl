@@ -3,8 +3,8 @@
 #include <stdlib.h>
 
 struct _RL_Map {
-    int width;
-    int height;
+    size_t width;
+    size_t height;
     char *tiles; // 2d array of tiles, set to 1 if tile is passable
 };
 
@@ -17,7 +17,7 @@ RL_Coords rl_coords(int x, int y)
     return c;
 }
 
-RL_Map* rl_create_map(int width, int height)
+RL_Map* rl_create_map(size_t width, size_t height)
 {
     RL_Map *map = malloc(sizeof(RL_Map));
 
@@ -29,7 +29,7 @@ RL_Map* rl_create_map(int width, int height)
 
     map->width = width;
     map->height = height;
-    map->tiles = calloc((size_t)width * (size_t)height, sizeof(char));
+    map->tiles = calloc(width * height, sizeof(char));
 
     if (map->tiles == NULL)
     {
@@ -52,47 +52,44 @@ void rl_free_map(RL_Map *map)
     free(map);
 }
 
-int rl_is_passable(const RL_Map* map, int x, int y)
+int rl_is_passable(const RL_Map* map, RL_Coords loc)
 {
     if (map == NULL)
         return 0;
 
-    // TODO handle negative coordinate system?
-    if (x < 0 || y < 0)
+    if (loc.x < 0 || loc.y < 0)
         return 0;
 
-    int index = y * map->width + x;
+    size_t index = loc.y * map->width + loc.x;
     if (index >= map->width * map->height)
         return 0;
 
     return map->tiles && map->tiles[index];
 }
 
-void rl_set_passable(RL_Map* map, int x, int y)
+void rl_set_passable(RL_Map* map, RL_Coords loc)
 {
     if (map == NULL || map->tiles == NULL)
         return;
 
-    // TODO handle negative coordinate system?
-    if (x < 0 || y < 0)
+    if (loc.x < 0 || loc.y < 0)
         return;
 
-    int index = y * map->width + x;
+    size_t index = loc.y * map->width + loc.x;
     if (index < map->width * map->height) {
         map->tiles[index] = 1;
     }
 }
 
-void rl_set_impassable(RL_Map* map, int x, int y)
+void rl_set_impassable(RL_Map* map, RL_Coords loc)
 {
     if (map == NULL || map->tiles == NULL)
         return;
 
-    // TODO handle negative coordinate system?
-    if (x < 0 || y < 0)
+    if (loc.x < 0 || loc.y < 0)
         return;
 
-    int index = y * map->width + x;
+    size_t index = loc.y * map->width + loc.x;
     if (index < map->width * map->height) {
         map->tiles[index] = 0;
     }
