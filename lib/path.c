@@ -139,7 +139,7 @@ typedef struct _RL_Node {
 static RL_Queue *openSet;
 static RL_Queue *closedSet;
 
-RL_Node *find_node(const RL_Queue *queue, RL_Coords loc)
+RL_Node *find_node(RL_Queue *queue, RL_Coords loc)
 {
     RL_Queue *cur = queue;
     while (cur != NULL)
@@ -165,17 +165,17 @@ RL_Path *rl_find_path(const RL_Coords start,
                       const RL_Coords end,
                       const RL_Map *map,
                       double diagonal_distance,
-                      double (*heuristic_func)(RL_Coords node, RL_Coords end))
+                      RL_heuristic_func heuristic)
 {
-    return rl_find_path_cb(start, end, diagonal_distance, heuristic_func,
-                           &is_map_passable, map);
+    return rl_find_path_cb(start, end, diagonal_distance, heuristic,
+                           &is_map_passable, (void*) map);
 }
-
+ 
 RL_Path *rl_find_path_cb(const RL_Coords start,
                          const RL_Coords end,
                          double diagonal_distance,
-                         double (*heuristic_func)(RL_Coords node, RL_Coords end),
-                         int    (*passable_func) (RL_Coords node, void *user_data),
+                         RL_heuristic_func heuristic,
+                         RL_passable_func  is_passable,
                          void *user_data)
 {
     // push start node to open set
@@ -207,7 +207,7 @@ RL_Path *rl_find_path_cb(const RL_Coords start,
         for (int i = 0; i < 8; ++i)
         {
             RL_Coords neighborLoc = neighbors[i];
-            if (passable_func(neighborLoc, user_data))
+            if (is_passable(neighborLoc, user_data))
             {
                 double diff = abs(curNode->loc.x - neighborLoc.x) + abs(curNode->loc.y - neighborLoc.y);
                 double g = curNode->g + 1.0;
@@ -220,7 +220,7 @@ RL_Path *rl_find_path_cb(const RL_Coords start,
                         continue; // don't move diagonally if no distance covered
                 }
 
-                double h = heuristic_func ? heuristic_func(neighborLoc, end) : 0.0;
+                double h = heuristic ? heuristic(neighborLoc, end) : 0.0;
                 double f = g + h;
 
                 // skip if in open set & f is larger than walked f
