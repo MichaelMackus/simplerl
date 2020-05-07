@@ -1,12 +1,13 @@
 PROGRAM = simplerl
 OBJS = main.o draw.o dungeon.o game.o item.o map.o message.o mob.o random.o tile.o lib/path.o lib/map.o lib/queue.o
-CCFLAGS = -lcurses
+CFLAGS = -Wall
+LIBFLAGS = -lcurses
 
 simplerl: $(OBJS)
-	gcc -o $(PROGRAM) $(CCFLAGS) $(OBJS)
+	gcc -o $(PROGRAM) $(CFLAGS) $(LIBFLAGS) $(OBJS)
 
 %.o: %.c
-	gcc -o $@ -c $<
+	gcc -o $@ $(CFLAGS) -c $<
 
 clean:
 	rm *.o
