@@ -4,16 +4,16 @@
 #include <stdlib.h>
 #include <memory.h>
 
-struct _RL_Path {
-    RL_Coords loc; // location in the path
-    struct _RL_Path *next; // next part of the linked list
-    struct _RL_Path *current; // current part of path (used during iteration after the path is generated)
-    struct _RL_Path *head; // head of list (used for reset & reversal)
+struct RL_path {
+    RL_coords_t loc; // location in the path
+    struct RL_path *next; // next part of the linked list
+    struct RL_path *current; // current part of path (used during iteration after the path is generated)
+    struct RL_path *head; // head of list (used for reset & reversal)
 };
 
-RL_Path *rl_get_line(const RL_Coords a, const RL_Coords b)
+RL_path_t *rl_get_line(const RL_coords_t a, const RL_coords_t b)
 {
-    RL_Path *head = malloc(sizeof(struct _RL_Path));
+    RL_path_t *head = malloc(sizeof(struct RL_path));
 
     if (head == NULL)
         return NULL;
@@ -29,10 +29,10 @@ RL_Path *rl_get_line(const RL_Coords a, const RL_Coords b)
     double error = 0.0;
     double slope = deltaX ? (double)deltaY / (double)deltaX : 0.0;
 
-    RL_Path *path = head;
+    RL_path_t *path = head;
     path->loc = a;
     while (path->loc.x != b.x || path->loc.y != b.y) {
-        RL_Coords currentCoords = path->loc;
+        RL_coords_t currentCoords = path->loc;
 
         if (deltaX > deltaY) {
             error += slope;
@@ -53,7 +53,7 @@ RL_Path *rl_get_line(const RL_Coords a, const RL_Coords b)
         }
 
         // add new member to linked list & advance
-        path->next = malloc(sizeof(struct _RL_Path));
+        path->next = malloc(sizeof(struct RL_path));
 
         // TODO free
         if (path->next == NULL)
@@ -67,12 +67,12 @@ RL_Path *rl_get_line(const RL_Coords a, const RL_Coords b)
     return head;
 }
 
-void rl_clear_path(RL_Path *path)
+void rl_clear_path(RL_path_t *path)
 {
     if (path == NULL)
         return;
-    RL_Path *current = path->head;
-    RL_Path *next;
+    RL_path_t *current = path->head;
+    RL_path_t *next;
     while (current != NULL) {
         next = current->next;
         free(current);
@@ -80,12 +80,12 @@ void rl_clear_path(RL_Path *path)
     }
 }
 
-const RL_Coords *rl_walk_path(RL_Path *path)
+const RL_coords_t *rl_walk_path(RL_path_t *path)
 {
     if (path == NULL)
         return NULL;
 
-    RL_Path *current = path->current;
+    RL_path_t *current = path->current;
 
     if (current == NULL)
         return NULL;
@@ -95,16 +95,16 @@ const RL_Coords *rl_walk_path(RL_Path *path)
     return &(current->loc);
 }
 
-void rl_reset_path(RL_Path *path)
+void rl_reset_path(RL_path_t *path)
 {
     path->current = path->head;
 }
 
-void rl_reverse_path(RL_Path *path)
+void rl_reverse_path(RL_path_t *path)
 {
-    RL_Path *prev = NULL;
-    RL_Path *current = path->head;
-    RL_Path *next = NULL;
+    RL_path_t *prev = NULL;
+    RL_path_t *current = path->head;
+    RL_path_t *next = NULL;
     while (current != NULL) {
         // Store next
         next = current->next;
@@ -121,22 +121,22 @@ void rl_reverse_path(RL_Path *path)
     path->current = prev;
 }
 
-typedef struct _RL_Node {
-    RL_Coords loc;
+typedef struct RL_node {
+    RL_coords_t loc;
     double f, g;
-    struct _RL_Node *parent;
-} RL_Node;
+    struct RL_node *parent;
+} RL_node_t;
 
 // Global variables used for pathfinding. These are here since we don't want to
 // malloc for *each* new path, and only need to realloc if the size is too big
-static RL_Queue *openSet;
-static RL_Queue *closedSet;
+static RL_queue_t *openSet;
+static RL_queue_t *closedSet;
 
-RL_Node *find_node(RL_Queue *queue, RL_Coords loc)
+RL_node_t *find_node(RL_queue_t *queue, RL_coords_t loc)
 {
-    RL_Queue *cur = queue;
+    RL_queue_t *cur = queue;
     while (cur != NULL) {
-        RL_Node *n = cur->data;
+        RL_node_t *n = cur->data;
         if (n && n->loc.x == loc.x && n->loc.y == loc.y)
             return n;
         cur = cur->next;
@@ -146,32 +146,32 @@ RL_Node *find_node(RL_Queue *queue, RL_Coords loc)
 }
 
 // default passable func that checks if a map tile is passable
-int is_map_passable(RL_Coords node, void *user_data)
+int is_map_passable(RL_coords_t node, void *user_data)
 {
-    RL_Map *map = user_data;
+    RL_map_t *map = user_data;
 
     return rl_is_passable(map, node);
 }
 
-RL_Path *rl_find_path(const RL_Coords start,
-                      const RL_Coords end,
-                      const RL_Map *map,
+RL_path_t *rl_find_path(const RL_coords_t start,
+                      const RL_coords_t end,
+                      const RL_map_t *map,
                       double diagonal_distance,
-                      RL_heuristic_func heuristic)
+                      RL_heuristic_f heuristic)
 {
     return rl_find_path_cb(start, end, diagonal_distance, heuristic,
                            &is_map_passable, (void *) map);
 }
 
-RL_Path *rl_find_path_cb(const RL_Coords start,
-                         const RL_Coords end,
+RL_path_t *rl_find_path_cb(const RL_coords_t start,
+                         const RL_coords_t end,
                          double diagonal_distance,
-                         RL_heuristic_func heuristic,
-                         RL_passable_func  is_passable,
+                         RL_heuristic_f heuristic,
+                         RL_passable_f  is_passable,
                          void *user_data)
 {
     // push start node to open set
-    RL_Node *curNode = calloc(1, sizeof(RL_Node));
+    RL_node_t *curNode = calloc(1, sizeof(RL_node_t));
     curNode->loc = start;
     rl_push(&openSet, curNode, 0);
     while (rl_peek(openSet) != NULL) {
@@ -184,7 +184,7 @@ RL_Path *rl_find_path_cb(const RL_Coords start,
         }
 
         // add neighbors to open set
-        RL_Coords neighbors[8] = {
+        RL_coords_t neighbors[8] = {
             rl_coords(curNode->loc.x - 1, curNode->loc.y),
             rl_coords(curNode->loc.x + 1, curNode->loc.y),
             rl_coords(curNode->loc.x, curNode->loc.y - 1),
@@ -195,7 +195,7 @@ RL_Path *rl_find_path_cb(const RL_Coords start,
             rl_coords(curNode->loc.x + 1, curNode->loc.y + 1),
         };
         for (int i = 0; i < 8; ++i) {
-            RL_Coords neighborLoc = neighbors[i];
+            RL_coords_t neighborLoc = neighbors[i];
             if (is_passable(neighborLoc, user_data)) {
                 double diff = abs(curNode->loc.x - neighborLoc.x) + abs(curNode->loc.y - neighborLoc.y);
                 double g = curNode->g + 1.0;
@@ -211,7 +211,7 @@ RL_Path *rl_find_path_cb(const RL_Coords start,
                 double f = g + h;
 
                 // skip if in open set & f is larger than walked f
-                RL_Node *n = find_node(openSet, neighborLoc);
+                RL_node_t *n = find_node(openSet, neighborLoc);
                 if (n && f >= n->f)
                     continue;
 
@@ -221,7 +221,7 @@ RL_Path *rl_find_path_cb(const RL_Coords start,
                     continue;
 
                 // add neighbor to open set
-                n = malloc(sizeof(RL_Node));
+                n = malloc(sizeof(RL_node_t));
                 n->loc = neighborLoc;
                 n->f = f;
                 n->g = g;
@@ -239,7 +239,7 @@ RL_Path *rl_find_path_cb(const RL_Coords start,
         || !(curNode->loc.x == end.x && curNode->loc.y == end.y)
     ) {
         // free nodes in open & closed set
-        RL_Node *n;
+        RL_node_t *n;
         while ((n = rl_pop(&openSet)) != NULL) free(n);
         while ((n = rl_pop(&closedSet)) != NULL) free(n);
 
@@ -249,10 +249,10 @@ RL_Path *rl_find_path_cb(const RL_Coords start,
 
     // make path from start to end (this traverses up the parents of
     // curLoc, making a linked list from end -> start)
-    RL_Path *path = NULL;
-    RL_Path *prevPath = NULL;
+    RL_path_t *path = NULL;
+    RL_path_t *prevPath = NULL;
     while (curNode) {
-        path = malloc(sizeof(RL_Path));
+        path = malloc(sizeof(RL_path_t));
         /* if (path == NULL) return NULL; // TODO free prev paths & nodes */
         if (path == NULL) exit(1);
         path->loc = curNode->loc;
@@ -264,7 +264,7 @@ RL_Path *rl_find_path_cb(const RL_Coords start,
     path->current = path;
 
     // free nodes in open & closed set
-    RL_Node *n;
+    RL_node_t *n;
     while ((n = rl_pop(&openSet)) != NULL) free(n);
     while ((n = rl_pop(&closedSet)) != NULL) free(n);
 

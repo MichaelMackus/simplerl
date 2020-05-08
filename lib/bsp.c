@@ -2,18 +2,18 @@
 
 #include <stdlib.h>
 
-struct _RL_BSP {
+struct RL_bsp_t {
     unsigned int width;
     unsigned int height;
-    RL_Coords loc;
+    RL_coords_t loc;
 
-    struct _RL_BSP *left;
-    struct _RL_BSP *right;
+    struct RL_bsp_t *left;
+    struct RL_bsp_t *right;
 };
 
-RL_BSP *rl_create_bsp(unsigned int width, unsigned int height)
+RL_bsp_t *rl_create_bsp(unsigned int width, unsigned int height)
 {
-    RL_BSP *bsp = calloc(1, sizeof(RL_BSP));
+    RL_bsp_t *bsp = calloc(1, sizeof(RL_bsp_t));
     if (bsp == NULL)
         return NULL;
 
@@ -22,7 +22,7 @@ RL_BSP *rl_create_bsp(unsigned int width, unsigned int height)
 
     return bsp;
 }
-void rl_split_bsp(RL_BSP *node, unsigned int position, RL_Split_Dir direction)
+void rl_split_bsp(RL_bsp_t *node, unsigned int position, RL_Split_Dir direction)
 {
     // TODO assert not already split
     if (direction == RL_SPLIT_VERTICALLY && position >= node->height)
@@ -30,10 +30,10 @@ void rl_split_bsp(RL_BSP *node, unsigned int position, RL_Split_Dir direction)
     if (direction == RL_SPLIT_HORIZONTALLY && position >= node->width)
         return;
 
-    RL_BSP *left = malloc(sizeof(RL_BSP));
+    RL_bsp_t *left = malloc(sizeof(RL_bsp_t));
     if (left == NULL)
         return;
-    RL_BSP *right = malloc(sizeof(RL_BSP));
+    RL_bsp_t *right = malloc(sizeof(RL_bsp_t));
     if (right == NULL) {
         free(left);
         return;
@@ -62,34 +62,34 @@ void rl_split_bsp(RL_BSP *node, unsigned int position, RL_Split_Dir direction)
 }
 
 // TODO assert on NULL?
-RL_BSP *rl_get_bsp_left(RL_BSP *node)
+RL_bsp_t *rl_get_bsp_left(RL_bsp_t *node)
 {
     if (node == NULL) return NULL;
     return node->left;
 }
-RL_BSP *rl_get_bsp_right(RL_BSP *node)
+RL_bsp_t *rl_get_bsp_right(RL_bsp_t *node)
 {
     if (node == NULL) return NULL;
     return node->right;
 }
-unsigned int rl_get_bsp_width(RL_BSP *node)
+unsigned int rl_get_bsp_width(RL_bsp_t *node)
 {
     if (node == NULL) return 0;
     return node->width;
 }
-unsigned int rl_get_bsp_height(RL_BSP *node)
+unsigned int rl_get_bsp_height(RL_bsp_t *node)
 {
     if (node == NULL) return 0;
     return node->height;
 }
-RL_Coords rl_get_bsp_loc(RL_BSP *node)
+RL_coords_t rl_get_bsp_loc(RL_bsp_t *node)
 {
-    if (node == NULL) return (RL_Coords) {
+    if (node == NULL) return (RL_coords_t) {
         0
     };
     return node->loc;
 }
-int rl_is_bsp_leaf(RL_BSP *node)
+int rl_is_bsp_leaf(RL_bsp_t *node)
 {
     if (node == NULL) return 0;
     return (node->left == NULL && node->right == NULL);
