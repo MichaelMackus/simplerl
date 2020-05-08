@@ -1,5 +1,5 @@
-#ifndef BSP_H
-#define BSP_H
+#ifndef RL_BSP_H
+#define RL_BSP_H
 
 #include "map.h"
 
