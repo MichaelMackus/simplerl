@@ -2,8 +2,8 @@
 #include "random.h"
 #include <stdlib.h>
 
-Mob *enemy(unsigned int hp, unsigned int minDamage, unsigned int maxDamage, char symbol, int form);
-Mob *create_mob(int depth, RL_Coords coords)
+Mob *enemy(int hp, int minDamage, int maxDamage, char symbol, int form);
+Mob *create_mob(int depth, RL_coords_t coords)
 {
     // difficulty ranges
     //
@@ -135,7 +135,7 @@ int attack(Mob *attacker, Mob *target)
     return damage;
 }
 
-Mob *enemy(unsigned int hp, unsigned int minDamage, unsigned int maxDamage, char symbol, int form)
+Mob *enemy(int hp, int minDamage, int maxDamage, char symbol, int form)
 {
     Mob *m;
     m = malloc(sizeof(Mob));

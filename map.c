@@ -67,7 +67,7 @@ Level *create_level(int depth)
     return level;
 }
 
-Tile *get_tile(const Level *level, RL_Coords coords)
+Tile *get_tile(const Level *level, RL_coords_t coords)
 {
     if (coords.y >= MAX_HEIGHT || coords.x >= MAX_WIDTH || coords.y < 0 || coords.x < 0)
         return NULL;
@@ -75,7 +75,7 @@ Tile *get_tile(const Level *level, RL_Coords coords)
     return &level->tiles[coords.y][coords.x];
 }
 
-Mob *get_enemy(const Level *level, RL_Coords coords)
+Mob *get_enemy(const Level *level, RL_coords_t coords)
 {
     if (coords.y >= MAX_HEIGHT || coords.x >= MAX_WIDTH || coords.y < 0 || coords.x < 0)
         return NULL;
@@ -91,7 +91,7 @@ Mob *get_enemy(const Level *level, RL_Coords coords)
     return NULL;
 }
 
-Mob *get_mob(const Level *level, RL_Coords coords)
+Mob *get_mob(const Level *level, RL_coords_t coords)
 {
     if (coords.y >= MAX_HEIGHT || coords.x >= MAX_WIDTH || coords.y < 0 || coords.x < 0)
         return NULL;
@@ -125,7 +125,7 @@ int place_on_tile(Mob *mob, int tileType, const Level *level)
 }
 
 // TODO handle NULL exception
-int move_mob(Mob *mob, RL_Coords coords, Level *level)
+int move_mob(Mob *mob, RL_coords_t coords, Level *level)
 {
     if (mob == NULL)
         return 0;

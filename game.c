@@ -16,7 +16,7 @@ Direction runDir = { 0, 0 }; // direction player is running
 int get_menu() { return inMenu; }
 int is_running() { return runDir.xdir != 0 || runDir.ydir != 0; }
 
-void taint(const RL_Coords playerCoords, Level *level);
+void taint(const RL_coords_t playerCoords, Level *level);
 int init_level(Level *level, Mob *player)
 {
     if (level == NULL)
@@ -42,7 +42,7 @@ int init_level(Level *level, Mob *player)
 
 int increase_depth(Dungeon *dungeon);
 int decrease_depth(Dungeon *dungeon);
-void move_player(Mob *player, RL_Coords coords, Level *level);
+void move_player(Mob *player, RL_coords_t coords, Level *level);
 void run_player(Mob *player, Direction dir, Level *level);
 void tick(Dungeon *dungeon);
 void tick_mobs(Level *level);
@@ -204,7 +204,7 @@ int gameloop(Dungeon *dungeon, char input)
 /**         **/
 /*************/
 
-void move_player(Mob *player, RL_Coords coords, Level *level)
+void move_player(Mob *player, RL_coords_t coords, Level *level)
 {
     // first, check for mob
     Mob *target = get_mob(level, coords);
@@ -240,8 +240,8 @@ void run_player(Mob *player, Direction dir, Level *level)
 // TODO add simple mob movement (instead of just sitting there)
 // TODO add simple sound AI (i.e. mob should be able to hear combat further than they can smell, and also remember that)
 void tick_mob(Mob *mob, Level *level);
-RL_Coords smelliest(RL_Coords coords, Level *level);
-int can_smell(RL_Coords coords, Level *level);
+RL_coords_t smelliest(RL_coords_t coords, Level *level);
+int can_smell(RL_coords_t coords, Level *level);
 void tick_mobs(Level *level)
 {
     for (int i = 0; i < MAX_MOBS; ++i)
@@ -252,7 +252,7 @@ void tick_mobs(Level *level)
     if (generate(1, 10) == 10)
     {
         // get random coordinates for new mob, must not be near player
-        RL_Coords coords = random_passable_coords(level);
+        RL_coords_t coords = random_passable_coords(level);
         while (can_see(coords, level->player->coords, level->tiles) ||
                 can_smell(coords, level) ||
                 get_tile(level, coords)->type == TILE_STAIR_UP ||
@@ -272,7 +272,7 @@ void tick_mobs(Level *level)
 }
 
 // returns -1 on move, 0 or more damage on attack
-int move_or_attack(Mob *attacker, RL_Coords coords, Level *level)
+int move_or_attack(Mob *attacker, RL_coords_t coords, Level *level)
 {
     // first, check for mob
     Mob *target = get_mob(level, coords);
@@ -325,7 +325,7 @@ void tick_mob(Mob *mob, Level *level)
         // if mob can't see, they can still smell the player (thanks NetHack!)
         if (can_smell(mob->coords, level))
         {
-            RL_Coords coords = smelliest(mob->coords, level);
+            RL_coords_t coords = smelliest(mob->coords, level);
             move_or_attack(mob, coords, level);
         }
     }
@@ -408,7 +408,7 @@ void cleanup(Dungeon *dungeon)
 }
 
 // taint smell aura around player
-void taint(const RL_Coords playerCoords, Level *level)
+void taint(const RL_coords_t playerCoords, Level *level)
 {
     // NOTE: all these tiles *except* the current player tile will get
     // decremented by 1 in gameloop after this code is run
@@ -430,7 +430,7 @@ void taint(const RL_Coords playerCoords, Level *level)
 
     for (int i = 0; i < 13; ++i)
     {
-        RL_Coords location = rl_coords(coords[i][0], coords[i][1]);
+        RL_coords_t location = rl_coords(coords[i][0], coords[i][1]);
         int smell = coords[i][2];
 
         // set smell if tile & greater than current smell
@@ -522,7 +522,7 @@ int handle_input(Dungeon *dungeon)
     if (is_running())
     {
         Direction dir = runDir;
-        RL_Coords target = rl_coords(player->coords.x + dir.xdir, player->coords.y + dir.ydir);
+        RL_coords_t target = rl_coords(player->coords.x + dir.xdir, player->coords.y + dir.ydir);
         Tile *tile = get_tile(level, target);
 
         // if player can see any mobs, reset running flag
@@ -548,10 +548,10 @@ int handle_input(Dungeon *dungeon)
 }
 
 // TODO allow mobs to smell diagonally
-RL_Coords smelliest(RL_Coords coords, Level *level)
+RL_coords_t smelliest(RL_coords_t coords, Level *level)
 {
     Tile **tiles = level->tiles;
-    RL_Coords smelliest = coords;
+    RL_coords_t smelliest = coords;
     int smell = 0;
 
     if (get_tile(level, rl_coords(coords.x, coords.y + 1)) != NULL &&
@@ -597,7 +597,7 @@ RL_Coords smelliest(RL_Coords coords, Level *level)
     return smelliest;
 }
 
-int can_smell(RL_Coords coords, Level *level)
+int can_smell(RL_coords_t coords, Level *level)
 {
     Tile *tile;
 
@@ -620,12 +620,12 @@ int can_smell(RL_Coords coords, Level *level)
     return 0;
 }
 
-int can_see(RL_Coords from, RL_Coords to, Tile **tiles)
+int can_see(RL_coords_t from, RL_coords_t to, Tile **tiles)
 {
     int ret = 0;
     int length = 0;
-    RL_Path *path = rl_get_line(from, to);
-    const RL_Coords *loc;
+    RL_path_t *path = rl_get_line(from, to);
+    const RL_coords_t *loc;
     while ((loc = rl_walk_path(path)) != NULL)
     {
         // if the line ends at the point we're looking at, we can see it!
