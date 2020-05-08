@@ -31,26 +31,20 @@ RL_Path *rl_get_line(const RL_Coords a, const RL_Coords b)
 
     RL_Path *path = head;
     path->loc = a;
-    while (path->loc.x != b.x || path->loc.y != b.y)
-    {
+    while (path->loc.x != b.x || path->loc.y != b.y) {
         RL_Coords currentCoords = path->loc;
 
-        if (deltaX > deltaY)
-        {
+        if (deltaX > deltaY) {
             error += slope;
-            if (error > 0.5 && currentCoords.y != b.y)
-            {
+            if (error > 0.5 && currentCoords.y != b.y) {
                 error -= 1.0;
                 currentCoords.y += yIncrement;
             }
 
             currentCoords.x += xIncrement;
-        }
-        else
-        {
+        } else {
             error += 1/slope;
-            if (error > 0.5 && currentCoords.x != b.x)
-            {
+            if (error > 0.5 && currentCoords.x != b.x) {
                 error -= 1.0;
                 currentCoords.x += xIncrement;
             }
@@ -79,8 +73,7 @@ void rl_clear_path(RL_Path *path)
         return;
     RL_Path *current = path->head;
     RL_Path *next;
-    while (current != NULL)
-    {
+    while (current != NULL) {
         next = current->next;
         free(current);
         current = next;
@@ -109,19 +102,19 @@ void rl_reset_path(RL_Path *path)
 
 void rl_reverse_path(RL_Path *path)
 {
-    RL_Path *prev = NULL; 
+    RL_Path *prev = NULL;
     RL_Path *current = path->head;
     RL_Path *next = NULL;
-    while (current != NULL) { 
-        // Store next 
-        next = current->next; 
+    while (current != NULL) {
+        // Store next
+        next = current->next;
 
-        // Reverse current node's pointer 
-        current->next = prev; 
+        // Reverse current node's pointer
+        current->next = prev;
 
-        // Move pointers one position ahead. 
-        prev = current; 
-        current = next; 
+        // Move pointers one position ahead.
+        prev = current;
+        current = next;
     }
 
     path->head = prev;
@@ -142,8 +135,7 @@ static RL_Queue *closedSet;
 RL_Node *find_node(RL_Queue *queue, RL_Coords loc)
 {
     RL_Queue *cur = queue;
-    while (cur != NULL)
-    {
+    while (cur != NULL) {
         RL_Node *n = cur->data;
         if (n && n->loc.x == loc.x && n->loc.y == loc.y)
             return n;
@@ -168,9 +160,9 @@ RL_Path *rl_find_path(const RL_Coords start,
                       RL_heuristic_func heuristic)
 {
     return rl_find_path_cb(start, end, diagonal_distance, heuristic,
-                           &is_map_passable, (void*) map);
+                           &is_map_passable, (void *) map);
 }
- 
+
 RL_Path *rl_find_path_cb(const RL_Coords start,
                          const RL_Coords end,
                          double diagonal_distance,
@@ -182,13 +174,11 @@ RL_Path *rl_find_path_cb(const RL_Coords start,
     RL_Node *curNode = calloc(1, sizeof(RL_Node));
     curNode->loc = start;
     rl_push(&openSet, curNode, 0);
-    while (rl_peek(openSet) != NULL)
-    {
+    while (rl_peek(openSet) != NULL) {
         curNode = rl_pop(&openSet);
 
         // check for end condition
-        if (curNode->loc.x == end.x && curNode->loc.y == end.y)
-        {
+        if (curNode->loc.x == end.x && curNode->loc.y == end.y) {
             rl_push(&closedSet, curNode, curNode->f);
             break;
         }
@@ -204,17 +194,14 @@ RL_Path *rl_find_path_cb(const RL_Coords start,
             rl_coords(curNode->loc.x + 1, curNode->loc.y - 1),
             rl_coords(curNode->loc.x + 1, curNode->loc.y + 1),
         };
-        for (int i = 0; i < 8; ++i)
-        {
+        for (int i = 0; i < 8; ++i) {
             RL_Coords neighborLoc = neighbors[i];
-            if (is_passable(neighborLoc, user_data))
-            {
+            if (is_passable(neighborLoc, user_data)) {
                 double diff = abs(curNode->loc.x - neighborLoc.x) + abs(curNode->loc.y - neighborLoc.y);
                 double g = curNode->g + 1.0;
 
                 // account for diagonal distance
-                if (diff > 1.0)
-                {
+                if (diff > 1.0) {
                     g = curNode->g + diagonal_distance;
                     if (diagonal_distance == 0.0)
                         continue; // don't move diagonally if no distance covered
@@ -247,8 +234,10 @@ RL_Path *rl_find_path_cb(const RL_Coords start,
         rl_push(&closedSet, curNode, curNode->f);
     }
 
-    if (curNode == NULL || !(curNode->loc.x == end.x && curNode->loc.y == end.y))
-    {
+    if (
+        curNode == NULL
+        || !(curNode->loc.x == end.x && curNode->loc.y == end.y)
+    ) {
         // free nodes in open & closed set
         RL_Node *n;
         while ((n = rl_pop(&openSet)) != NULL) free(n);
@@ -262,8 +251,7 @@ RL_Path *rl_find_path_cb(const RL_Coords start,
     // curLoc, making a linked list from end -> start)
     RL_Path *path = NULL;
     RL_Path *prevPath = NULL;
-    while (curNode)
-    {
+    while (curNode) {
         path = malloc(sizeof(RL_Path));
         /* if (path == NULL) return NULL; // TODO free prev paths & nodes */
         if (path == NULL) exit(1);

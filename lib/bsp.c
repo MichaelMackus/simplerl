@@ -11,9 +11,9 @@ struct _RL_BSP {
     struct _RL_BSP *right;
 };
 
-RL_BSP* rl_create_bsp(unsigned int width, unsigned int height)
+RL_BSP *rl_create_bsp(unsigned int width, unsigned int height)
 {
-    RL_BSP* bsp = calloc(1, sizeof(RL_BSP));
+    RL_BSP *bsp = calloc(1, sizeof(RL_BSP));
     if (bsp == NULL)
         return NULL;
 
@@ -22,7 +22,7 @@ RL_BSP* rl_create_bsp(unsigned int width, unsigned int height)
 
     return bsp;
 }
-void rl_split_bsp(RL_BSP* node, unsigned int position, RL_Split_Dir direction)
+void rl_split_bsp(RL_BSP *node, unsigned int position, RL_Split_Dir direction)
 {
     // TODO assert not already split
     if (direction == RL_SPLIT_VERTICALLY && position >= node->height)
@@ -30,18 +30,16 @@ void rl_split_bsp(RL_BSP* node, unsigned int position, RL_Split_Dir direction)
     if (direction == RL_SPLIT_HORIZONTALLY && position >= node->width)
         return;
 
-    RL_BSP* left = malloc(sizeof(RL_BSP));
+    RL_BSP *left = malloc(sizeof(RL_BSP));
     if (left == NULL)
         return;
-    RL_BSP* right = malloc(sizeof(RL_BSP));
-    if (right == NULL)
-    {
+    RL_BSP *right = malloc(sizeof(RL_BSP));
+    if (right == NULL) {
         free(left);
         return;
     }
 
-    if (direction == RL_SPLIT_VERTICALLY)
-    {
+    if (direction == RL_SPLIT_VERTICALLY) {
         left->width = node->width;
         left->height = position;
         left->loc = node->loc;
@@ -49,9 +47,7 @@ void rl_split_bsp(RL_BSP* node, unsigned int position, RL_Split_Dir direction)
         right->height = node->height - position;
         right->loc = node->loc;
         right->loc.y += position;
-    }
-    else
-    {
+    } else {
         left->width = position;
         left->height = node->height;
         left->loc = node->loc;
@@ -66,32 +62,34 @@ void rl_split_bsp(RL_BSP* node, unsigned int position, RL_Split_Dir direction)
 }
 
 // TODO assert on NULL?
-RL_BSP* rl_get_bsp_left(RL_BSP* node)
+RL_BSP *rl_get_bsp_left(RL_BSP *node)
 {
     if (node == NULL) return NULL;
     return node->left;
 }
-RL_BSP* rl_get_bsp_right(RL_BSP* node)
+RL_BSP *rl_get_bsp_right(RL_BSP *node)
 {
     if (node == NULL) return NULL;
     return node->right;
 }
-unsigned int rl_get_bsp_width(RL_BSP* node)
+unsigned int rl_get_bsp_width(RL_BSP *node)
 {
     if (node == NULL) return 0;
     return node->width;
 }
-unsigned int rl_get_bsp_height(RL_BSP* node)
+unsigned int rl_get_bsp_height(RL_BSP *node)
 {
     if (node == NULL) return 0;
     return node->height;
 }
-RL_Coords rl_get_bsp_loc(RL_BSP* node)
+RL_Coords rl_get_bsp_loc(RL_BSP *node)
 {
-    if (node == NULL) return (RL_Coords){ 0 };
+    if (node == NULL) return (RL_Coords) {
+        0
+    };
     return node->loc;
 }
-int rl_is_bsp_leaf(RL_BSP* node)
+int rl_is_bsp_leaf(RL_BSP *node)
 {
     if (node == NULL) return 0;
     return (node->left == NULL && node->right == NULL);

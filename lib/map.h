@@ -24,7 +24,7 @@ typedef struct _RL_Map RL_Map;
  * used to declare/test if a coordinate on the map is passable. The map
  * does not handle negative coordinates.
  */
-RL_Map* rl_create_map(size_t width, size_t height);
+RL_Map *rl_create_map(size_t width, size_t height);
 
 /**
  * Free the map.
@@ -34,16 +34,16 @@ void rl_free_map(RL_Map *map);
 /**
  * Return 1 if a tile is passable, else return 0.
  */
-int rl_is_passable(const RL_Map* map, RL_Coords loc);
+int rl_is_passable(const RL_Map *map, RL_Coords loc);
 
 /**
  * Mark a tile as walkable on the map.
  */
-void rl_set_passable(RL_Map* map, RL_Coords loc);
+void rl_set_passable(RL_Map *map, RL_Coords loc);
 
 /**
  * Mark a tile as impassable on the map.
  */
-void rl_set_impassable(RL_Map* map, RL_Coords loc);
+void rl_set_impassable(RL_Map *map, RL_Coords loc);
 
 #endif

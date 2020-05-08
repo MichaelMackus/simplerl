@@ -17,7 +17,7 @@ RL_Coords rl_coords(int x, int y)
     return c;
 }
 
-RL_Map* rl_create_map(size_t width, size_t height)
+RL_Map *rl_create_map(size_t width, size_t height)
 {
     RL_Map *map = malloc(sizeof(RL_Map));
 
@@ -31,8 +31,7 @@ RL_Map* rl_create_map(size_t width, size_t height)
     map->height = height;
     map->tiles = calloc(width * height, sizeof(char));
 
-    if (map->tiles == NULL)
-    {
+    if (map->tiles == NULL) {
         free(map);
 
         return NULL;
@@ -52,7 +51,7 @@ void rl_free_map(RL_Map *map)
     free(map);
 }
 
-int rl_is_passable(const RL_Map* map, RL_Coords loc)
+int rl_is_passable(const RL_Map *map, RL_Coords loc)
 {
     if (map == NULL)
         return 0;
@@ -67,7 +66,7 @@ int rl_is_passable(const RL_Map* map, RL_Coords loc)
     return map->tiles && map->tiles[index];
 }
 
-void rl_set_passable(RL_Map* map, RL_Coords loc)
+void rl_set_passable(RL_Map *map, RL_Coords loc)
 {
     if (map == NULL || map->tiles == NULL)
         return;
@@ -81,7 +80,7 @@ void rl_set_passable(RL_Map* map, RL_Coords loc)
     }
 }
 
-void rl_set_impassable(RL_Map* map, RL_Coords loc)
+void rl_set_impassable(RL_Map *map, RL_Coords loc)
 {
     if (map == NULL || map->tiles == NULL)
         return;

@@ -2,7 +2,7 @@
 
 #include <stdlib.h>
 
-void *rl_pop(RL_Queue** queue)
+void *rl_pop(RL_Queue **queue)
 {
     if (*queue == NULL)
         return NULL;
@@ -16,13 +16,12 @@ void *rl_pop(RL_Queue** queue)
     return data;
 }
 
-void rl_push(RL_Queue** queue, void *data, int priority)
+void rl_push(RL_Queue **queue, void *data, int priority)
 {
     if (queue == NULL)
         return;
 
-    if (*queue == NULL)
-    {
+    if (*queue == NULL) {
         (*queue) = malloc(sizeof(RL_Queue));
         (*queue)->data = data;
         (*queue)->priority = priority;
@@ -30,23 +29,21 @@ void rl_push(RL_Queue** queue, void *data, int priority)
         return;
     }
 
-    RL_Queue* newNode = malloc(sizeof(RL_Queue));
+    RL_Queue *newNode = malloc(sizeof(RL_Queue));
     if (newNode == NULL) return;
     newNode->data = data;
     newNode->priority = priority;
     newNode->next = NULL;
 
     // if newNode is more urgent then head, replace head
-    if (priority < (*queue)->priority)
-    {
+    if (priority < (*queue)->priority) {
         newNode->next = *queue;
         *queue = newNode;
         return;
     }
 
-    RL_Queue* current = *queue;
-    while (current->next != NULL)
-    {
+    RL_Queue *current = *queue;
+    while (current->next != NULL) {
         // found the spot to insert
         if (current->next->priority > priority)
             break;
@@ -58,7 +55,7 @@ void rl_push(RL_Queue** queue, void *data, int priority)
     current->next = newNode;
 }
 
-void* rl_peek(const RL_Queue* queue)
+void *rl_peek(const RL_Queue *queue)
 {
     if (queue == NULL)
         return NULL;
