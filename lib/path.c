@@ -247,7 +247,7 @@ RL_Path *rl_find_path_cb(const RL_Coords start,
         rl_push(&closedSet, curNode, curNode->f);
     }
 
-    if (curNode == NULL)
+    if (curNode == NULL || !(curNode->loc.x == end.x && curNode->loc.y == end.y))
     {
         // free nodes in open & closed set
         RL_Node *n;
