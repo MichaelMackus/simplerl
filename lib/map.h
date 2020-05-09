@@ -6,11 +6,11 @@
 typedef struct {
     int x;
     int y;
-} RL_coords_t;
-RL_coords_t rl_coords(int x, int y);
+} rl_coords_t;
+rl_coords_t rl_coords(int x, int y);
 
-struct RL_map;
-typedef struct RL_map RL_map_t;
+struct rl_map;
+typedef struct rl_map rl_map_t;
 
 /**
  * Create empty map (map full of impassable tiles). Can be used in the
@@ -24,26 +24,26 @@ typedef struct RL_map RL_map_t;
  * used to declare/test if a coordinate on the map is passable. The map
  * does not handle negative coordinates.
  */
-RL_map_t *rl_create_map(size_t width, size_t height);
+rl_map_t *rl_create_map(size_t width, size_t height);
 
 /**
  * Free the map.
  */
-void rl_free_map(RL_map_t *map);
+void rl_free_map(rl_map_t *map);
 
 /**
  * Return 1 if a tile is passable, else return 0.
  */
-int rl_is_passable(const RL_map_t *map, RL_coords_t loc);
+int rl_is_passable(const rl_map_t *map, rl_coords_t loc);
 
 /**
  * Mark a tile as walkable on the map.
  */
-void rl_set_passable(RL_map_t *map, RL_coords_t loc);
+void rl_set_passable(rl_map_t *map, rl_coords_t loc);
 
 /**
  * Mark a tile as impassable on the map.
  */
-void rl_set_impassable(RL_map_t *map, RL_coords_t loc);
+void rl_set_impassable(rl_map_t *map, rl_coords_t loc);
 
 #endif

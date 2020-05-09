@@ -3,7 +3,7 @@
 #include <stdlib.h>
 
 Mob *enemy(int hp, int minDamage, int maxDamage, char symbol, int form);
-Mob *create_mob(int depth, RL_coords_t coords)
+Mob *create_mob(int depth, rl_coords_t coords)
 {
     // difficulty ranges
     //

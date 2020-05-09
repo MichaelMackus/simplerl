@@ -26,7 +26,7 @@ int max_depth(Dungeon *dungeon);
 
 // return random coordinates that are passable and
 // do not have a mob
-RL_coords_t random_passable_coords(Level *level);
+rl_coords_t random_passable_coords(Level *level);
 
 // randomly generate tiles by filling dungeon with cells
 // and then connecting via corridors

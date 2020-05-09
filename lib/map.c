@@ -2,24 +2,24 @@
 
 #include <stdlib.h>
 
-struct RL_map {
+struct rl_map {
     size_t width;
     size_t height;
     char *tiles; // 2d array of tiles, set to 1 if tile is passable
 };
 
-RL_coords_t rl_coords(int x, int y)
+rl_coords_t rl_coords(int x, int y)
 {
-    RL_coords_t c;
+    rl_coords_t c;
     c.x = x;
     c.y = y;
 
     return c;
 }
 
-RL_map_t *rl_create_map(size_t width, size_t height)
+rl_map_t *rl_create_map(size_t width, size_t height)
 {
-    RL_map_t *map = malloc(sizeof(RL_map_t));
+    rl_map_t *map = malloc(sizeof(rl_map_t));
 
     if (map == NULL)
         return NULL;
@@ -40,7 +40,7 @@ RL_map_t *rl_create_map(size_t width, size_t height)
     return map;
 }
 
-void rl_free_map(RL_map_t *map)
+void rl_free_map(rl_map_t *map)
 {
     if (map == NULL)
         return;
@@ -51,7 +51,7 @@ void rl_free_map(RL_map_t *map)
     free(map);
 }
 
-int rl_is_passable(const RL_map_t *map, RL_coords_t loc)
+int rl_is_passable(const rl_map_t *map, rl_coords_t loc)
 {
     if (map == NULL)
         return 0;
@@ -66,7 +66,7 @@ int rl_is_passable(const RL_map_t *map, RL_coords_t loc)
     return map->tiles && map->tiles[index];
 }
 
-void rl_set_passable(RL_map_t *map, RL_coords_t loc)
+void rl_set_passable(rl_map_t *map, rl_coords_t loc)
 {
     if (map == NULL || map->tiles == NULL)
         return;
@@ -80,7 +80,7 @@ void rl_set_passable(RL_map_t *map, RL_coords_t loc)
     }
 }
 
-void rl_set_impassable(RL_map_t *map, RL_coords_t loc)
+void rl_set_impassable(rl_map_t *map, rl_coords_t loc)
 {
     if (map == NULL || map->tiles == NULL)
         return;

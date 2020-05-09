@@ -30,6 +30,6 @@ int handle_input(Dungeon *dungeon);
 int get_menu();
 
 // simple lighting function to see if mob can see x and y
-int can_see(RL_coords_t from, RL_coords_t to, Tile **tiles);
+int can_see(rl_coords_t from, rl_coords_t to, Tile **tiles);
 
 #endif
