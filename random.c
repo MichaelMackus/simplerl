@@ -6,11 +6,10 @@
 
 void seed_random()
 {
-    // simply use time since epoch as seed for now
-    rl_rng_stdlib_init();
+    rl_rng_twister_init();
 }
 
 int generate(int min, int max)
 {
-    return rl_rng_stdlib_generate(min, max);
+    return rl_rng_twister_generate(min, max);
 }
