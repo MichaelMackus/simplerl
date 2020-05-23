@@ -10,6 +10,7 @@ typedef struct {
 Dungeon *create_dungeon()
 {
     // do this otherwise initial seed will always be the same
+    init_random();
     seed_random();
 
     // allocate dungeon

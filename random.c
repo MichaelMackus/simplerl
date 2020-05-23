@@ -4,9 +4,14 @@
 #include <stdlib.h>
 #include <time.h>
 
+void init_random()
+{
+    rl_rng_twister_create();
+}
+
 void seed_random()
 {
-    rl_rng_twister_init();
+    rl_rng_twister_seed(0);
 }
 
 int generate(int min, int max)

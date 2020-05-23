@@ -5,9 +5,10 @@
 #include <time.h>
 #include <stdlib.h>
 
-void rl_rng_stdlib_init()
+void rl_rng_stdlib_seed(unsigned int seed)
 {
-    srand(time(0));
+    if (seed) srand(seed);
+    else      srand(time(0));
 }
 
 unsigned long rl_rng_stdlib_generate(unsigned long min, unsigned long max)
@@ -22,14 +23,21 @@ unsigned long rl_rng_stdlib_generate(unsigned long min, unsigned long max)
 #include "rng/mtwist/mt.c"
 
 mtwist *rl_twister_state;
-void rl_rng_twister_init()
+void rl_rng_twister_create()
 {
     rl_twister_state = mtwist_new();
-    mtwist_seed_from_system(rl_twister_state);
 }
 void rl_rng_twister_free()
 {
     if (rl_twister_state) mtwist_free(rl_twister_state);
+}
+
+void rl_rng_twister_seed(unsigned long seed)
+{
+    if (seed)
+        mtwist_init(rl_twister_state, seed);
+    else
+        mtwist_seed_from_system(rl_twister_state);
 }
 
 unsigned long rl_rng_twister_generate(unsigned long min, unsigned long max)
