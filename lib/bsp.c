@@ -1,5 +1,6 @@
 #include "bsp.h"
 
+#include <assert.h>
 #include <stdlib.h>
 
 struct rl_bsp {
@@ -24,7 +25,9 @@ rl_bsp *rl_create_bsp(unsigned int width, unsigned int height)
 }
 void rl_split_bsp(rl_bsp *node, unsigned int position, rl_Split_Dir direction)
 {
-    // TODO assert not already split
+    // can't split something already split
+    assert(node->left == NULL && node->right == NULL);
+
     if (direction == RL_SPLIT_VERTICALLY && position >= node->height)
         return;
     if (direction == RL_SPLIT_HORIZONTALLY && position >= node->width)

@@ -1,5 +1,6 @@
 #include "rng.h"
 
+#include <assert.h>
 #include <limits.h>
 #include <time.h>
 #include <stdlib.h>
@@ -11,9 +12,8 @@ void rl_rng_stdlib_init()
 
 unsigned long rl_rng_stdlib_generate(unsigned long min, unsigned long max)
 {
-    // TODO assert/unsigned?
-    if (min < 0 || max < 0 || (min == 0 && max == 0))
-        return 0;
+    assert(max > min);
+    assert(max < RAND_MAX);
 
     return min + rand() / (RAND_MAX / (max - min + 1) + 1);
 }
@@ -34,9 +34,8 @@ void rl_rng_twister_free()
 
 unsigned long rl_rng_twister_generate(unsigned long min, unsigned long max)
 {
-    // TODO assert/unsigned?
-    if (min < 0 || max < 0 || (min == 0 && max == 0))
-        return 0;
+    assert(max > min);
+    assert(max < MTWIST_FULL_MASK);
 
     return min + mtwist_drand(rl_twister_state) * (max - min + 1);
 }
