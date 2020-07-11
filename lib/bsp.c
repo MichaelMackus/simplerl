@@ -23,7 +23,7 @@ rl_bsp *rl_create_bsp(unsigned int width, unsigned int height)
 
     return bsp;
 }
-void rl_split_bsp(rl_bsp *node, unsigned int position, rl_Split_Dir direction)
+void rl_split_bsp(rl_bsp *node, unsigned int position, rl_split_dir direction)
 {
     // can't split something already split
     assert(node->left == NULL && node->right == NULL);
