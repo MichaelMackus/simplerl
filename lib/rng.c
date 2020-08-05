@@ -13,7 +13,7 @@ void rl_rng_stdlib_seed(unsigned int seed)
 
 unsigned long rl_rng_stdlib_generate(unsigned long min, unsigned long max)
 {
-    assert(max > min);
+    assert(max >= min);
     assert(max < RAND_MAX);
 
     return min + rand() / (RAND_MAX / (max - min + 1) + 1);
@@ -42,7 +42,7 @@ void rl_rng_twister_seed(unsigned long seed)
 
 unsigned long rl_rng_twister_generate(unsigned long min, unsigned long max)
 {
-    assert(max > min);
+    assert(max >= min);
     assert(max < MTWIST_FULL_MASK);
 
     return min + mtwist_drand(rl_twister_state) * (max - min + 1);
