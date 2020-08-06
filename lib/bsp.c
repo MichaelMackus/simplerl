@@ -2,6 +2,7 @@
 
 #include <assert.h>
 #include <stdlib.h>
+#include <limits.h>
 
 struct rl_bsp {
     unsigned int width;
@@ -129,11 +130,27 @@ int rl_is_bsp_leaf(rl_bsp *node)
     return (node->left == NULL && node->right == NULL);
 }
 
+int rl_is_bsp_left(rl_bsp *node)
+{
+    if (node == NULL) return 0;
+    if (node->parent == NULL) return 0;
+    
+    return node->parent->left == node;
+}
+
+int rl_is_bsp_right(rl_bsp *node)
+{
+    if (node == NULL) return 0;
+    if (node->parent == NULL) return 0;
+
+    return node->parent->right == node;
+}
+
 void push_leaves(rl_queue **queue, rl_bsp *node)
 {
     if (node->left) {
         if (rl_is_bsp_leaf(node->left)) {
-            rl_push(queue, node->left, rl_get_bsp_depth(node->left));
+            rl_push(queue, node->left, INT_MAX - rl_get_bsp_depth(node->left));
         } else {
             push_leaves(queue, node->left);
         }
@@ -141,7 +158,7 @@ void push_leaves(rl_queue **queue, rl_bsp *node)
 
     if (node->right) {
         if (rl_is_bsp_leaf(node->right)) {
-            rl_push(queue, node->right, rl_get_bsp_depth(node->right));
+            rl_push(queue, node->right, INT_MAX - rl_get_bsp_depth(node->right));
         } else {
             push_leaves(queue, node->right);
         }
@@ -157,7 +174,10 @@ rl_queue *rl_get_bsp_leaves(rl_bsp *node)
 
 void push_nodes(rl_queue **queue, rl_bsp *node)
 {
-    rl_push(queue, node, rl_get_bsp_depth(node));
+    if (node == NULL) return;
+
+    // TODO FIXME
+    rl_push(queue, node, INT_MAX - rl_get_bsp_depth(node));
 
     if (node->left) {
         push_nodes(queue, node->left);

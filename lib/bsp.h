@@ -27,10 +27,15 @@ int rl_get_bsp_depth(rl_bsp *node);
 
 // return 1 if node is a leaf node (no children)
 int rl_is_bsp_leaf(rl_bsp *node);
-// returns a queue of all leaves, prioritized by depth (most priority = shallowest depth)
+// returns a queue of all leaves, prioritized by depth (most priority = deepest depth)
 rl_queue *rl_get_bsp_leaves(rl_bsp *node);
 
-// returns a queue of all nodes, prioritized by depth (most priority = shallowest depth)
+// return 1 if node is left node of parent
+int rl_is_bsp_left(rl_bsp *node);
+// return 1 if node is right node of parent
+int rl_is_bsp_right(rl_bsp *node);
+
+// returns a queue of all nodes, prioritized by depth (most priority = deepest depth; leaves will be at front of queue)
 rl_queue *rl_get_bsp_nodes(rl_bsp *node);
 
 #endif
