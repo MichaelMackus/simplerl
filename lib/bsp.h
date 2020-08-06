@@ -17,10 +17,20 @@ void rl_split_bsp(rl_bsp *node, unsigned int position, rl_split_dir direction);
 
 rl_bsp *rl_get_bsp_left(rl_bsp *node);
 rl_bsp *rl_get_bsp_right(rl_bsp *node);
+rl_bsp *rl_get_bsp_parent(rl_bsp *node);
+rl_bsp *rl_get_bsp_sibling(rl_bsp *node);
+
 unsigned int rl_get_bsp_width(rl_bsp *node);
 unsigned int rl_get_bsp_height(rl_bsp *node);
 rl_coords rl_get_bsp_loc(rl_bsp *node);
+int rl_get_bsp_depth(rl_bsp *node);
+
+// return 1 if node is a leaf node (no children)
 int rl_is_bsp_leaf(rl_bsp *node);
+// returns a queue of all leaves, prioritized by depth (most priority = shallowest depth)
 rl_queue *rl_get_bsp_leaves(rl_bsp *node);
+
+// returns a queue of all nodes, prioritized by depth (most priority = shallowest depth)
+rl_queue *rl_get_bsp_nodes(rl_bsp *node);
 
 #endif

@@ -17,4 +17,7 @@ void *rl_pop(rl_queue **queue);
 // peek at the data in the queue
 void *rl_peek(const rl_queue *queue);
 
+// reverse all the priorities (reverse sort)
+void rl_reverse_queue(rl_queue **queue);
+
 #endif
