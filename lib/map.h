@@ -55,4 +55,14 @@ void rl_set_passable(rl_map *map, rl_coords loc);
  */
 void rl_set_impassable(rl_map *map, rl_coords loc);
 
+/**
+ * Return 1 if a tile is a wall.
+ */
+int rl_is_wall(const rl_map *map, rl_coords loc);
+
+/**
+ * Mark a tile as a wall tile & also set to impassable.
+ */
+int rl_set_wall(const rl_map *map, rl_coords loc);
+
 #endif
