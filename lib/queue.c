@@ -62,24 +62,3 @@ void *rl_peek(const rl_queue *queue)
 
     return queue->data;
 }
-
-void rl_reverse_queue(rl_queue **queue)
-{
-    if (*queue == NULL)
-        return;
-
-    rl_queue *cur = *queue;
-    int deepest;
-    while (cur) {
-        deepest = cur->priority;
-        cur = cur->next;
-    }
-
-    rl_queue *new = NULL;
-    while (*queue) {
-        rl_push(&new, (*queue)->data, deepest - (*queue)->priority);
-        rl_pop(queue);
-    }
-
-    *queue = new;
-}
