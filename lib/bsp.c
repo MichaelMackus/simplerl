@@ -97,3 +97,29 @@ int rl_is_bsp_leaf(rl_bsp *node)
     if (node == NULL) return 0;
     return (node->left == NULL && node->right == NULL);
 }
+
+void push_leaves(rl_queue **queue, rl_bsp *node)
+{
+    if (node->left) {
+        if (rl_is_bsp_leaf(node->left)) {
+            rl_push(queue, node->left, 0);
+        } else {
+            push_leaves(queue, node->left);
+        }
+    }
+
+    if (node->right) {
+        if (rl_is_bsp_leaf(node->right)) {
+            rl_push(queue, node->right, 0);
+        } else {
+            push_leaves(queue, node->right);
+        }
+    }
+}
+rl_queue *rl_get_bsp_leaves(rl_bsp *node)
+{
+    rl_queue *queue = NULL;
+    push_leaves(&queue, node);
+
+    return queue;
+}

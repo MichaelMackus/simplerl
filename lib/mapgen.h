@@ -19,4 +19,14 @@ void rl_recursively_split_bsp(rl_bsp *root, rl_generator_f generator,
         unsigned int min_width, unsigned int min_height,
         float deviation, int max_recursion);
 
+/**
+ * Create a map from a BSP tree. This adds rooms of random size into
+ * each BSP leaf, and then connects every BSP sibling with cooridors
+ * (traversing up the tree until all nodes are connected).
+ */
+rl_map *rl_create_map_from_bsp(rl_bsp *root, rl_generator_f generator,
+        unsigned int room_min_width, unsigned int room_min_height,
+        unsigned int room_max_width, unsigned int room_max_height,
+        unsigned int room_padding);
+
 #endif

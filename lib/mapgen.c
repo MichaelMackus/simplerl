@@ -76,3 +76,66 @@ void rl_recursively_split_bsp(rl_bsp *root, rl_generator_f generator,
     rl_recursively_split_bsp(right, generator,
             min_width, min_height, deviation, max_recursion - 1);
 }
+
+typedef struct rl_room {
+    rl_coords loc;
+    size_t width;
+    size_t height;
+} rl_room;
+
+typedef struct rl_corridor {
+    rl_coords start;
+    rl_coords end;
+} rl_corridor;
+
+rl_map *rl_create_map_from_bsp(rl_bsp *root, rl_generator_f generator,
+        unsigned int room_min_width, unsigned int room_min_height,
+        unsigned int room_max_width, unsigned int room_max_height,
+        unsigned int room_padding)
+{
+    unsigned int map_width = rl_get_bsp_width(root);
+    unsigned int map_height = rl_get_bsp_height(root);
+
+    rl_queue *leaves = rl_get_bsp_leaves(root);
+    if (leaves == NULL)
+        return NULL;
+
+    rl_queue *cur = leaves;
+    size_t leafCount = 0;
+    while (cur) {
+        cur = cur->next;
+        leafCount++;
+    }
+
+    rl_map *map = rl_create_map(map_width, map_height);
+    if (map == NULL)
+        return NULL; // TODO free queue
+
+    rl_room *rooms = calloc(leafCount, sizeof(rl_room));
+    for (int i = 0; i < leafCount; ++i) {
+        rl_bsp *leaf = rl_pop(&leaves);
+        if (leaf == NULL)
+            continue;
+        unsigned int width = rl_get_bsp_width(leaf);
+        unsigned int height = rl_get_bsp_height(leaf);
+        rl_coords loc = rl_get_bsp_loc(leaf);
+
+        rl_room room = rooms[i];
+        room.width = generator(room_min_width, room_max_width);
+        if (room.width + room_padding*2 > width)
+            room.width = width - room_padding*2;
+        room.height = generator(room_min_height, room_max_height);
+        if (room.height + room_padding*2 > height)
+            room.height = height - room_padding*2;
+        room.loc.x = generator(loc.x + room_padding, loc.x + width - room.width - room_padding);
+        room.loc.y = generator(loc.y + room_padding, loc.y + height - room.height - room_padding);
+
+        for (int x = room.loc.x; x < room.loc.x + room.width; ++x) {
+            for (int y = room.loc.y; y < room.loc.y + room.height; ++y) {
+                rl_set_passable(map, (rl_coords){ x, y });
+            }
+        }
+    }
+
+    return map;
+}

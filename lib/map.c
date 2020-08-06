@@ -57,6 +57,22 @@ int rl_is_passable(const rl_map *map, rl_coords loc)
     return map->tiles && map->tiles[index];
 }
 
+size_t rl_get_map_width(const rl_map *map)
+{
+    if (map == NULL)
+        return 0;
+
+    return map->width;
+}
+
+size_t rl_get_map_height(const rl_map *map)
+{
+    if (map == NULL)
+        return 0;
+
+    return map->height;
+}
+
 void rl_set_passable(rl_map *map, rl_coords loc)
 {
     if (map == NULL || map->tiles == NULL)

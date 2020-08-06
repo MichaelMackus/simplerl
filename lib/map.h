@@ -36,6 +36,16 @@ void rl_free_map(rl_map *map);
 int rl_is_passable(const rl_map *map, rl_coords loc);
 
 /**
+ * Return map width
+ */
+size_t rl_get_map_width(const rl_map *map);
+
+/**
+ * Return map height
+ */
+size_t rl_get_map_height(const rl_map *map);
+
+/**
  * Mark a tile as walkable on the map.
  */
 void rl_set_passable(rl_map *map, rl_coords loc);
