@@ -12,6 +12,10 @@ typedef int    (*rl_passable_f) (rl_coords node, void *user_data);
 // get straight line from a to b using Bresenham's
 rl_path *rl_get_line(const rl_coords a, const rl_coords b);
 
+// get straight line from a to b using Manhattan distance (this
+// resembles an "L" shape when there is a change in direction)
+rl_path *rl_get_line_manhattan(const rl_coords a, const rl_coords b);
+
 // A* pathfinding function
 // pass 0 to diagonal_distance to disable moving diagonally, else you probably want sqrt(2) (~1.4)
 // pass NULL to heuristic to use Dijkstra's algorithm

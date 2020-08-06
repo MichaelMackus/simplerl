@@ -1,8 +1,10 @@
 #include "mapgen.h"
+#include "path.h"
+#include "util.h"
 
 #include <assert.h>
 
-#define MAX_GENERATOR_RECURSION 10
+#define MAX_GENERATOR_RECURSION 100
 
 void rl_recursively_split_bsp(rl_bsp *root, rl_generator_f generator,
         unsigned int min_width, unsigned int min_height, float deviation, int max_recursion)
@@ -83,11 +85,7 @@ typedef struct rl_room {
     size_t height;
 } rl_room;
 
-typedef struct rl_corridor {
-    rl_coords start;
-    rl_coords end;
-} rl_corridor;
-
+int is_diggable(rl_map *map, rl_coords start, rl_coords end);
 rl_map *rl_create_map_from_bsp(rl_bsp *root, rl_generator_f generator,
         unsigned int room_min_width, unsigned int room_min_height,
         unsigned int room_max_width, unsigned int room_max_height,
@@ -111,31 +109,98 @@ rl_map *rl_create_map_from_bsp(rl_bsp *root, rl_generator_f generator,
     if (map == NULL)
         return NULL; // TODO free queue
 
-    rl_room *rooms = calloc(leafCount, sizeof(rl_room));
+    // generate rooms
+    rl_room rooms[leafCount];
     for (int i = 0; i < leafCount; ++i) {
         rl_bsp *leaf = rl_pop(&leaves);
-        if (leaf == NULL)
-            continue;
+        if (leaf == NULL) continue;
+
         unsigned int width = rl_get_bsp_width(leaf);
         unsigned int height = rl_get_bsp_height(leaf);
         rl_coords loc = rl_get_bsp_loc(leaf);
 
-        rl_room room = rooms[i];
-        room.width = generator(room_min_width, room_max_width);
-        if (room.width + room_padding*2 > width)
-            room.width = width - room_padding*2;
-        room.height = generator(room_min_height, room_max_height);
-        if (room.height + room_padding*2 > height)
-            room.height = height - room_padding*2;
-        room.loc.x = generator(loc.x + room_padding, loc.x + width - room.width - room_padding);
-        room.loc.y = generator(loc.y + room_padding, loc.y + height - room.height - room_padding);
+        rl_room *room = &rooms[i];
+        room->width = generator(room_min_width, room_max_width);
+        if (room->width + room_padding*2 > width)
+            room->width = width - room_padding*2;
+        room->height = generator(room_min_height, room_max_height);
+        if (room->height + room_padding*2 > height)
+            room->height = height - room_padding*2;
+        room->loc.x = generator(loc.x + room_padding, loc.x + width - room->width - room_padding);
+        room->loc.y = generator(loc.y + room_padding, loc.y + height - room->height - room_padding);
 
-        for (int x = room.loc.x; x < room.loc.x + room.width; ++x) {
-            for (int y = room.loc.y; y < room.loc.y + room.height; ++y) {
+        for (int x = room->loc.x; x < room->loc.x + room->width; ++x) {
+            for (int y = room->loc.y; y < room->loc.y + room->height; ++y) {
                 rl_set_passable(map, (rl_coords){ x, y });
             }
         }
     }
 
+    // generate corridors
+    rl_queue *nodes = rl_get_bsp_nodes(root);
+    rl_bsp *node;
+    while (node = rl_pop(&nodes)) {
+        rl_coords node_loc = rl_get_bsp_loc(node);
+        unsigned int node_width = rl_get_bsp_width(node);
+        unsigned int node_height = rl_get_bsp_height(node);
+
+        rl_bsp *sibling = rl_get_bsp_sibling(node);
+        if (sibling == NULL) continue;
+        rl_coords sibling_loc = rl_get_bsp_loc(sibling);
+        unsigned int sibling_width = rl_get_bsp_width(sibling);
+        unsigned int sibling_height = rl_get_bsp_height(sibling);
+
+        // ensure sibling corridor hasn't already been carved
+        cur = nodes;
+        rl_bsp *target = NULL;
+        while (cur) {
+            target = rl_peek(cur);
+            if (target == sibling) break;
+            cur = cur->next;
+        }
+        if (target != sibling)
+            continue; // sibling not found - corridor already carved
+
+        // pick a random passable point within current node and
+        // random passable point within sibling node, and connect them
+        rl_coords start = { node_loc.x + node_width/2, node_loc.y + node_height/2 };
+        rl_coords end = { sibling_loc.x + sibling_width/2, sibling_loc.y + sibling_height/2 };
+        int recursion = 0; 
+        while (!is_diggable(map, start, end)) {
+            start = (rl_coords) {
+                generator(node_loc.x, node_loc.x + node_width - 1),
+                generator(node_loc.y, node_loc.y + node_height - 1)
+            };
+            end = (rl_coords) {
+                generator(sibling_loc.x, sibling_loc.x + sibling_width - 1),
+                generator(sibling_loc.y, sibling_loc.y + sibling_height - 1)
+            };
+            ++recursion;
+        }
+
+        rl_path *path = rl_get_line_manhattan(start, end);
+        rl_coords *coords;
+        while (coords = rl_walk_path(path)) {
+            rl_set_passable(map, *coords);
+        }
+    }
+
+    // TODO cleanup memory
+
     return map;
+}
+
+int is_diggable(rl_map *map, rl_coords start, rl_coords end)
+{
+    int in_start = 1;
+    int in_end = 0;
+    rl_path *path = rl_get_line_manhattan(start, end);
+
+    // start & end diggable?
+    if (!rl_is_passable(map, start) || !rl_is_passable(map, end))
+        return 0;
+
+    rl_coords *coords;
+
+    return 1;
 }

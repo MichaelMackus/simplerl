@@ -1,5 +1,6 @@
 #include "path.h"
 #include "queue.h"
+#include "util.h"
 
 #include <stdlib.h>
 #include <memory.h>
@@ -65,6 +66,16 @@ rl_path *rl_get_line(const rl_coords a, const rl_coords b)
     }
 
     return head;
+}
+
+int all_passable(rl_coords node, void *user_data)
+{
+    return 1;
+}
+rl_path *rl_get_line_manhattan(const rl_coords a, const rl_coords b)
+{
+
+    return rl_find_path_cb(a, b, 0, &manhattan_distance, &all_passable, NULL);
 }
 
 void rl_clear_path(rl_path *path)
