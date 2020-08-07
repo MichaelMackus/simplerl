@@ -87,10 +87,12 @@ typedef struct rl_room {
 
 int is_diggable(rl_map *map, const char *corridors, rl_coords start, rl_coords end);
 int is_corner(rl_map *map, rl_coords loc);
+int count_doors(rl_map *map, rl_coords loc);
+rl_coords get_closest_door(rl_map *map, rl_coords loc);
 rl_map *rl_create_map_from_bsp(rl_bsp *root, rl_generator_f generator,
         unsigned int room_min_width, unsigned int room_min_height,
         unsigned int room_max_width, unsigned int room_max_height,
-        unsigned int room_padding)
+        unsigned int room_padding, unsigned int max_adjacent_doors)
 {
     unsigned int map_width = rl_get_bsp_width(root);
     unsigned int map_height = rl_get_bsp_height(root);
@@ -197,8 +199,38 @@ rl_map *rl_create_map_from_bsp(rl_bsp *root, rl_generator_f generator,
     // mark corridors on map
     for (int x = 0; x < map_width; ++x) {
         for (int y = 0; y < map_height; ++y) {
-            if (corridors[y*map_width + x])
-                rl_set_passable(map, (rl_coords){x, y});
+            if (corridors[y*map_width + x]) {
+                int adjacent_doors = 0;
+                rl_coords loc = {x, y};
+
+                // if wall, make sure we haven't hit adjacent door limit
+                if (rl_is_wall(map, loc)) {
+                    // find side of wall we're on
+                    for (int i = 0; i < leafCount; ++i) {
+                        rl_room room = rooms[i];
+                        if (loc.x >= room.loc.x && loc.x < room.loc.x + room.width &&
+                            loc.y >= room.loc.y && loc.y < room.loc.y + room.height
+                        ) {
+                            if (loc.y == room.loc.y || loc.y == room.loc.y + room.height - 1) {
+                                if (rl_is_passable(map, (rl_coords){loc.x + 1, loc.y}))
+                                    adjacent_doors++;
+                                if (rl_is_passable(map, (rl_coords){loc.x - 1, loc.y}))
+                                    adjacent_doors++;
+                            } else if (loc.x == room.loc.x || loc.x == room.loc.x + room.width - 1) {
+                                if (rl_is_passable(map, (rl_coords){loc.x, loc.y + 1}))
+                                    adjacent_doors++;
+                                if (rl_is_passable(map, (rl_coords){loc.x, loc.y - 1}))
+                                    adjacent_doors++;
+                            } else {
+                                assert("Invalid wall side!" == 1);
+                            }
+                        }
+                    }
+                }
+
+                if (adjacent_doors < max_adjacent_doors)
+                    rl_set_passable(map, loc);
+            }
         }
     }
 
@@ -224,6 +256,7 @@ int is_corner(rl_map *map, rl_coords loc)
 
     return 0;
 }
+
 int is_passable(rl_map *map, const char *corridors, rl_coords loc)
 {
     unsigned int width = rl_get_map_width(map);

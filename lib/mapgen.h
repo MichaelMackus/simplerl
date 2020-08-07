@@ -27,6 +27,6 @@ void rl_recursively_split_bsp(rl_bsp *root, rl_generator_f generator,
 rl_map *rl_create_map_from_bsp(rl_bsp *root, rl_generator_f generator,
         unsigned int room_min_width, unsigned int room_min_height,
         unsigned int room_max_width, unsigned int room_max_height,
-        unsigned int room_padding);
+        unsigned int room_padding, unsigned int max_adjacent_doors);
 
 #endif
