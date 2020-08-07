@@ -188,9 +188,9 @@ rl_map *rl_create_map_from_bsp(rl_bsp *root, rl_generator_f generator,
 
         // pick a random passable point within current node and
         // random passable point within sibling node, and connect them
-        rl_coords start = { node_loc.x + node_width/2, node_loc.y + node_height/2 };
-        rl_coords end = { sibling_loc.x + sibling_width/2, sibling_loc.y + sibling_height/2 };
-        while (!is_diggable(map, room_map, start, end)) {
+        rl_coords start;
+        rl_coords end;
+        do {
             start = (rl_coords) {
                 generator(node_loc.x, node_loc.x + node_width - 1),
                 generator(node_loc.y, node_loc.y + node_height - 1)
@@ -199,7 +199,7 @@ rl_map *rl_create_map_from_bsp(rl_bsp *root, rl_generator_f generator,
                 generator(sibling_loc.x, sibling_loc.x + sibling_width - 1),
                 generator(sibling_loc.y, sibling_loc.y + sibling_height - 1)
             };
-        }
+        } while (!is_diggable(map, room_map, start, end));
 
         rl_path *path = rl_get_line_manhattan(start, end);
         rl_coords *coords;
