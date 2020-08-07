@@ -202,8 +202,6 @@ rl_map *rl_create_map_from_bsp(rl_bsp *root, rl_generator_f generator,
         }
     }
 
-    // TODO cleanup memory
-
     return map;
 }
 
@@ -243,6 +241,7 @@ int is_diggable(rl_map *map, rl_coords start, rl_coords end)
     while (coords = rl_walk_path(path)) {
         if (is_corner(map, *coords)) return 0;
     }
+    rl_clear_path(path);
 
     return 1;
 }
