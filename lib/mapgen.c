@@ -85,7 +85,7 @@ typedef struct rl_room {
     size_t height;
 } rl_room;
 
-int is_diggable(rl_map *map, rl_coords start, rl_coords end);
+int is_diggable(rl_map *map, const char *corridors, rl_coords start, rl_coords end);
 int is_corner(rl_map *map, rl_coords loc);
 rl_map *rl_create_map_from_bsp(rl_bsp *root, rl_generator_f generator,
         unsigned int room_min_width, unsigned int room_min_height,
@@ -175,7 +175,7 @@ rl_map *rl_create_map_from_bsp(rl_bsp *root, rl_generator_f generator,
         // random passable point within sibling node, and connect them
         rl_coords start = { node_loc.x + node_width/2, node_loc.y + node_height/2 };
         rl_coords end = { sibling_loc.x + sibling_width/2, sibling_loc.y + sibling_height/2 };
-        while (!is_diggable(map, start, end)) {
+        while (!is_diggable(map, corridors, start, end)) {
             start = (rl_coords) {
                 generator(node_loc.x, node_loc.x + node_width - 1),
                 generator(node_loc.y, node_loc.y + node_height - 1)
@@ -224,15 +224,21 @@ int is_corner(rl_map *map, rl_coords loc)
 
     return 0;
 }
-int is_diggable(rl_map *map, rl_coords start, rl_coords end)
+int is_passable(rl_map *map, const char *corridors, rl_coords loc)
+{
+    unsigned int width = rl_get_map_width(map);
+
+    return corridors[loc.y*width + loc.x] || rl_is_passable(map, loc);
+}
+int is_diggable(rl_map *map, const char *corridors, rl_coords start, rl_coords end)
 {
     int in_start = 1;
     int in_end = 0;
 
     // start & end can only be walls that *aren't* corners or passable tiles
-    if ((rl_is_wall(map, start) && is_corner(map, start)) || !rl_is_passable(map, start))
+    if ((rl_is_wall(map, start) && is_corner(map, start)) || !is_passable(map, corridors, start))
         return 0;
-    if ((rl_is_wall(map, end) && is_corner(map, end)) || !rl_is_passable(map, end))
+    if ((rl_is_wall(map, end) && is_corner(map, end)) || !is_passable(map, corridors, end))
         return 0;
 
     // ensure we don't go through any corners on the way
