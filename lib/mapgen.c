@@ -86,6 +86,7 @@ typedef struct rl_room {
 } rl_room;
 
 int is_diggable(rl_map *map, rl_coords start, rl_coords end);
+int is_corner(rl_map *map, rl_coords loc);
 rl_map *rl_create_map_from_bsp(rl_bsp *root, rl_generator_f generator,
         unsigned int room_min_width, unsigned int room_min_height,
         unsigned int room_max_width, unsigned int room_max_height,
@@ -131,12 +132,21 @@ rl_map *rl_create_map_from_bsp(rl_bsp *root, rl_generator_f generator,
 
         for (int x = room->loc.x; x < room->loc.x + room->width; ++x) {
             for (int y = room->loc.y; y < room->loc.y + room->height; ++y) {
-                rl_set_passable(map, (rl_coords){ x, y });
+                if (x == room->loc.x || x == room->loc.x + room->width - 1 ||
+                    y == room->loc.y || y == room->loc.y + room->height - 1
+                ) {
+                    // set sides of room to walls
+                    rl_set_wall(map, (rl_coords){ x, y });
+                } else {
+                    rl_set_passable(map, (rl_coords){ x, y });
+                }
             }
         }
     }
 
     // generate corridors
+    char corridors[map_width * map_height];
+    for (int i = 0; i < map_width*map_height; ++i) corridors[i] = 0;
     rl_queue *nodes = rl_get_bsp_nodes(root);
     rl_bsp *node;
     while (node = rl_pop(&nodes)) {
@@ -165,7 +175,6 @@ rl_map *rl_create_map_from_bsp(rl_bsp *root, rl_generator_f generator,
         // random passable point within sibling node, and connect them
         rl_coords start = { node_loc.x + node_width/2, node_loc.y + node_height/2 };
         rl_coords end = { sibling_loc.x + sibling_width/2, sibling_loc.y + sibling_height/2 };
-        int recursion = 0; 
         while (!is_diggable(map, start, end)) {
             start = (rl_coords) {
                 generator(node_loc.x, node_loc.x + node_width - 1),
@@ -175,13 +184,21 @@ rl_map *rl_create_map_from_bsp(rl_bsp *root, rl_generator_f generator,
                 generator(sibling_loc.x, sibling_loc.x + sibling_width - 1),
                 generator(sibling_loc.y, sibling_loc.y + sibling_height - 1)
             };
-            ++recursion;
         }
 
         rl_path *path = rl_get_line_manhattan(start, end);
         rl_coords *coords;
         while (coords = rl_walk_path(path)) {
-            rl_set_passable(map, *coords);
+            corridors[coords->y*map_width + coords->x] = 1;
+        }
+        rl_clear_path(path);
+    }
+
+    // mark corridors on map
+    for (int x = 0; x < map_width; ++x) {
+        for (int y = 0; y < map_height; ++y) {
+            if (corridors[y*map_width + x])
+                rl_set_passable(map, (rl_coords){x, y});
         }
     }
 
@@ -190,17 +207,42 @@ rl_map *rl_create_map_from_bsp(rl_bsp *root, rl_generator_f generator,
     return map;
 }
 
+int is_corner(rl_map *map, rl_coords loc)
+{
+    if (!rl_is_wall(map, loc))
+        return 0;
+
+    if (rl_is_wall(map, (rl_coords){ loc.x + 1, loc.y }) && 
+        (rl_is_wall(map, (rl_coords){ loc.x, loc.y + 1 }) || rl_is_wall(map, (rl_coords){ loc.x, loc.y - 1 }))
+    ) {
+        return 1;
+    }
+
+    if (rl_is_wall(map, (rl_coords){ loc.x - 1, loc.y }) && 
+        (rl_is_wall(map, (rl_coords){ loc.x, loc.y + 1 }) || rl_is_wall(map, (rl_coords){ loc.x, loc.y - 1 }))
+    ) {
+        return 1;
+    }
+
+    return 0;
+}
 int is_diggable(rl_map *map, rl_coords start, rl_coords end)
 {
     int in_start = 1;
     int in_end = 0;
-    rl_path *path = rl_get_line_manhattan(start, end);
 
-    // start & end diggable?
-    if (!rl_is_passable(map, start) || !rl_is_passable(map, end))
+    // start & end can only be walls that *aren't* corners or passable tiles
+    if ((rl_is_wall(map, start) && is_corner(map, start)) || !rl_is_passable(map, start))
+        return 0;
+    if ((rl_is_wall(map, end) && is_corner(map, end)) || !rl_is_passable(map, end))
         return 0;
 
+    // ensure we don't go through any corners on the way
+    rl_path *path = rl_get_line_manhattan(start, end);
     rl_coords *coords;
+    while (coords = rl_walk_path(path)) {
+        if (is_corner(map, *coords)) return 0;
+    }
 
     return 1;
 }
