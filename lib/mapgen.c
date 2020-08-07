@@ -79,12 +79,6 @@ void rl_recursively_split_bsp(rl_bsp *root, rl_generator_f generator,
             min_width, min_height, deviation, max_recursion - 1);
 }
 
-typedef struct rl_room {
-    rl_coords loc;
-    size_t width;
-    size_t height;
-} rl_room;
-
 int is_diggable(rl_map *map, rl_map *room_map, rl_coords start, rl_coords end);
 int is_corner(rl_map *map, rl_coords loc);
 int count_doors(rl_map *map, rl_coords loc);
@@ -92,7 +86,7 @@ rl_coords get_closest_door(rl_map *map, rl_coords loc);
 rl_map *rl_create_map_from_bsp(rl_bsp *root, rl_generator_f generator,
         unsigned int room_min_width, unsigned int room_min_height,
         unsigned int room_max_width, unsigned int room_max_height,
-        unsigned int room_padding, unsigned int max_adjacent_doors)
+        unsigned int room_padding, rl_bsp_map_f corridor_algorithm)
 {
     unsigned int map_width = rl_get_bsp_width(root);
     unsigned int map_height = rl_get_bsp_height(root);
@@ -109,12 +103,11 @@ rl_map *rl_create_map_from_bsp(rl_bsp *root, rl_generator_f generator,
     }
 
     // generate map containing original room data
-    rl_map *room_map = rl_create_map(map_width, map_height);
-    if (room_map == NULL)
+    rl_map *map = rl_create_map(map_width, map_height);
+    if (map == NULL)
         return NULL; // TODO free queue
 
     // generate rooms
-    rl_room rooms[leafCount];
     for (int i = 0; i < leafCount; ++i) {
         rl_bsp *leaf = rl_pop(&leaves);
         if (leaf == NULL) continue;
@@ -123,46 +116,56 @@ rl_map *rl_create_map_from_bsp(rl_bsp *root, rl_generator_f generator,
         unsigned int height = rl_get_bsp_height(leaf);
         rl_coords loc = rl_get_bsp_loc(leaf);
 
-        rl_room *room = &rooms[i];
-        room->width = generator(room_min_width, room_max_width);
-        if (room->width + room_padding*2 > width)
-            room->width = width - room_padding*2;
-        room->height = generator(room_min_height, room_max_height);
-        if (room->height + room_padding*2 > height)
-            room->height = height - room_padding*2;
-        room->loc.x = generator(loc.x + room_padding, loc.x + width - room->width - room_padding);
-        room->loc.y = generator(loc.y + room_padding, loc.y + height - room->height - room_padding);
+        unsigned int room_width = generator(room_min_width, room_max_width);
+        if (room_width + room_padding*2 > width)
+            room_width = width - room_padding*2;
+        unsigned int room_height = generator(room_min_height, room_max_height);
+        if (room_height + room_padding*2 > height)
+            room_height = height - room_padding*2;
+        rl_coords room_loc;
+        room_loc.x = generator(loc.x + room_padding, loc.x + width - room_width - room_padding);
+        room_loc.y = generator(loc.y + room_padding, loc.y + height - room_height - room_padding);
 
-        for (int x = room->loc.x; x < room->loc.x + room->width; ++x) {
-            for (int y = room->loc.y; y < room->loc.y + room->height; ++y) {
-                if (x == room->loc.x || x == room->loc.x + room->width - 1 ||
-                    y == room->loc.y || y == room->loc.y + room->height - 1
+        for (int x = room_loc.x; x < room_loc.x + room_width; ++x) {
+            for (int y = room_loc.y; y < room_loc.y + room_height; ++y) {
+                if (x == room_loc.x || x == room_loc.x + room_width - 1 ||
+                    y == room_loc.y || y == room_loc.y + room_height - 1
                 ) {
                     // set sides of room to walls
-                    rl_set_wall(room_map, (rl_coords){ x, y });
+                    rl_set_wall(map, (rl_coords){ x, y });
                 } else {
-                    rl_set_passable(room_map, (rl_coords){ x, y });
+                    rl_set_passable(map, (rl_coords){ x, y });
                 }
             }
         }
     }
 
-    // populate final map from room data
-    rl_map *map = rl_create_map(map_width, map_height);
-    for (int i = 0; i < leafCount; ++i) {
-        rl_room room = rooms[i];
-        for (int x = room.loc.x; x < room.loc.x + room.width; ++x) {
-            for (int y = room.loc.y; y < room.loc.y + room.height; ++y) {
-                if (rl_is_wall(room_map, (rl_coords){ x, y }))
-                    rl_set_wall(map, (rl_coords){ x, y });
-                if (rl_is_passable(room_map, (rl_coords){ x, y }))
-                    rl_set_passable(map, (rl_coords){ x, y });
-            }
+    if (corridor_algorithm)
+        corridor_algorithm(map, generator, root);
+
+    return map;
+}
+
+void connect_corridors_to_siblings(rl_map *map, rl_generator_f generator, rl_bsp *root)
+{
+    int max_adjacent_doors = 1;
+
+    // populate room data map
+    unsigned int map_width = rl_get_map_width(map);
+    unsigned int map_height = rl_get_map_height(map);
+    rl_map *room_map = rl_create_map(map_width, map_height);
+    for (int x = 0; x < map_width; ++x) {
+        for (int y = 0; y < map_height; ++y) {
+            if (rl_is_wall(map, (rl_coords){ x, y }))
+                rl_set_wall(room_map, (rl_coords){ x, y });
+            if (rl_is_passable(map, (rl_coords){ x, y }))
+                rl_set_passable(room_map, (rl_coords){ x, y });
         }
     }
 
     // generate corridors
     rl_queue *nodes = rl_get_bsp_nodes(root);
+    rl_queue *cur;
     rl_bsp *node;
     while (node = rl_pop(&nodes)) {
         rl_coords node_loc = rl_get_bsp_loc(node);
@@ -207,27 +210,23 @@ rl_map *rl_create_map_from_bsp(rl_bsp *root, rl_generator_f generator,
             int adjacent_doors = 0;
 
             // if wall, make sure we haven't hit adjacent door limit
-            if (rl_is_wall(map, *coords)) {
+            if (rl_is_wall(room_map, *coords)) {
                 // find side of wall we're on
-                for (int i = 0; i < leafCount; ++i) {
-                    rl_room room = rooms[i];
-                    if (coords->x >= room.loc.x && coords->x < room.loc.x + room.width &&
-                        coords->y >= room.loc.y && coords->y < room.loc.y + room.height
-                    ) {
-                        if (coords->y == room.loc.y || coords->y == room.loc.y + room.height - 1) {
-                            if (rl_is_passable(map, (rl_coords){coords->x + 1, coords->y}))
-                                adjacent_doors++;
-                            if (rl_is_passable(map, (rl_coords){coords->x - 1, coords->y}))
-                                adjacent_doors++;
-                        } else if (coords->x == room.loc.x || coords->x == room.loc.x + room.width - 1) {
-                            if (rl_is_passable(map, (rl_coords){coords->x, coords->y + 1}))
-                                adjacent_doors++;
-                            if (rl_is_passable(map, (rl_coords){coords->x, coords->y - 1}))
-                                adjacent_doors++;
-                        } else {
-                            assert("Invalid wall side!" == 1);
-                        }
-                    }
+                if (rl_is_wall(room_map, (rl_coords){coords->x + 1, coords->y}) ||
+                    rl_is_wall(room_map, (rl_coords){coords->x - 1, coords->y})
+                ) {
+                    if (rl_is_passable(map, (rl_coords){coords->x + 1, coords->y}))
+                        adjacent_doors++;
+                    if (rl_is_passable(map, (rl_coords){coords->x - 1, coords->y}))
+                        adjacent_doors++;
+                }
+                if (rl_is_wall(room_map, (rl_coords){coords->x, coords->y + 1}) ||
+                    rl_is_wall(room_map, (rl_coords){coords->x, coords->y - 1})
+                ) {
+                    if (rl_is_passable(map, (rl_coords){coords->x, coords->y + 1}))
+                        adjacent_doors++;
+                    if (rl_is_passable(map, (rl_coords){coords->x, coords->y - 1}))
+                        adjacent_doors++;
                 }
             }
 
@@ -238,8 +237,6 @@ rl_map *rl_create_map_from_bsp(rl_bsp *root, rl_generator_f generator,
     }
 
     rl_free_map(room_map);
-
-    return map;
 }
 
 int is_corner(rl_map *map, rl_coords loc)

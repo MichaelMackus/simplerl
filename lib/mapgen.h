@@ -19,14 +19,22 @@ void rl_recursively_split_bsp(rl_bsp *root, rl_generator_f generator,
         unsigned int min_width, unsigned int min_height,
         float deviation, int max_recursion);
 
+// represents a function to modify a BSP map (used for custom corridor code)
+typedef void (*rl_bsp_map_f)(rl_map *map, rl_generator_f generator, rl_bsp *root);
+
 /**
  * Create a map from a BSP tree. This adds rooms of random size into
  * each BSP leaf, and then connects every BSP sibling with cooridors
  * (traversing up the tree until all nodes are connected).
+ *
+ * Pass a reference to the corridor connection function you want to use,
+ * or NULL to get a map of just rooms.
  */
 rl_map *rl_create_map_from_bsp(rl_bsp *root, rl_generator_f generator,
         unsigned int room_min_width, unsigned int room_min_height,
         unsigned int room_max_width, unsigned int room_max_height,
-        unsigned int room_padding, unsigned int max_adjacent_doors);
+        unsigned int room_padding, rl_bsp_map_f corridor_algorithm);
+
+void connect_corridors_to_siblings(rl_map *map, rl_generator_f generator, rl_bsp *root);
 
 #endif
