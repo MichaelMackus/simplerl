@@ -15,7 +15,7 @@
 #define MOB_FORM_FLYING 4
 
 #include "item.h"
-#include "lib/path.h"
+#include <lib/path.h>
 
 typedef struct {
     int exp;

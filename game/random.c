@@ -1,5 +1,5 @@
 #include "random.h"
-#include "lib/rng.h"
+#include <lib/rng.h>
 
 #include <stdlib.h>
 #include <time.h>
