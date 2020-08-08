@@ -80,7 +80,7 @@ int max_depth(Dungeon *dungeon)
 {
     Level *cur = dungeon->level;
     while (cur->next)
-        ++cur;
+        cur = cur->next;
 
     return cur->depth;
 }
