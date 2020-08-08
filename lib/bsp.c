@@ -22,10 +22,19 @@ rl_bsp *rl_create_bsp(unsigned int width, unsigned int height)
 
     bsp->width = width;
     bsp->height = height;
-    bsp->parent = NULL;
 
     return bsp;
 }
+void rl_free_bsp(rl_bsp* root)
+{
+    if (root->left)
+        rl_free_bsp(root->left);
+    if (root->right)
+        rl_free_bsp(root->right);
+    if (!root->left && !root->right)
+        free(root);
+}
+
 void rl_split_bsp(rl_bsp *node, unsigned int position, rl_split_dir direction)
 {
     // can't split something already split
@@ -36,10 +45,10 @@ void rl_split_bsp(rl_bsp *node, unsigned int position, rl_split_dir direction)
     if (direction == RL_SPLIT_HORIZONTALLY && position >= node->width)
         return;
 
-    rl_bsp *left = malloc(sizeof(rl_bsp));
+    rl_bsp *left = calloc(1, sizeof(rl_bsp));
     if (left == NULL)
         return;
-    rl_bsp *right = malloc(sizeof(rl_bsp));
+    rl_bsp *right = calloc(1, sizeof(rl_bsp));
     if (right == NULL) {
         free(left);
         return;

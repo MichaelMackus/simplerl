@@ -14,6 +14,7 @@ typedef enum {
 
 rl_bsp *rl_create_bsp(unsigned int width, unsigned int height);
 void rl_split_bsp(rl_bsp *node, unsigned int position, rl_split_dir direction);
+void rl_free_bsp(rl_bsp *root);
 
 rl_bsp *rl_get_bsp_left(rl_bsp *node);
 rl_bsp *rl_get_bsp_right(rl_bsp *node);
