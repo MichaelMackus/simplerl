@@ -142,23 +142,14 @@ rl_map *rl_create_map_from_bsp(rl_bsp *root, rl_generator_f generator,
     return map;
 }
 
-int is_diggable(rl_map *map, rl_map *room_map, rl_coords start, rl_coords end);
+int is_diggable(rl_map *map, rl_coords start, rl_coords end);
 void connect_corridors_to_random_siblings(rl_map *map, rl_generator_f generator, rl_bsp *root)
 {
-    int max_adjacent_doors = 1;
+    if (map == NULL || root == NULL) return;
 
-    // populate room data map
+    int max_adjacent_doors = 1;
     unsigned int map_width = rl_get_map_width(map);
     unsigned int map_height = rl_get_map_height(map);
-    rl_map *room_map = rl_create_map(map_width, map_height);
-    for (int x = 0; x < map_width; ++x) {
-        for (int y = 0; y < map_height; ++y) {
-            if (rl_is_wall(map, (rl_coords){ x, y }))
-                rl_set_tile(room_map, (rl_coords){ x, y }, RL_TILE_WALL);
-            if (rl_is_passable(map, (rl_coords){ x, y }))
-                rl_set_tile(room_map, (rl_coords){ x, y }, RL_TILE_ROOM);
-        }
-    }
 
     // generate corridors
     rl_queue *nodes = rl_get_bsp_nodes(root);
@@ -199,7 +190,7 @@ void connect_corridors_to_random_siblings(rl_map *map, rl_generator_f generator,
                 generator(sibling_loc.x, sibling_loc.x + sibling_width - 1),
                 generator(sibling_loc.y, sibling_loc.y + sibling_height - 1)
             };
-        } while (!is_diggable(map, room_map, start, end));
+        } while (!is_diggable(map, start, end));
 
         rl_path *path = rl_get_line_manhattan(start, end);
         rl_coords *coords;
@@ -227,11 +218,9 @@ void connect_corridors_to_random_siblings(rl_map *map, rl_generator_f generator,
         }
         rl_clear_path(path);
     }
-
-    rl_free_map(room_map);
 }
 
-rl_path *dig_path(rl_map *map, rl_map *room_map, rl_bsp *node, rl_bsp *sibling);
+rl_path *dig_path(rl_map *map, rl_bsp *node, rl_bsp *sibling);
 void connect_corridors_to_closest_siblings(rl_map *map, rl_generator_f generator, rl_bsp *root)
 {
     if (map == NULL || root == NULL) return;
@@ -241,15 +230,6 @@ void connect_corridors_to_closest_siblings(rl_map *map, rl_generator_f generator
     // populate room data map
     unsigned int map_width = rl_get_map_width(map);
     unsigned int map_height = rl_get_map_height(map);
-    rl_map *room_map = rl_create_map(map_width, map_height);
-    for (int x = 0; x < map_width; ++x) {
-        for (int y = 0; y < map_height; ++y) {
-            if (rl_is_wall(map, (rl_coords){ x, y }))
-                rl_set_tile(room_map, (rl_coords){ x, y }, RL_TILE_WALL);
-            if (rl_is_passable(map, (rl_coords){ x, y }))
-                rl_set_tile(room_map, (rl_coords){ x, y }, RL_TILE_ROOM);
-        }
-    }
 
     // generate corridors
     rl_queue *nodes = rl_get_bsp_nodes(root);
@@ -277,7 +257,7 @@ void connect_corridors_to_closest_siblings(rl_map *map, rl_generator_f generator
         if (target != sibling)
             continue; // sibling not found - corridor already carved
 
-        rl_path *path = dig_path(map, room_map, node, sibling);
+        rl_path *path = dig_path(map, node, sibling);
         rl_coords *coords;
         while (coords = rl_walk_path(path)) {
             if (rl_is_wall(map, *coords))
@@ -287,23 +267,26 @@ void connect_corridors_to_closest_siblings(rl_map *map, rl_generator_f generator
         }
         rl_clear_path(path);
     }
-
-    rl_free_map(room_map);
 }
 
 int is_corner(rl_map *map, rl_coords loc)
 {
-    if (!rl_is_wall(map, loc))
+    if (!rl_is_wall(map, loc) && !rl_is_doorway(map, loc))
         return 0;
 
-    if (rl_is_wall(map, (rl_coords){ loc.x + 1, loc.y }) && 
-        (rl_is_wall(map, (rl_coords){ loc.x, loc.y + 1 }) || rl_is_wall(map, (rl_coords){ loc.x, loc.y - 1 }))
+    rl_tile tx1 = rl_get_tile(map, (rl_coords){ loc.x + 1, loc.y });
+    rl_tile tx2 = rl_get_tile(map, (rl_coords){ loc.x - 1, loc.y });
+    rl_tile ty1 = rl_get_tile(map, (rl_coords){ loc.x, loc.y + 1 });
+    rl_tile ty2 = rl_get_tile(map, (rl_coords){ loc.x, loc.y - 1 });
+
+    if ((tx1 == RL_TILE_WALL || tx1 == RL_TILE_DOORWAY) &&
+        ((ty1 == RL_TILE_WALL || ty1 == RL_TILE_DOORWAY) || (ty2 == RL_TILE_WALL || ty2 == RL_TILE_DOORWAY))
     ) {
         return 1;
     }
 
-    if (rl_is_wall(map, (rl_coords){ loc.x - 1, loc.y }) && 
-        (rl_is_wall(map, (rl_coords){ loc.x, loc.y + 1 }) || rl_is_wall(map, (rl_coords){ loc.x, loc.y - 1 }))
+    if ((tx2 == RL_TILE_WALL || tx2 == RL_TILE_DOORWAY) &&
+        ((ty1 == RL_TILE_WALL || ty1 == RL_TILE_DOORWAY) || (ty2 == RL_TILE_WALL || ty2 == RL_TILE_DOORWAY))
     ) {
         return 1;
     }
@@ -311,26 +294,26 @@ int is_corner(rl_map *map, rl_coords loc)
     return 0;
 }
 
-int is_diggable(rl_map *map, rl_map *room_map, rl_coords start, rl_coords end)
+int is_diggable(rl_map *map, rl_coords start, rl_coords end)
 {
     // start & end can only be walls that *aren't* corners or passable tiles
-    if ((rl_is_wall(room_map, start) && is_corner(room_map, start)) || !rl_is_passable(map, start))
+    if (!rl_is_passable(map, start))
         return 0;
-    if ((rl_is_wall(room_map, end) && is_corner(room_map, end)) || !rl_is_passable(map, end))
+    if (!rl_is_passable(map, end))
         return 0;
 
     // ensure we don't go through any corners on the way
     rl_path *path = rl_get_line_manhattan(start, end);
     rl_coords *coords;
     while (coords = rl_walk_path(path)) {
-        if (is_corner(room_map, *coords)) return 0;
+        if (is_corner(map, *coords)) return 0;
     }
     rl_clear_path(path);
 
     return 1;
 }
 
-rl_path *dig_path(rl_map *map, rl_map *room_map, rl_bsp *node, rl_bsp *sibling)
+rl_path *dig_path(rl_map *map, rl_bsp *node, rl_bsp *sibling)
 {
     if (map == NULL || node == NULL || sibling == NULL)
         return NULL;
@@ -368,7 +351,7 @@ rl_path *dig_path(rl_map *map, rl_map *room_map, rl_bsp *node, rl_bsp *sibling)
     for (int x = node_loc.x; x < node_loc.x + node_width; ++x) {
         for (int y = node_loc.y; y < node_loc.y + node_height; ++y) {
             // start & end can only be walls that *aren't* corners or passable tiles
-            if (is_corner(room_map, (rl_coords){x,y}) || !rl_is_passable(map, (rl_coords){x,y}))
+            if (!rl_is_passable(map, (rl_coords){x,y}))
                 continue;
 
             rl_coords *loc = malloc(sizeof(rl_coords));
@@ -384,8 +367,8 @@ rl_path *dig_path(rl_map *map, rl_map *room_map, rl_bsp *node, rl_bsp *sibling)
         for (int x = sibling_loc.x; x < sibling_loc.x + sibling_width; ++x) {
             for (int y = sibling_loc.y; y < sibling_loc.y + sibling_height; ++y) {
                 // start & end can only be walls that *aren't* corners or passable tiles
-                if (is_corner(room_map, (rl_coords){x,y}) || !rl_is_passable(map, (rl_coords){x,y}) ||
-                    !is_diggable(map, room_map, *from, (rl_coords){x,y})
+                if (!rl_is_passable(map, (rl_coords){x,y}) ||
+                    !is_diggable(map, *from, (rl_coords){x,y})
                 ) {
                     continue;
                 }
@@ -398,7 +381,7 @@ rl_path *dig_path(rl_map *map, rl_map *room_map, rl_bsp *node, rl_bsp *sibling)
             }
         }
 
-        if (!(to.x == center.x && to.y == center.y) && is_diggable(map, room_map, *from, to))
+        if (!(to.x == center.x && to.y == center.y) && is_diggable(map, *from, to))
             break;
         free(from);
     }
