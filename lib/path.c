@@ -2,6 +2,7 @@
 #include "queue.h"
 #include "util.h"
 
+#include <assert.h>
 #include <stdlib.h>
 #include <memory.h>
 
@@ -264,8 +265,7 @@ rl_path *rl_find_path_cb(const rl_coords start,
     rl_path *prevPath = NULL;
     while (curNode) {
         path = malloc(sizeof(rl_path));
-        /* if (path == NULL) return NULL; // TODO free prev paths & nodes */
-        if (path == NULL) exit(1);
+        assert(path);
         path->loc = curNode->loc;
         path->next = prevPath;
         prevPath = path;
