@@ -132,15 +132,13 @@ void randomly_fill_tiles(Level *level)
             level->tiles[y][x].type = custom_tile;
         }
     }
-    rl_free_map(map);
-    rl_free_bsp(bsp);
 
     // randomly place upstairs
     rl_coords up;
     int i = 0;
     while (i < MAX_RANDOM_RECURSION) {
         up = random_passable_coords(level);
-        if (level->tiles[up.y][up.x].type == TILE_FLOOR) {
+        if (rl_is_room(map, up)) {
             level->tiles[up.y][up.x].type = TILE_STAIR_UP;
             break;
         }
@@ -153,11 +151,14 @@ void randomly_fill_tiles(Level *level)
     i = 0;
     while (i < MAX_RANDOM_RECURSION) {
         down = random_passable_coords(level);
-        if (level->tiles[down.y][down.x].type == TILE_FLOOR) {
+        if (rl_is_room(map, down)) {
             level->tiles[down.y][down.x].type = TILE_STAIR_DOWN;
             break;
         }
     }
+
+    rl_free_map(map);
+    rl_free_bsp(bsp);
 }
 
 void randomly_fill_mobs(Level *level, int max)
