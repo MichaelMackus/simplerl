@@ -35,6 +35,10 @@ rl_map *rl_create_map_from_bsp(rl_bsp *root, rl_generator_f generator,
         unsigned int room_max_width, unsigned int room_max_height,
         unsigned int room_padding, rl_bsp_map_f corridor_algorithm);
 
-void connect_corridors_to_siblings(rl_map *map, rl_generator_f generator, rl_bsp *root);
+// tries to connect corridors to random passable tiles in siblings
+// this does some post processing to remove adjacent doorways
+void connect_corridors_to_random_siblings(rl_map *map, rl_generator_f generator, rl_bsp *root);
+// connects corridors to closest sibling rooms
+void connect_corridors_to_closest_siblings(rl_map *map, rl_generator_f generator, rl_bsp *root);
 
 #endif
