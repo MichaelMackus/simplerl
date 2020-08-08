@@ -1,4 +1,6 @@
 #include "dungeon.h"
+#include <lib/bsp.h>
+#include <lib/mapgen.h>
 #include <stdlib.h>
 #include <memory.h>
 
@@ -122,51 +124,68 @@ void randomly_fill_corridors(Level *level, const Box **cells, int cellCount);
 int branches(const Box *cell, const Level *level);
 void randomly_fill_tiles(Level *level)
 {
-    int maxCells = generate(MIN_CELLS + 1, MAX_CELLS - 1);
-    int cellCount = 0;
-    int i = 0;
+    if (level == NULL) return;
+    rl_bsp *bsp = rl_create_bsp(MAX_WIDTH, MAX_HEIGHT);
+    if (bsp == NULL) return;
+    rl_recursively_split_bsp(bsp, &rl_rng_twister_generate, 6, 6, 0.5, 4);
+    rl_map *map = rl_create_map_from_bsp(bsp, &rl_rng_twister_generate, 4, 4, 8, 8, 1);
+    if (map == NULL) return;
+    rl_connect_corridors_to_random_siblings(map, bsp, &rl_rng_twister_generate, 1);
 
-    // randomly fill cells
-    Box **cells;
-    cells = malloc(sizeof(Box*) * maxCells);
-    memset(cells, 0, sizeof(Box*) * maxCells);
-    while (cellCount < maxCells && i < MAX_RANDOM_RECURSION)
-    {
-        Box *cell = random_cell(level);
-        if (cell != NULL)
-        {
-            fill_cell(cell, level, 1);
-            cells[cellCount] = cell;
-            ++cellCount;
+    // transfer the RL map to our custom map
+    for (int x = 0; x < MAX_WIDTH; ++x) {
+        for (int y = 0; y < MAX_HEIGHT; ++y) {
+            rl_tile tile = rl_get_tile(map, XY(x, y));
+            int custom_tile = 0;
+            switch (tile) {
+                case RL_TILE_WALL:
+                    if (rl_is_wall(map, XY(x + 1, y)) || rl_is_wall(map, XY(x - 1, y)))
+                        custom_tile = TILE_WALL;
+                    else
+                        custom_tile = TILE_WALL_SIDE;
+                    break;
+                case RL_TILE_ROOM:
+                    custom_tile = TILE_FLOOR;
+                    break;
+                case RL_TILE_PASSAGE:
+                    custom_tile = TILE_CAVERN;
+                    break;
+                case RL_TILE_DOORWAY:
+                    custom_tile = TILE_FLOOR;
+                    break;
+                default:
+                    break;
+            }
+
+            level->tiles[y][x].type = custom_tile;
         }
-        ++i;
     }
-
-    // fill corridors between cells
-    randomly_fill_corridors(level, (const Box**) cells, cellCount);
+    rl_free_map(map);
+    rl_free_bsp(bsp);
 
     // randomly place upstairs
-    i = generate(0, cellCount - 1);
     rl_coords up;
-    up.x = cells[i]->coords.x + cells[i]->dimensions.w/2;
-    up.y = cells[i]->coords.y + cells[i]->dimensions.h/2;
-    level->tiles[up.y][up.x].type = TILE_STAIR_UP;
+    int i = 0;
+    while (i < MAX_RANDOM_RECURSION) {
+        up = random_passable_coords(level);
+        if (level->tiles[up.y][up.x].type == TILE_FLOOR) {
+            level->tiles[up.y][up.x].type = TILE_STAIR_UP;
+            break;
+        }
+    }
 
     // randomly place downstairs
     // TODO place downstairs at greater distance from upstairs
     // TODO once win condition is defined, don't place downstairs on last level
-    int j = i;
-    while (i == j)
-        i = generate(0, cellCount - 1);
     rl_coords down;
-    down.x = cells[i]->coords.x + cells[i]->dimensions.w/2;
-    down.y = cells[i]->coords.y + cells[i]->dimensions.h/2;
-    level->tiles[down.y][down.x].type = TILE_STAIR_DOWN;
-
-    // free cells
-    for (i = 0; i < cellCount; ++i)
-        free(cells[i]);
-    free(cells);
+    i = 0;
+    while (i < MAX_RANDOM_RECURSION) {
+        down = random_passable_coords(level);
+        if (level->tiles[down.y][down.x].type == TILE_FLOOR) {
+            level->tiles[down.y][down.x].type = TILE_STAIR_DOWN;
+            break;
+        }
+    }
 }
 
 void randomly_fill_mobs(Level *level, int max)
