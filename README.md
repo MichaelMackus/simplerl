@@ -1,5 +1,19 @@
 # simplerl
 
-Simple roguelike game. This game was created with the intention of increasing my knowledge of the C programming language.
+This is a simple roguelike library, with an example game implementation.
+The library is a collection of tools such as dungeon generation,
+pathfinding, and more things that are useful for roguelikes and/or RPGs.
 
-To build, simply type `make` in a terminal with standard build tools. Dependencies are `ncurses` (usually installed by default on Linux, and is also available for Windows & Mac OSx).
+# Building
+
+To build the library simply run `make`. To build the library and game
+you run `make all`.
+
+The only dependency for the library are libm (which is part of the C
+standard library and should be included by default on your platform).
+The only dependencies for the game are libm and libcurses. Windows
+building *should* work, but this has been untested and might require
+further tweaking (please create any relevant github issues).
+
+The resulting (static) library will be built at lib/libsimplerl.a and
+the game will be built at game/simplerl

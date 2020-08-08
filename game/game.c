@@ -3,13 +3,20 @@
 #include <stdlib.h>
 #include <memory.h>
 
-#define MENU_INVENTORY 1
-#define MENU_WIELD 2
-#define MENU_WEAR 3
-#define MENU_THROW 4
-#define MENU_DIRECTION 5
+typedef struct {
+    int xdir;
+    int ydir;
+} Direction;
+Direction direction(int xdir, int ydir) { return (Direction) { xdir, ydir }; }
 
-void taint(const Coords playerCoords, Level *level);
+int resting = 0; // 1 if player resting
+int inMenu = 0; // one of MENU consts if in menu
+Direction runDir = { 0, 0 }; // direction player is running
+
+int get_menu() { return inMenu; }
+int is_running() { return runDir.xdir != 0 || runDir.ydir != 0; }
+
+void taint(const rl_coords playerCoords, Level *level);
 int init_level(Level *level, Mob *player)
 {
     if (level == NULL)
@@ -35,7 +42,7 @@ int init_level(Level *level, Mob *player)
 
 int increase_depth(Dungeon *dungeon);
 int decrease_depth(Dungeon *dungeon);
-void move_player(Mob *player, Coords coords, Level *level);
+void move_player(Mob *player, rl_coords coords, Level *level);
 void run_player(Mob *player, Direction dir, Level *level);
 void tick(Dungeon *dungeon);
 void tick_mobs(Level *level);
@@ -46,13 +53,13 @@ int gameloop(Dungeon *dungeon, char input)
     Level *level = dungeon->level;
     Mob *player = dungeon->player;
 
-    if (in_menu(player))
+    if (inMenu)
     {
         inventory_management(input, player);
         input = '.'; // do nothing
     }
 
-    if (is_resting(player) || is_running(player))
+    if (resting || is_running())
         input = '.'; // do nothing
 
     switch (input)
@@ -64,16 +71,16 @@ int gameloop(Dungeon *dungeon, char input)
             return GAME_QUIT;
 
         case 'h':
-            move_player(player, xy(player->coords.x - 1, player->coords.y), level);
+            move_player(player, XY(player->coords.x - 1, player->coords.y), level);
             break;
         case 'l':
-            move_player(player, xy(player->coords.x + 1, player->coords.y), level);
+            move_player(player, XY(player->coords.x + 1, player->coords.y), level);
             break;
         case 'j':
-            move_player(player, xy(player->coords.x, player->coords.y + 1), level);
+            move_player(player, XY(player->coords.x, player->coords.y + 1), level);
             break;
         case 'k':
-            move_player(player, xy(player->coords.x, player->coords.y - 1), level);
+            move_player(player, XY(player->coords.x, player->coords.y - 1), level);
             break;
 
         case 'H':
@@ -105,27 +112,27 @@ int gameloop(Dungeon *dungeon, char input)
 
         case 'i':
             // open inventory menu
-            dungeon->player->attrs.inMenu = MENU_INVENTORY;
+            inMenu = MENU_INVENTORY;
             break;
 
         case 'w':
             // open wield menu
-            dungeon->player->attrs.inMenu = MENU_WIELD;
+            inMenu = MENU_WIELD;
             break;
 
         case 'W':
             // open wear menu
-            dungeon->player->attrs.inMenu = MENU_WEAR;
+            inMenu = MENU_WEAR;
             break;
 
         case 'f':
         case 't':
             // open throw menu
-            dungeon->player->attrs.inMenu = MENU_THROW;
+            inMenu = MENU_THROW;
             break;
 
         case 'R':
-            dungeon->player->attrs.resting = 1;
+            resting = 1;
             break;
 
         case '>': // check for downstair
@@ -164,7 +171,7 @@ int gameloop(Dungeon *dungeon, char input)
     }
 
     // skip turn if we're still in the inventory menu
-    if (in_menu(player))
+    if (inMenu)
         return GAME_PLAYING;
 
     // check for player death (i.e. damaged self)
@@ -197,7 +204,7 @@ int gameloop(Dungeon *dungeon, char input)
 /**         **/
 /*************/
 
-void move_player(Mob *player, Coords coords, Level *level)
+void move_player(Mob *player, rl_coords coords, Level *level)
 {
     // first, check for mob
     Mob *target = get_mob(level, coords);
@@ -225,16 +232,16 @@ void move_player(Mob *player, Coords coords, Level *level)
 
 void run_player(Mob *player, Direction dir, Level *level)
 {
-    player->attrs.running = dir;
-    move_player(player, xy(player->coords.x + dir.xdir, player->coords.y + dir.ydir), level);
+    runDir = dir;
+    move_player(player, XY(player->coords.x + dir.xdir, player->coords.y + dir.ydir), level);
 }
 
 // mob AI & spawning
 // TODO add simple mob movement (instead of just sitting there)
 // TODO add simple sound AI (i.e. mob should be able to hear combat further than they can smell, and also remember that)
 void tick_mob(Mob *mob, Level *level);
-Coords smelliest(Coords coords, Level *level);
-int can_smell(Coords coords, Level *level);
+rl_coords smelliest(rl_coords coords, Level *level);
+int can_smell(rl_coords coords, Level *level);
 void tick_mobs(Level *level)
 {
     for (int i = 0; i < MAX_MOBS; ++i)
@@ -245,7 +252,7 @@ void tick_mobs(Level *level)
     if (generate(1, 10) == 10)
     {
         // get random coordinates for new mob, must not be near player
-        Coords coords = random_passable_coords(level);
+        rl_coords coords = random_passable_coords(level);
         while (can_see(coords, level->player->coords, level->tiles) ||
                 can_smell(coords, level) ||
                 get_tile(level, coords)->type == TILE_STAIR_UP ||
@@ -265,7 +272,7 @@ void tick_mobs(Level *level)
 }
 
 // returns -1 on move, 0 or more damage on attack
-int move_or_attack(Mob *attacker, Coords coords, Level *level)
+int move_or_attack(Mob *attacker, rl_coords coords, Level *level)
 {
     // first, check for mob
     Mob *target = get_mob(level, coords);
@@ -289,20 +296,20 @@ void tick_mob(Mob *mob, Level *level)
         // advance mob towards player, if there is no enemy at target spot
         if (player->coords.x > mob->coords.x &&
                 is_passable(level->tiles[mob->coords.y][mob->coords.x + 1]) &&
-                get_enemy(level, xy(mob->coords.x + 1, mob->coords.y)) == NULL)
-            dmg = move_or_attack(mob, xy(mob->coords.x + 1, mob->coords.y), level);
+                get_enemy(level, XY(mob->coords.x + 1, mob->coords.y)) == NULL)
+            dmg = move_or_attack(mob, XY(mob->coords.x + 1, mob->coords.y), level);
         else if (player->coords.x < mob->coords.x &&
                 is_passable(level->tiles[mob->coords.y][mob->coords.x - 1]) &&
-                get_enemy(level, xy(mob->coords.x - 1, mob->coords.y)) == NULL)
-            dmg = move_or_attack(mob, xy(mob->coords.x - 1, mob->coords.y), level);
+                get_enemy(level, XY(mob->coords.x - 1, mob->coords.y)) == NULL)
+            dmg = move_or_attack(mob, XY(mob->coords.x - 1, mob->coords.y), level);
         else if (player->coords.y > mob->coords.y &&
                 is_passable(level->tiles[mob->coords.y + 1][mob->coords.x]) &&
-                get_enemy(level, xy(mob->coords.x, mob->coords.y + 1)) == NULL)
-            dmg = move_or_attack(mob, xy(mob->coords.x, mob->coords.y + 1), level);
+                get_enemy(level, XY(mob->coords.x, mob->coords.y + 1)) == NULL)
+            dmg = move_or_attack(mob, XY(mob->coords.x, mob->coords.y + 1), level);
         else if (player->coords.y < mob->coords.y &&
                 is_passable(level->tiles[mob->coords.y - 1][mob->coords.x]) &&
-                get_enemy(level, xy(mob->coords.x, mob->coords.y - 1)) == NULL)
-            dmg = move_or_attack(mob, xy(mob->coords.x, mob->coords.y - 1), level);
+                get_enemy(level, XY(mob->coords.x, mob->coords.y - 1)) == NULL)
+            dmg = move_or_attack(mob, XY(mob->coords.x, mob->coords.y - 1), level);
         else
             return;
 
@@ -318,7 +325,7 @@ void tick_mob(Mob *mob, Level *level)
         // if mob can't see, they can still smell the player (thanks NetHack!)
         if (can_smell(mob->coords, level))
         {
-            Coords coords = smelliest(mob->coords, level);
+            rl_coords coords = smelliest(mob->coords, level);
             move_or_attack(mob, coords, level);
         }
     }
@@ -401,7 +408,7 @@ void cleanup(Dungeon *dungeon)
 }
 
 // taint smell aura around player
-void taint(const Coords playerCoords, Level *level)
+void taint(const rl_coords playerCoords, Level *level)
 {
     // NOTE: all these tiles *except* the current player tile will get
     // decremented by 1 in gameloop after this code is run
@@ -423,7 +430,7 @@ void taint(const Coords playerCoords, Level *level)
 
     for (int i = 0; i < 13; ++i)
     {
-        Coords location = xy(coords[i][0], coords[i][1]);
+        rl_coords location = XY(coords[i][0], coords[i][1]);
         int smell = coords[i][2];
 
         // set smell if tile & greater than current smell
@@ -490,46 +497,46 @@ int handle_input(Dungeon *dungeon)
 
     // update seen tiles (done here to update before first turn)
     // TODO make more efficient
-    if (!is_resting(player))
+    if (!resting)
         for (int y = 0; y < MAX_HEIGHT; ++y)
             for (int x = 0; x < MAX_WIDTH; ++x)
-                if (can_see(player->coords, xy(x, y), level->tiles))
+                if (can_see(player->coords, XY(x, y), level->tiles))
                     level->tiles[y][x].seen = 1;
 
-    if (is_resting(player))
+    if (resting)
     {
         if (player->hp >= player->maxHP)
-            dungeon->player->attrs.resting = 0;
+            resting = 0;
 
         // if player can see any mobs, reset resting flag
         for (int i = 0; i < MAX_MOBS; ++i)
             if (level->mobs[i] != NULL &&
                 can_see(player->coords, level->mobs[i]->coords, level->tiles))
-                    dungeon->player->attrs.resting = 0;
+                    resting = 0;
 
         // if we're still resting, don't handle input
-        if (is_resting(player))
+        if (resting)
             return 0;
     }
 
-    if (is_running(player))
+    if (is_running())
     {
-        Direction dir = player->attrs.running;
-        Coords target = xy(player->coords.x + dir.xdir, player->coords.y + dir.ydir);
+        Direction dir = runDir;
+        rl_coords target = XY(player->coords.x + dir.xdir, player->coords.y + dir.ydir);
         Tile *tile = get_tile(level, target);
 
         // if player can see any mobs, reset running flag
         for (int i = 0; i < MAX_MOBS; ++i)
             if (level->mobs[i] != NULL &&
                     can_see(player->coords, level->mobs[i]->coords, level->tiles))
-                dungeon->player->attrs.running = direction(0, 0);
+                runDir = direction(0, 0);
 
         if (tile == NULL || !is_passable(*tile) ||
                 get_enemy(level, target) != NULL)
-            player->attrs.running = direction(0, 0);
+            runDir = direction(0, 0);
 
         // if we're still running, move the player and don't handle input
-        if (is_running(player))
+        if (is_running())
         {
             move_player(player, target, level);
 
@@ -541,83 +548,111 @@ int handle_input(Dungeon *dungeon)
 }
 
 // TODO allow mobs to smell diagonally
-Coords smelliest(Coords coords, Level *level)
+rl_coords smelliest(rl_coords coords, Level *level)
 {
     Tile **tiles = level->tiles;
-    Coords smelliest = coords;
+    rl_coords smelliest = coords;
     int smell = 0;
 
-    if (get_tile(level, xy(coords.x, coords.y + 1)) != NULL &&
-            get_tile(level, xy(coords.x, coords.y + 1))->smell > smell &&
-            is_passable(*get_tile(level, xy(coords.x, coords.y + 1))) &&
-            get_enemy(level, xy(coords.x, coords.y + 1)) == NULL)
+    if (get_tile(level, XY(coords.x, coords.y + 1)) != NULL &&
+            get_tile(level, XY(coords.x, coords.y + 1))->smell > smell &&
+            is_passable(*get_tile(level, XY(coords.x, coords.y + 1))) &&
+            get_enemy(level, XY(coords.x, coords.y + 1)) == NULL)
     {
         smelliest.y = coords.y + 1;
         smelliest.x = coords.x;
-        smell = get_tile(level, xy(coords.x, coords.y + 1))->smell;
+        smell = get_tile(level, XY(coords.x, coords.y + 1))->smell;
     }
 
-    if (get_tile(level, xy(coords.x, coords.y - 1)) != NULL &&
-            get_tile(level, xy(coords.x, coords.y - 1))->smell > smell &&
-            is_passable(*get_tile(level, xy(coords.x, coords.y - 1))) &&
-            get_enemy(level, xy(coords.x, coords.y - 1)) == NULL)
+    if (get_tile(level, XY(coords.x, coords.y - 1)) != NULL &&
+            get_tile(level, XY(coords.x, coords.y - 1))->smell > smell &&
+            is_passable(*get_tile(level, XY(coords.x, coords.y - 1))) &&
+            get_enemy(level, XY(coords.x, coords.y - 1)) == NULL)
     {
         smelliest.y = coords.y - 1;
         smelliest.x = coords.x;
-        smell = get_tile(level, xy(coords.x, coords.y - 1))->smell;
+        smell = get_tile(level, XY(coords.x, coords.y - 1))->smell;
     }
 
-    if (get_tile(level, xy(coords.x + 1, coords.y)) != NULL &&
-            get_tile(level, xy(coords.x + 1, coords.y))->smell > smell &&
-            is_passable(*get_tile(level, xy(coords.x + 1, coords.y))) &&
-            get_enemy(level, xy(coords.x + 1, coords.y)) == NULL)
+    if (get_tile(level, XY(coords.x + 1, coords.y)) != NULL &&
+            get_tile(level, XY(coords.x + 1, coords.y))->smell > smell &&
+            is_passable(*get_tile(level, XY(coords.x + 1, coords.y))) &&
+            get_enemy(level, XY(coords.x + 1, coords.y)) == NULL)
     {
         smelliest.y = coords.y;
         smelliest.x = coords.x + 1;
-        smell = get_tile(level, xy(coords.x + 1, coords.y))->smell;
+        smell = get_tile(level, XY(coords.x + 1, coords.y))->smell;
     }
 
-    if (get_tile(level, xy(coords.x - 1, coords.y)) != NULL &&
-            get_tile(level, xy(coords.x - 1, coords.y))->smell > smell &&
-            is_passable(*get_tile(level, xy(coords.x - 1, coords.y))) &&
-            get_enemy(level, xy(coords.x - 1, coords.y)) == NULL)
+    if (get_tile(level, XY(coords.x - 1, coords.y)) != NULL &&
+            get_tile(level, XY(coords.x - 1, coords.y))->smell > smell &&
+            is_passable(*get_tile(level, XY(coords.x - 1, coords.y))) &&
+            get_enemy(level, XY(coords.x - 1, coords.y)) == NULL)
     {
         smelliest.y = coords.y;
         smelliest.x = coords.x - 1;
-        smell = get_tile(level, xy(coords.x - 1, coords.y))->smell;
+        smell = get_tile(level, XY(coords.x - 1, coords.y))->smell;
     }
 
     return smelliest;
 }
 
-int can_smell(Coords coords, Level *level)
+int can_smell(rl_coords coords, Level *level)
 {
     Tile *tile;
 
-    tile = get_tile(level, xy(coords.x + 1, coords.y));
+    tile = get_tile(level, XY(coords.x + 1, coords.y));
     if (tile != NULL && is_passable(*tile) && tile->smell > 0)
         return 1;
 
-    tile = get_tile(level, xy(coords.x - 1, coords.y));
+    tile = get_tile(level, XY(coords.x - 1, coords.y));
     if (tile != NULL && is_passable(*tile) && tile->smell > 0)
         return 1;
 
-    tile = get_tile(level, xy(coords.x, coords.y + 1));
+    tile = get_tile(level, XY(coords.x, coords.y + 1));
     if (tile != NULL && is_passable(*tile) && tile->smell > 0)
         return 1;
 
-    tile = get_tile(level, xy(coords.x, coords.y - 1));
+    tile = get_tile(level, XY(coords.x, coords.y - 1));
     if (tile != NULL && is_passable(*tile) && tile->smell > 0)
         return 1;
 
     return 0;
 }
 
+int can_see(rl_coords from, rl_coords to, Tile **tiles)
+{
+    int ret = 0;
+    int length = 0;
+    rl_path *path = rl_get_line(from, to);
+    const rl_coords *loc;
+    while ((loc = rl_walk_path(path)) != NULL)
+    {
+        // if the line ends at the point we're looking at, we can see it!
+        if (loc->x == to.x && loc->y == to.y)
+        {
+            ret = 1;
+            break;
+        }
+
+        // if the current coord blocks the view and is at least 1 space
+        // away, we can't see it
+        int type = tiles[loc->y][loc->x].type;
+        if ((type == TILE_NONE || type == TILE_WALL_SIDE || type == TILE_WALL || type == TILE_CAVERN) && length)
+            break;
+
+        ++length;
+    }
+    rl_clear_path(path);
+
+    return ret;
+}
+
 void inventory_management(char input, Mob *player)
 {
     Items inventory = player->items;
 
-    if (player->attrs.inMenu == MENU_WIELD)
+    if (inMenu == MENU_WIELD)
     {
         // wield chosen weapon
         for (int i = 0; i < inventory.count; ++i)
@@ -635,7 +670,7 @@ void inventory_management(char input, Mob *player)
         }
     }
 
-    if (player->attrs.inMenu == MENU_WEAR)
+    if (inMenu == MENU_WEAR)
     {
         // wear chosen armor
         for (int i = 0; i < inventory.count; ++i)
@@ -653,7 +688,7 @@ void inventory_management(char input, Mob *player)
         }
     }
 
-    if (player->attrs.inMenu == MENU_THROW)
+    if (inMenu == MENU_THROW)
     {
         // throw chosen projectile
         for (int i = 0; i < inventory.count; ++i)
@@ -663,7 +698,7 @@ void inventory_management(char input, Mob *player)
             {
                 if (item->type == ITEM_WEAPON || item->type == ITEM_PROJECTILE)
                 {
-                    player->attrs.inMenu = MENU_DIRECTION;
+                    inMenu = MENU_DIRECTION;
                 }
                 else
                     // TODO let them throw it anyway?
@@ -675,5 +710,6 @@ void inventory_management(char input, Mob *player)
     }
 
     // turn off inventory management
-    player->attrs.inMenu = 0;
+    inMenu = 0;
 }
+

@@ -1,2 +1,3 @@
 simplerl
 *.o
+*.a

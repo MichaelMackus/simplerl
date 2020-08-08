@@ -1,4 +1,4 @@
-#include "draw.h"
+#include "game.h"
 #include "message.h"
 #include <ncurses.h>
 #include <string.h>
@@ -59,7 +59,7 @@ void render(const Dungeon *dungeon)
     // render player last (should always be seen)
     render_mob(dungeon->player);
 
-    if (in_menu(dungeon->player))
+    if (get_menu())
     {
         if (player->items.count)
         {
@@ -130,7 +130,7 @@ void render_level(Level *level, const Mob *player)
         for (int x = 0; x < MAX_WIDTH; ++x)
         {
             // draw tile symbol if the player can see it
-            if (can_see(player->coords, xy(x, y), level->tiles) ||
+            if (can_see(player->coords, XY(x, y), level->tiles) ||
                     level->tiles[y][x].seen)
             {
                 Tile t = level->tiles[y][x];

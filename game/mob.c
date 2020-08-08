@@ -1,10 +1,9 @@
 #include "mob.h"
-#include "path.h"
 #include "random.h"
 #include <stdlib.h>
 
-Mob *enemy(unsigned int hp, unsigned int minDamage, unsigned int maxDamage, char symbol, int form);
-Mob *create_mob(int depth, Coords coords)
+Mob *enemy(int hp, int minDamage, int maxDamage, char symbol, int form);
+Mob *create_mob(int depth, rl_coords coords)
 {
     // difficulty ranges
     //
@@ -136,7 +135,7 @@ int attack(Mob *attacker, Mob *target)
     return damage;
 }
 
-Mob *enemy(unsigned int hp, unsigned int minDamage, unsigned int maxDamage, char symbol, int form)
+Mob *enemy(int hp, int minDamage, int maxDamage, char symbol, int form)
 {
     Mob *m;
     m = malloc(sizeof(Mob));
@@ -203,32 +202,6 @@ Mobs initialize_mobs()
     mobs.content = NULL;
 
     return mobs;
-}
-
-int is_resting(Mob *player)
-{
-    if (player == NULL || player->type != MOB_PLAYER)
-        return 0;
-
-    return player->attrs.resting;
-}
-
-int is_running(Mob *player)
-{
-    if (player == NULL || player->type != MOB_PLAYER)
-        return 0;
-
-    Direction runDir = player->attrs.running;
-
-    return runDir.xdir != 0 || runDir.ydir != 0;
-}
-
-int in_menu(Mob *player)
-{
-    if (player == NULL || player->type != MOB_PLAYER)
-        return 0;
-
-    return player->attrs.inMenu > 0;
 }
 
 const char* mob_name(char symbol)
