@@ -110,7 +110,8 @@ void randomly_fill_tiles(Level *level)
             int custom_tile = 0;
             switch (tile) {
                 case RL_TILE_WALL:
-                    if (rl_is_wall(map, XY(x + 1, y)) || rl_is_wall(map, XY(x - 1, y)))
+                    if (rl_is_wall(map, XY(x + 1, y)) || rl_is_wall(map, XY(x - 1, y)) ||
+                            rl_is_doorway(map, XY(x + 1, y)) || rl_is_doorway(map, XY(x - 1, y)))
                         custom_tile = TILE_WALL;
                     else
                         custom_tile = TILE_WALL_SIDE;
