@@ -82,7 +82,7 @@ void rl_recursively_split_bsp(rl_bsp *root, rl_generator_f generator,
 rl_map *rl_create_map_from_bsp(rl_bsp *root, rl_generator_f generator,
         unsigned int room_min_width, unsigned int room_min_height,
         unsigned int room_max_width, unsigned int room_max_height,
-        unsigned int room_padding, rl_bsp_map_f corridor_algorithm)
+        unsigned int room_padding)
 {
     unsigned int map_width = rl_get_bsp_width(root);
     unsigned int map_height = rl_get_bsp_height(root);
@@ -136,18 +136,14 @@ rl_map *rl_create_map_from_bsp(rl_bsp *root, rl_generator_f generator,
         }
     }
 
-    if (corridor_algorithm)
-        corridor_algorithm(map, generator, root);
-
     return map;
 }
 
 int is_diggable(rl_map *map, rl_coords start, rl_coords end);
-void connect_corridors_to_random_siblings(rl_map *map, rl_generator_f generator, rl_bsp *root)
+void rl_connect_corridors_to_random_siblings(rl_map *map, rl_bsp *root, rl_generator_f generator, unsigned int max_adjacent_doors)
 {
     if (map == NULL || root == NULL) return;
 
-    int max_adjacent_doors = 1;
     unsigned int map_width = rl_get_map_width(map);
     unsigned int map_height = rl_get_map_height(map);
 
@@ -197,19 +193,21 @@ void connect_corridors_to_random_siblings(rl_map *map, rl_generator_f generator,
         while (coords = rl_walk_path(path)) {
             int adjacent_doors = 0;
 
-            // make sure we haven't hit adjacent door limit
-            if (rl_is_wall(map, *coords)) {
-                if (rl_is_doorway(map, (rl_coords){coords->x + 1, coords->y}))
-                    adjacent_doors++;
-                if (rl_is_doorway(map, (rl_coords){coords->x - 1, coords->y}))
-                    adjacent_doors++;
-                if (rl_is_doorway(map, (rl_coords){coords->x, coords->y + 1}))
-                    adjacent_doors++;
-                if (rl_is_doorway(map, (rl_coords){coords->x, coords->y - 1}))
-                    adjacent_doors++;
+            if (max_adjacent_doors) {
+                // make sure we haven't hit adjacent door limit
+                if (rl_is_wall(map, *coords)) {
+                    if (rl_is_doorway(map, (rl_coords){coords->x + 1, coords->y}))
+                        adjacent_doors++;
+                    if (rl_is_doorway(map, (rl_coords){coords->x - 1, coords->y}))
+                        adjacent_doors++;
+                    if (rl_is_doorway(map, (rl_coords){coords->x, coords->y + 1}))
+                        adjacent_doors++;
+                    if (rl_is_doorway(map, (rl_coords){coords->x, coords->y - 1}))
+                        adjacent_doors++;
+                }
             }
 
-            if (adjacent_doors < max_adjacent_doors) {
+            if (!max_adjacent_doors || adjacent_doors < max_adjacent_doors) {
                 if (rl_is_wall(map, *coords))
                     rl_set_tile(map, *coords, RL_TILE_DOORWAY);
                 else if (!rl_is_passable(map, *coords))
@@ -221,7 +219,7 @@ void connect_corridors_to_random_siblings(rl_map *map, rl_generator_f generator,
 }
 
 rl_path *dig_path(rl_map *map, rl_bsp *node, rl_bsp *sibling);
-void connect_corridors_to_closest_siblings(rl_map *map, rl_generator_f generator, rl_bsp *root)
+void rl_connect_corridors_to_closest_siblings(rl_map *map, rl_bsp *root, rl_generator_f generator)
 {
     if (map == NULL || root == NULL) return;
 

@@ -19,26 +19,23 @@ void rl_recursively_split_bsp(rl_bsp *root, rl_generator_f generator,
         unsigned int min_width, unsigned int min_height,
         float deviation, int max_recursion);
 
-// represents a function to modify a BSP map (used for custom corridor code)
-typedef void (*rl_bsp_map_f)(rl_map *map, rl_generator_f generator, rl_bsp *root);
-
 /**
  * Create a map from a BSP tree. This adds rooms of random size into
- * each BSP leaf, and then connects every BSP sibling with cooridors
- * (traversing up the tree until all nodes are connected).
+ * each BSP leaf.
  *
- * Pass a reference to the corridor connection function you want to use,
- * or NULL to get a map of just rooms.
+ * You will need to connect the corridors afterwards - you can call one
+ * of the rl_connect_corridors_* functions or do this manually.
  */
 rl_map *rl_create_map_from_bsp(rl_bsp *root, rl_generator_f generator,
         unsigned int room_min_width, unsigned int room_min_height,
         unsigned int room_max_width, unsigned int room_max_height,
-        unsigned int room_padding, rl_bsp_map_f corridor_algorithm);
+        unsigned int room_padding);
 
 // tries to connect corridors to random passable tiles in siblings
-// this does some post processing to remove adjacent doorways
-void connect_corridors_to_random_siblings(rl_map *map, rl_generator_f generator, rl_bsp *root);
+// max_adjacent_doors - defines max adjacent doorways for post
+//     processing; set to 0 for unlimited adjacent doors
+void rl_connect_corridors_to_random_siblings(rl_map *map, rl_bsp *root, rl_generator_f generator, unsigned int max_adjacent_doors);
 // connects corridors to closest sibling rooms
-void connect_corridors_to_closest_siblings(rl_map *map, rl_generator_f generator, rl_bsp *root);
+void rl_connect_corridors_to_closest_siblings(rl_map *map, rl_bsp *root, rl_generator_f generator);
 
 #endif
