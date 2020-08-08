@@ -8,14 +8,6 @@ struct rl_map {
     char *tiles; // 2d array of tiles
 };
 
-typedef enum rl_tile {
-    RL_TILE_STONE   = 0, //impassable by default
-    RL_TILE_WALL    = 1, //impassable by default
-    RL_TILE_ROOM    = 2, //passable by default
-    RL_TILE_FLOOR   = 3, //passable by default
-    RL_TILE_DOORWAY = 4  //passable by default
-} rl_tile;
-
 rl_map *rl_create_map(size_t width, size_t height)
 {
     rl_map *map = malloc(sizeof(rl_map));
@@ -109,22 +101,28 @@ void rl_set_impassable(rl_map *map, rl_coords loc)
     }
 }
 
-int rl_is_wall(const rl_map *map, rl_coords loc)
+rl_tile rl_get_tile(const rl_map *map, rl_coords loc)
 {
     if (map == NULL)
-        return 0;
+        return RL_TILE_INVALID;
 
     if (loc.x < 0 || loc.y < 0)
-        return 0;
+        return RL_TILE_INVALID;
 
     size_t index = loc.y * map->width + loc.x;
     if (index >= map->width * map->height)
-        return 0;
+        return RL_TILE_INVALID;
 
-    return map->tiles && map->tiles[index] & RL_TILE_WALL;
+    if (!map->tiles)
+        return RL_TILE_INVALID;
+
+    if (map->tiles[index] & 0x80)
+        return map->tiles[index] ^ 0x80;
+
+    return map->tiles[index];
 }
 
-int rl_set_wall(const rl_map *map, rl_coords loc)
+rl_tile rl_set_tile(const rl_map *map, rl_coords loc, rl_tile tile)
 {
     if (map == NULL || map->tiles == NULL)
         return;
@@ -134,53 +132,23 @@ int rl_set_wall(const rl_map *map, rl_coords loc)
 
     size_t index = loc.y * map->width + loc.x;
     if (index < map->width * map->height) {
-        map->tiles[index] = RL_TILE_WALL;
+        map->tiles[index] = tile;
+        if (tile == RL_TILE_ROOM || tile == RL_TILE_PASSAGE || tile == RL_TILE_DOORWAY)
+            rl_set_passable(map, loc);
     }
+}
+
+int rl_is_wall(const rl_map *map, rl_coords loc)
+{
+    return rl_get_tile(map, loc) == RL_TILE_WALL;
 }
 
 int rl_is_room(const rl_map *map, rl_coords loc)
 {
-    if (map == NULL)
-        return 0;
-
-    if (loc.x < 0 || loc.y < 0)
-        return 0;
-
-    size_t index = loc.y * map->width + loc.x;
-    if (index >= map->width * map->height)
-        return 0;
-
-    return map->tiles && map->tiles[index] & RL_TILE_ROOM;
-}
-
-int rl_set_room(const rl_map *map, rl_coords loc)
-{
-    if (map == NULL || map->tiles == NULL)
-        return;
-
-    if (loc.x < 0 || loc.y < 0)
-        return;
-
-    size_t index = loc.y * map->width + loc.x;
-    if (index < map->width * map->height) {
-        map->tiles[index] = RL_TILE_ROOM | 0x80;
-    }
+    return rl_get_tile(map, loc) == RL_TILE_ROOM;
 }
 
 int rl_is_doorway(const rl_map *map, rl_coords loc)
 {
+    return rl_get_tile(map, loc) == RL_TILE_DOORWAY;
 }
-
-int rl_set_doorway(const rl_map *map, rl_coords loc)
-{
-}
-
-/**
- * Get a tile type at a location.
- */
-rl_tile rl_get_tile(const rl_map *map, rl_coords loc);
-
-/**
- * Set a tile type at a location.
- */
-rl_tile rl_set_tile(const rl_map *map, rl_coords loc, rl_tile tile);

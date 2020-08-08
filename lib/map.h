@@ -8,6 +8,16 @@ typedef struct rl_coords {
     int y;
 } rl_coords;
 
+typedef enum rl_tile {
+    RL_TILE_BLOCK = 0,   //impassable by default
+    RL_TILE_WALL,        //impassable by default
+    RL_TILE_ROOM,        //passable by default
+    RL_TILE_PASSAGE,     //passable by default
+    RL_TILE_DOORWAY,     //passable by default
+
+    RL_TILE_INVALID = -1 //impassable by default
+} rl_tile;
+
 struct rl_map;
 typedef struct rl_map rl_map;
 
@@ -56,13 +66,28 @@ void rl_set_passable(rl_map *map, rl_coords loc);
 void rl_set_impassable(rl_map *map, rl_coords loc);
 
 /**
+ * Get a tile type at a location.
+ */
+rl_tile rl_get_tile(const rl_map *map, rl_coords loc);
+
+/**
+ * Set a tile type at a location.
+ */
+rl_tile rl_set_tile(const rl_map *map, rl_coords loc, rl_tile tile);
+
+/**
  * Return 1 if a tile is a wall.
  */
 int rl_is_wall(const rl_map *map, rl_coords loc);
 
 /**
- * Mark a tile as a wall tile & also set to impassable.
+ * Return 1 if a tile is a room tile.
  */
-int rl_set_wall(const rl_map *map, rl_coords loc);
+int rl_is_room(const rl_map *map, rl_coords loc);
+
+/**
+ * Return 1 if a tile is a doorway tile.
+ */
+int rl_is_doorway(const rl_map *map, rl_coords loc);
 
 #endif

@@ -128,9 +128,9 @@ rl_map *rl_create_map_from_bsp(rl_bsp *root, rl_generator_f generator,
                     y == room_loc.y || y == room_loc.y + room_height - 1
                 ) {
                     // set sides of room to walls
-                    rl_set_wall(map, (rl_coords){ x, y });
+                    rl_set_tile(map, (rl_coords){ x, y }, RL_TILE_WALL);
                 } else {
-                    rl_set_passable(map, (rl_coords){ x, y });
+                    rl_set_tile(map, (rl_coords){ x, y }, RL_TILE_ROOM);
                 }
             }
         }
@@ -154,9 +154,9 @@ void connect_corridors_to_random_siblings(rl_map *map, rl_generator_f generator,
     for (int x = 0; x < map_width; ++x) {
         for (int y = 0; y < map_height; ++y) {
             if (rl_is_wall(map, (rl_coords){ x, y }))
-                rl_set_wall(room_map, (rl_coords){ x, y });
+                rl_set_tile(room_map, (rl_coords){ x, y }, RL_TILE_WALL);
             if (rl_is_passable(map, (rl_coords){ x, y }))
-                rl_set_passable(room_map, (rl_coords){ x, y });
+                rl_set_tile(room_map, (rl_coords){ x, y }, RL_TILE_ROOM);
         }
     }
 
@@ -206,29 +206,24 @@ void connect_corridors_to_random_siblings(rl_map *map, rl_generator_f generator,
         while (coords = rl_walk_path(path)) {
             int adjacent_doors = 0;
 
-            // if wall, make sure we haven't hit adjacent door limit
-            if (rl_is_wall(room_map, *coords)) {
-                // find side of wall we're on
-                if (rl_is_wall(room_map, (rl_coords){coords->x + 1, coords->y}) ||
-                    rl_is_wall(room_map, (rl_coords){coords->x - 1, coords->y})
-                ) {
-                    if (rl_is_passable(map, (rl_coords){coords->x + 1, coords->y}))
-                        adjacent_doors++;
-                    if (rl_is_passable(map, (rl_coords){coords->x - 1, coords->y}))
-                        adjacent_doors++;
-                }
-                if (rl_is_wall(room_map, (rl_coords){coords->x, coords->y + 1}) ||
-                    rl_is_wall(room_map, (rl_coords){coords->x, coords->y - 1})
-                ) {
-                    if (rl_is_passable(map, (rl_coords){coords->x, coords->y + 1}))
-                        adjacent_doors++;
-                    if (rl_is_passable(map, (rl_coords){coords->x, coords->y - 1}))
-                        adjacent_doors++;
-                }
+            // make sure we haven't hit adjacent door limit
+            if (rl_is_wall(map, *coords)) {
+                if (rl_is_doorway(map, (rl_coords){coords->x + 1, coords->y}))
+                    adjacent_doors++;
+                if (rl_is_doorway(map, (rl_coords){coords->x - 1, coords->y}))
+                    adjacent_doors++;
+                if (rl_is_doorway(map, (rl_coords){coords->x, coords->y + 1}))
+                    adjacent_doors++;
+                if (rl_is_doorway(map, (rl_coords){coords->x, coords->y - 1}))
+                    adjacent_doors++;
             }
 
-            if (adjacent_doors < max_adjacent_doors)
-                rl_set_passable(map, *coords);
+            if (adjacent_doors < max_adjacent_doors) {
+                if (rl_is_wall(map, *coords))
+                    rl_set_tile(map, *coords, RL_TILE_DOORWAY);
+                else if (!rl_is_passable(map, *coords))
+                    rl_set_tile(map, *coords, RL_TILE_PASSAGE);
+            }
         }
         rl_clear_path(path);
     }
@@ -250,9 +245,9 @@ void connect_corridors_to_closest_siblings(rl_map *map, rl_generator_f generator
     for (int x = 0; x < map_width; ++x) {
         for (int y = 0; y < map_height; ++y) {
             if (rl_is_wall(map, (rl_coords){ x, y }))
-                rl_set_wall(room_map, (rl_coords){ x, y });
+                rl_set_tile(room_map, (rl_coords){ x, y }, RL_TILE_WALL);
             if (rl_is_passable(map, (rl_coords){ x, y }))
-                rl_set_passable(room_map, (rl_coords){ x, y });
+                rl_set_tile(room_map, (rl_coords){ x, y }, RL_TILE_ROOM);
         }
     }
 
@@ -285,7 +280,10 @@ void connect_corridors_to_closest_siblings(rl_map *map, rl_generator_f generator
         rl_path *path = dig_path(map, room_map, node, sibling);
         rl_coords *coords;
         while (coords = rl_walk_path(path)) {
-            rl_set_passable(map, *coords);
+            if (rl_is_wall(map, *coords))
+                rl_set_tile(map, *coords, RL_TILE_DOORWAY);
+            else
+                rl_set_tile(map, *coords, RL_TILE_PASSAGE);
         }
         rl_clear_path(path);
     }
