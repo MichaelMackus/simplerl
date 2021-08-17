@@ -70,9 +70,6 @@ typedef struct {
     Item **content;
 } Items;
 
-const char **unknownItems;
-const char **knownItems;
-
 char item_symbol(int itemType);
 char inventory_symbol(const Item *item, Items items); // signifies selection spot in inventory
 

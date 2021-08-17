@@ -200,9 +200,9 @@ void draw_status(const Dungeon *dungeon)
     // re-render messages
     for (int y = 0; y < MAX_MESSAGES; ++y)
     {
-        if (messages[y] != NULL)
+        if (get_message(y) != NULL)
         {
-            mvaddstr(y + MAX_HEIGHT, MAX_WIDTH / 2, messages[y]);
+            mvaddstr(y + MAX_HEIGHT, MAX_WIDTH / 2, get_message(y));
         }
     }
 

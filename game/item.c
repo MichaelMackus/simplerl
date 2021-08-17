@@ -1,6 +1,9 @@
 #include "item.h"
 #include "random.h"
 
+const char **unknownItems;
+const char **knownItems;
+
 char item_symbol(int itemType)
 {
     switch (itemType)

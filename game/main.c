@@ -23,8 +23,7 @@ int main()
         return ERROR_OOM;
 
     // allocate messages array
-    messages = malloc(sizeof(char*) * MAX_MESSAGE_LENGTH * MAX_MESSAGES);
-    if (messages == NULL)
+    if (init_messages() == NULL)
         return ERROR_OOM;
 
     // randomize initial level

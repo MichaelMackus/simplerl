@@ -2,6 +2,20 @@
 #include <stdlib.h>
 #include <memory.h>
 
+const char **messages;
+
+int init_messages()
+{
+    messages = malloc(sizeof(char*) * MAX_MESSAGE_LENGTH * MAX_MESSAGES);
+
+    return messages;
+}
+
+const char *get_message(int index)
+{
+    return messages[index];
+}
+
 int insert_message(const char *message, const char **messages)
 {
     if (message == NULL)
