@@ -156,3 +156,85 @@ int rl_is_doorway(const rl_map *map, rl_coords loc)
 {
     return rl_get_tile(map, loc) == RL_TILE_DOORWAY;
 }
+
+char rl_wall_connections(const rl_map *map, rl_coords loc)
+{
+    char connection = 0;
+
+    if (rl_is_wall(map, (rl_coords) { loc.x - 1, loc.y })) {
+        connection |= RL_CONNECTION_L;
+    }
+    if (rl_is_wall(map, (rl_coords) { loc.x + 1, loc.y })) {
+        connection |= RL_CONNECTION_R;
+    }
+    if (rl_is_wall(map, (rl_coords) { loc.x, loc.y - 1 })) {
+        connection |= RL_CONNECTION_U;
+    }
+    if (rl_is_wall(map, (rl_coords) { loc.x, loc.y + 1 })) {
+        connection |= RL_CONNECTION_D;
+    }
+
+    // diagonals
+    if (rl_is_wall(map, (rl_coords) { loc.x - 1, loc.y - 1 })) {
+        connection |= RL_CONNECTION_DIAG_UL;
+    }
+    if (rl_is_wall(map, (rl_coords) { loc.x + 1, loc.y + 1 })) {
+        connection |= RL_CONNECTION_DIAG_UR;
+    }
+    if (rl_is_wall(map, (rl_coords) { loc.x - 1, loc.y - 1 })) {
+        connection |= RL_CONNECTION_DIAG_DL;
+    }
+    if (rl_is_wall(map, (rl_coords) { loc.x + 1, loc.y + 1 })) {
+        connection |= RL_CONNECTION_DIAG_DR;
+    }
+
+    return connection;
+}
+
+char rl_door_connections(const rl_map *map, rl_coords loc)
+{
+    char connection = 0;
+
+    if (rl_is_doorway(map, (rl_coords) { loc.x - 1, loc.y })) {
+        connection |= RL_CONNECTION_L;
+    }
+    if (rl_is_doorway(map, (rl_coords) { loc.x + 1, loc.y })) {
+        connection |= RL_CONNECTION_R;
+    }
+    if (rl_is_doorway(map, (rl_coords) { loc.x, loc.y - 1 })) {
+        connection |= RL_CONNECTION_U;
+    }
+    if (rl_is_doorway(map, (rl_coords) { loc.x, loc.y + 1 })) {
+        connection |= RL_CONNECTION_D;
+    }
+
+    // diagonals
+    if (rl_is_doorway(map, (rl_coords) { loc.x - 1, loc.y - 1 })) {
+        connection |= RL_CONNECTION_DIAG_UL;
+    }
+    if (rl_is_doorway(map, (rl_coords) { loc.x + 1, loc.y + 1 })) {
+        connection |= RL_CONNECTION_DIAG_UR;
+    }
+    if (rl_is_doorway(map, (rl_coords) { loc.x - 1, loc.y - 1 })) {
+        connection |= RL_CONNECTION_DIAG_DL;
+    }
+    if (rl_is_doorway(map, (rl_coords) { loc.x + 1, loc.y + 1 })) {
+        connection |= RL_CONNECTION_DIAG_DR;
+    }
+
+    return connection;
+}
+
+int rl_is_corner(const rl_map *map, rl_coords loc)
+{
+    char connections = rl_wall_connections(map, loc) | rl_door_connections(map, loc);
+
+    if (connections == 0 || !rl_is_wall(map, loc)) {
+        return 0;
+    }
+
+    return (connections & (RL_CONNECTION_L | RL_CONNECTION_U)) == (RL_CONNECTION_L | RL_CONNECTION_U) ||
+           (connections & (RL_CONNECTION_L | RL_CONNECTION_D)) == (RL_CONNECTION_L | RL_CONNECTION_D) ||
+           (connections & (RL_CONNECTION_R | RL_CONNECTION_U)) == (RL_CONNECTION_R | RL_CONNECTION_U) ||
+           (connections & (RL_CONNECTION_R | RL_CONNECTION_D)) == (RL_CONNECTION_R | RL_CONNECTION_D);
+}

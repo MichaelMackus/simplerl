@@ -90,4 +90,41 @@ int rl_is_room(const rl_map *map, rl_coords loc);
  */
 int rl_is_doorway(const rl_map *map, rl_coords loc);
 
+/**
+ * Return 1 if a tile is a wall and is on a corner surrounded by walls/doors.
+ * TODO: this does not count diagonals.
+ */
+int rl_is_corner(const rl_map *map, rl_coords loc);
+
+/**
+ * Wall connection definitions - these are for the resulting bitmask from
+ * rl_wall_connection
+ */
+#define RL_CONNECTION_R       0b00000001
+#define RL_CONNECTION_L       0b00000010
+#define RL_CONNECTION_D       0b00000100
+#define RL_CONNECTION_U       0b00001000
+#define RL_CONNECTION_DIAG_UL 0b00010000
+#define RL_CONNECTION_DIAG_UR 0b00100000
+#define RL_CONNECTION_DIAG_DL 0b01000000
+#define RL_CONNECTION_DIAG_DR 0b10000000
+
+/**
+ * Return >0 if a tile is connected to nearby walls.
+ *
+ * Return value is a byte mask containing one or more of RL_CONNECTION_ defines
+ * or'ed together.  For example, for walls that are connecting to the current
+ * point to the left and right, the value would be "0b00000011" or
+ * "RL_CONNECTION_L | RL_CONNECTION_R".
+ */
+char rl_wall_connections(const rl_map *map, rl_coords loc);
+
+/**
+ * Returns >0 if a tile is connected to nearby doors.
+ *
+ * Works the same way as rl_wall_connections but for connecting doors instead of
+ * walls.
+ */
+char rl_door_connections(const rl_map *map, rl_coords loc);
+
 #endif

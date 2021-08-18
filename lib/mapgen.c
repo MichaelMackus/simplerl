@@ -4,8 +4,6 @@
 
 #include <assert.h>
 
-#define MAX_GENERATOR_RECURSION 100
-
 void rl_recursively_split_bsp(rl_bsp *root, rl_generator_f generator,
         unsigned int min_width, unsigned int min_height, float deviation, int max_recursion)
 {
@@ -139,8 +137,27 @@ rl_map *rl_create_map_from_bsp(rl_bsp *root, rl_generator_f generator,
     return map;
 }
 
+// passable function for connecting corridors
+// everything is passable (i.e. "diggable") except corners & walls adjacent to doors
+int rl_corridors_passable_f(rl_coords node, void *user_data)
+{
+    rl_map *map = user_data;
+
+    // don't dig through corners
+    if (rl_is_corner(map, node)) {
+        return 0;
+    }
+
+    // don't dig when there's an adjacent door
+    if (rl_is_wall(map, node) && rl_door_connections(map, node)) {
+        return 0;
+    }
+
+    return 1;
+}
+
 int is_diggable(rl_map *map, rl_coords start, rl_coords end);
-void rl_connect_corridors_to_random_siblings(rl_map *map, rl_bsp *root, rl_generator_f generator, unsigned int max_adjacent_doors)
+void rl_connect_corridors_to_random_siblings(rl_map *map, rl_bsp *root, rl_generator_f generator)
 {
     if (map == NULL || root == NULL) return;
 
@@ -188,42 +205,82 @@ void rl_connect_corridors_to_random_siblings(rl_map *map, rl_bsp *root, rl_gener
             };
         } while (!is_diggable(map, start, end));
 
-        rl_path *path = rl_get_line_manhattan(start, end);
-        rl_coords *coords;
+        // now we have start & end points, dig out passages in map
+        rl_path *path = rl_find_path_cb(start, end, 0, &manhattan_distance, &rl_corridors_passable_f, map);
+        rl_coords *coords, *prev_coords = NULL;
         while (coords = rl_walk_path(path)) {
-            int adjacent_doors = 0;
-
-            if (max_adjacent_doors) {
-                // make sure we haven't hit adjacent door limit
-                if (rl_is_wall(map, *coords)) {
-                    if (rl_is_doorway(map, (rl_coords){coords->x + 1, coords->y}))
-                        adjacent_doors++;
-                    if (rl_is_doorway(map, (rl_coords){coords->x - 1, coords->y}))
-                        adjacent_doors++;
-                    if (rl_is_doorway(map, (rl_coords){coords->x, coords->y + 1}))
-                        adjacent_doors++;
-                    if (rl_is_doorway(map, (rl_coords){coords->x, coords->y - 1}))
-                        adjacent_doors++;
-                }
-            }
-
-            if (!max_adjacent_doors || adjacent_doors < max_adjacent_doors) {
-                if (rl_is_wall(map, *coords))
-                    rl_set_tile(map, *coords, RL_TILE_DOORWAY);
-                else if (!rl_is_passable(map, *coords))
-                    rl_set_tile(map, *coords, RL_TILE_PASSAGE);
-            }
+            if (rl_is_wall(map, *coords))
+                rl_set_tile(map, *coords, RL_TILE_DOORWAY);
+            else if (!rl_is_passable(map, *coords))
+                rl_set_tile(map, *coords, RL_TILE_PASSAGE);
         }
         rl_clear_path(path);
     }
 }
 
+// connects corridors to random nodes chaotically (think like nethack)
+void rl_connect_corridors_chaotic(rl_map *map, rl_bsp *root, rl_generator_f generator)
+{
+    if (map == NULL || root == NULL) return;
+
+    unsigned int map_width = rl_get_map_width(map);
+    unsigned int map_height = rl_get_map_height(map);
+
+    struct rl_node_connection {
+        rl_bsp *from;
+        rl_bsp *to;
+    };
+
+    rl_queue *queue = rl_get_bsp_leaves(root);
+    int bsp_size = rl_queue_size(queue);
+    rl_bsp **nodes = rl_queue_to_array(&queue);
+
+    if (bsp_size <= 1) return;
+
+    for (int a = 0; a < bsp_size; ++a) {
+        // generate random node to connect to
+        int b = a;
+        while (a == b) {
+            b = generator(0, bsp_size - 1);
+        }
+
+        rl_bsp *node_a = nodes[a];
+        rl_bsp *node_b = nodes[b];
+
+        // pick random passable point within node A and B
+        rl_coords a_coords = {-1,-1};
+        while (!rl_is_passable(map, a_coords)) {
+            a_coords.x = generator(rl_get_bsp_loc(node_a).x, rl_get_bsp_loc(node_a).x + rl_get_bsp_width(node_a));
+            a_coords.y = generator(rl_get_bsp_loc(node_a).y, rl_get_bsp_loc(node_a).y + rl_get_bsp_height(node_a));
+        }
+        rl_coords b_coords = {-1,-1};
+        while (!rl_is_passable(map, b_coords)) {
+            b_coords.x = generator(rl_get_bsp_loc(node_b).x, rl_get_bsp_loc(node_b).x + rl_get_bsp_width(node_b));
+            b_coords.y = generator(rl_get_bsp_loc(node_b).y, rl_get_bsp_loc(node_b).y + rl_get_bsp_height(node_b));
+        }
+
+        // draw path using A* to node B
+        rl_path *path = rl_find_path_cb(a_coords, b_coords, 0, &manhattan_distance, &rl_corridors_passable_f, map);
+        rl_coords *coords;
+        while (coords = rl_walk_path(path)) {
+            if (rl_is_wall(map, *coords))
+                rl_set_tile(map, *coords, RL_TILE_DOORWAY);
+            else if (!rl_is_passable(map, *coords))
+                rl_set_tile(map, *coords, RL_TILE_PASSAGE);
+        }
+        rl_clear_path(path);
+    }
+
+    free(nodes);
+}
+
+// TODO connects corridors to random nodes - this should *smartly* connect the corridors only where needed to connect different nodes
+/* void rl_connect_corridors_orderly(rl_map *map, rl_bsp *root, rl_generator_f generator) */
+
 rl_path *dig_path(rl_map *map, rl_bsp *node, rl_bsp *sibling);
 void rl_connect_corridors_to_closest_siblings(rl_map *map, rl_bsp *root, rl_generator_f generator)
 {
     if (map == NULL || root == NULL) return;
-
-    int max_adjacent_doors = 1;
 
     // populate room data map
     unsigned int map_width = rl_get_map_width(map);

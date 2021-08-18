@@ -5,6 +5,9 @@
 #include "rng.h"
 #include "map.h"
 
+// TODO use config structure for map generation
+// TODO can pass custom mapgen type/function (i.e. BSP generation, cellular automata, maze, etc.)
+
 /**
  * root is the root node to split from
  * generator is your RNG generator function
@@ -31,11 +34,18 @@ rl_map *rl_create_map_from_bsp(rl_bsp *root, rl_generator_f generator,
         unsigned int room_max_width, unsigned int room_max_height,
         unsigned int room_padding);
 
-// tries to connect corridors to random passable tiles in siblings
-// max_adjacent_doors - defines max adjacent doorways for post
-//     processing; set to 0 for unlimited adjacent doors
-void rl_connect_corridors_to_random_siblings(rl_map *map, rl_bsp *root, rl_generator_f generator, unsigned int max_adjacent_doors);
-// connects corridors to closest sibling rooms
+/**
+ * Corridor generation below - note that currently all corridor generation
+ * functions prevent putting corridors on wall corners and next to adjacent
+ * doors.
+ */
+
+// connects corridors to random rooms completely randomly
+void rl_connect_corridors_chaotic(rl_map *map, rl_bsp *root, rl_generator_f generator);
+// tries to connect corridors to random passable tiles in siblings (looks a
+// little more orderly than above while offering a bit of randomness)
+void rl_connect_corridors_to_random_siblings(rl_map *map, rl_bsp *root, rl_generator_f generator);
+// connects corridors to closest sibling rooms (usually results in more linear maps)
 void rl_connect_corridors_to_closest_siblings(rl_map *map, rl_bsp *root, rl_generator_f generator);
 
 #endif

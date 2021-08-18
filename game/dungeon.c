@@ -101,7 +101,12 @@ void randomly_fill_tiles(Level *level)
     rl_recursively_split_bsp(bsp, &rl_rng_twister_generate, 6, 6, 0.5, 4);
     rl_map *map = rl_create_map_from_bsp(bsp, &rl_rng_twister_generate, 4, 4, 8, 8, 1);
     if (map == NULL) return;
-    rl_connect_corridors_to_random_siblings(map, bsp, &rl_rng_twister_generate, 1);
+
+    // randomize corridor generation
+    if (generate(0, 1))
+        rl_connect_corridors_chaotic(map, bsp, &rl_rng_twister_generate);
+    else
+        rl_connect_corridors_to_random_siblings(map, bsp, &rl_rng_twister_generate);
 
     // transfer the RL map to our custom map
     for (int x = 0; x < MAX_WIDTH; ++x) {
