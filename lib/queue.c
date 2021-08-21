@@ -39,7 +39,7 @@ void rl_push(rl_queue **queue, void *data, int priority)
     newNode->next = NULL;
 
     // if newNode is more urgent then head, replace head
-    if (priority < (*queue)->priority) {
+    if (priority <= (*queue)->priority) {
         newNode->next = *queue;
         *queue = newNode;
         return;
