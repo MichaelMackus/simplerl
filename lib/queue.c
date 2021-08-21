@@ -45,6 +45,7 @@ void rl_push(rl_queue **queue, void *data, int priority)
         return;
     }
 
+    // TODO opposite order?
     rl_queue *current = *queue;
     while (current->next != NULL) {
         // found the spot to insert
@@ -114,4 +115,15 @@ void **rl_queue_to_array(rl_queue **queue)
     }
 
     return arr;
+}
+
+void rl_array_to_queue(rl_queue **queue, void **data, int length)
+{
+    for (int i = 0; i < length; ++i) {
+        rl_push(queue, data[i], i);
+    }
+
+    free(data);
+
+    return queue;
 }

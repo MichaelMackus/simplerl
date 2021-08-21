@@ -22,6 +22,13 @@ void *rl_peek(const rl_queue *queue);
 int rl_queue_size(const rl_queue *queue);
 
 // transform queue to array - make sure you free the array when you are done
+// this frees the queue via the rl_pop function
 void **rl_queue_to_array(rl_queue **queue);
+
+// transform array to queue - discards NULL entries in array
+// priority of items will be set to index inside array
+// this function frees the array passed - if it needs to be used again as an
+// array, use rl_queue_to_array
+void rl_array_to_queue(rl_queue **queue, void **data, int length);
 
 #endif
