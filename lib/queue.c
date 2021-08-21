@@ -123,7 +123,5 @@ void rl_array_to_queue(rl_queue **queue, void **data, int length)
         rl_push(queue, data[i], i);
     }
 
-    free(data);
-
     return queue;
 }

@@ -27,8 +27,7 @@ void **rl_queue_to_array(rl_queue **queue);
 
 // transform array to queue - discards NULL entries in array
 // priority of items will be set to index inside array
-// this function frees the array passed - if it needs to be used again as an
-// array, use rl_queue_to_array
+// this function preserves the array being passed (it must be freed elsewhere)
 void rl_array_to_queue(rl_queue **queue, void **data, int length);
 
 #endif
