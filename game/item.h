@@ -64,6 +64,8 @@ typedef struct {
     };
 } Item;
 
+// TODO remove this and replace with priority queue
+// TODO can sort priority by A-Z index order
 typedef struct {
     size_t count;
     size_t size;

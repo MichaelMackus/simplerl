@@ -3,6 +3,8 @@
 
 #include <stddef.h>
 
+#define RL_XY(x,y) (rl_coords){x,y}
+
 typedef struct rl_coords {
     int x;
     int y;
@@ -39,6 +41,11 @@ rl_map *rl_create_map(size_t width, size_t height);
  * Free the map.
  */
 void rl_free_map(rl_map *map);
+
+/**
+ * Check if coords within map bounds.
+ */
+int rl_in_map_bounds(const rl_map *map, rl_coords loc);
 
 /**
  * Return 1 if a tile is passable, else return 0.

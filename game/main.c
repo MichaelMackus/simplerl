@@ -29,6 +29,7 @@ int main()
     // randomize initial level
     if (!init_level(dungeon->level, dungeon->player))
         return ERROR_OOM;
+    render(dungeon);
 
     int result = GAME_PLAYING;
     char input;
@@ -63,8 +64,8 @@ int main()
         printf("Undefined game loop result...\n");
 
     // print some things that might be interesting to the user
-    printf("\n");
-    print_mob_list(dungeon->killed);
+    /* printf("\n"); */
+    /* print_mob_list(dungeon->killed); */
     printf("\n");
     printf("You reached dungeon level %d. Your player was level %d and collected %d gold.\n\n",
             max_depth(dungeon),

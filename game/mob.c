@@ -111,7 +111,7 @@ int attack(Mob *attacker, Mob *target)
     if (attacker == NULL || target == NULL)
         return 0;
 
-    int damage;
+    int damage = 5;
     if (attacker->equipment.weapon != NULL)
     {
         // calculate based on equipped weapon
@@ -170,30 +170,30 @@ int insert_mob(Mob *mob, Mob **mobs)
     return 1;
 }
 
-int kill_mob(Mob *mob, Mobs *mobs)
-{
-    if (mob == NULL)
-        return 1;
+/* int kill_mob(Mob *mob, Mobs *mobs) */
+/* { */
+/*     if (mob == NULL) */
+/*         return 1; */
 
-    size_t count = mobs->count;
-    size_t size = mobs->size;
+/*     size_t count = mobs->count; */
+/*     size_t size = mobs->size; */
 
-    if (count >= size)
-    {
-        Mob **tmp = realloc(mobs->content, sizeof(Mob*) * (size + MAX_MOBS));
+/*     if (count >= size) */
+/*     { */
+/*         Mob **tmp = realloc(mobs->content, sizeof(Mob*) * (size + MAX_MOBS)); */
 
-        if (tmp == NULL)
-            return 0;
+/*         if (tmp == NULL) */
+/*             return 0; */
 
-        mobs->size += MAX_MOBS;
-        mobs->content = tmp;
-    }
+/*         mobs->size += MAX_MOBS; */
+/*         mobs->content = tmp; */
+/*     } */
 
-    mobs->content[count] = mob;
-    ++mobs->count;
+/*     mobs->content[count] = mob; */
+/*     ++mobs->count; */
 
-    return 1;
-}
+/*     return 1; */
+/* } */
 
 Mobs initialize_mobs()
 {

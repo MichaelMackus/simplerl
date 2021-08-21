@@ -1,6 +1,6 @@
 PROGRAM = simplerl
-OBJS = main.o draw.o dungeon.o game.o item.o map.o message.o mob.o random.o tile.o
-CFLAGS = -Wall -DRL_TWISTER -I../
+OBJS = main.o draw.o dungeon.o game.o item.o message.o mob.o random.o
+CFLAGS = -W -DRL_TWISTER -I../
 LIBFLAGS = -lcurses -lm -L../lib -lsimplerl
 
 $(PROGRAM): $(OBJS)
@@ -12,3 +12,6 @@ $(PROGRAM): $(OBJS)
 clean:
 	rm *.o
 	rm $(PROGRAM)
+
+test:
+	gcc -o test $(CFLAGS) test.c $(LIBFLAGS)

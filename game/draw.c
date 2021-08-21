@@ -29,10 +29,8 @@ void deinit()
 // THANKS curses!
 char drawBuffer[MAX_HEIGHT][MAX_WIDTH];
 
-void render_mob(const Mob *mob);
 void render_messages();
 void render_message(const char *message, int y, int x); // TODO use this for other messages
-void render_level(Level *level, const Mob *player);
 void draw(const char drawBuffer[][MAX_WIDTH], const char prevDrawBuffer[][MAX_WIDTH]);
 void draw_status(const Dungeon *dungeon);
 void render(const Dungeon *dungeon)
@@ -46,18 +44,13 @@ void render(const Dungeon *dungeon)
             prevDrawBuffer[y][x] = drawBuffer[y][x];
 
     // render onto our current map
-    render_level(dungeon->level, player);
-
-    // render mobs
-    for (int i = 0; i < MAX_MOBS; ++i)
+    for (int y = 0; y < MAX_HEIGHT; ++y)
     {
-        const Mob *mob = dungeon->level->mobs[i];
-        if (mob != NULL && can_see(player->coords, mob->coords, dungeon->level->tiles))
-            render_mob(mob);
+        for (int x = 0; x < MAX_WIDTH; ++x)
+        {
+            drawBuffer[y][x] = get_symbol(dungeon->level, RL_XY(x, y));
+        }
     }
-
-    // render player last (should always be seen)
-    render_mob(dungeon->player);
 
     if (get_menu())
     {
@@ -121,35 +114,6 @@ void render(const Dungeon *dungeon)
 /** private **/
 /**         **/
 /*************/
-
-void render_level(Level *level, const Mob *player)
-{
-    // draw tiles array
-    for (int y = 0; y < MAX_HEIGHT; ++y)
-    {
-        for (int x = 0; x < MAX_WIDTH; ++x)
-        {
-            // draw tile symbol if the player can see it
-            if (can_see(player->coords, XY(x, y), level->tiles) ||
-                    level->tiles[y][x].seen)
-            {
-                Tile t = level->tiles[y][x];
-                if (t.items.count > 0)
-                    // draw top item
-                    drawBuffer[y][x] = item_symbol(t.items.content[t.items.count - 1]->type);
-                else
-                    drawBuffer[y][x] = tile_symbol(t);
-            }
-            else
-                drawBuffer[y][x] = tile_symbol(create_tile(TILE_NONE));
-        }
-    }
-}
-
-void render_mob(const Mob *mob)
-{
-    drawBuffer[mob->coords.y][mob->coords.x] = mob->symbol;
-}
 
 void render_message(const char *message, int y, int x)
 {

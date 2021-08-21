@@ -16,9 +16,6 @@
 
 #include "dungeon.h"
 
-// initialize random dungeon
-int init_level(Level *level, Mob *player);
-
 // return GAME constant
 int gameloop(Dungeon *dungeon, char input);
 
@@ -30,6 +27,6 @@ int handle_input(Dungeon *dungeon);
 int get_menu();
 
 // simple lighting function to see if mob can see x and y
-int can_see(rl_coords from, rl_coords to, Tile **tiles);
+int can_see(rl_coords from, rl_coords to, Tile tiles[MAX_HEIGHT][MAX_WIDTH]);
 
 #endif

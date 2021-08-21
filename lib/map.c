@@ -49,6 +49,11 @@ void rl_free_map(rl_map *map)
     free(map);
 }
 
+int rl_in_map_bounds(const rl_map *map, rl_coords loc)
+{
+    return loc.x < map->width && loc.x >= 0 && loc.y < map->height && loc.y >= 0;
+}
+
 int rl_is_passable(const rl_map *map, rl_coords loc)
 {
     if (map == NULL)

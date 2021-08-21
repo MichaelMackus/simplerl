@@ -4,6 +4,7 @@
 
 const char **messages;
 
+// TODO size param
 int init_messages()
 {
     messages = malloc(sizeof(char*) * MAX_MESSAGE_LENGTH * MAX_MESSAGES);
