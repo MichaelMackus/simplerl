@@ -9,7 +9,7 @@
 #define ITEM_ARMOR  3
 #define ITEM_POTION 4
 #define ITEM_SCROLL 5
-#define ITEM_ROCK   64 | 2
+#define ITEM_ROCK   66
 
 // weapon damage types
 #define WEAPON_BLUNT 0

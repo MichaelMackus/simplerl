@@ -619,8 +619,10 @@ void menu_management(int input, Level *level)
                     return;
                 }
                 else
+                {
                     // TODO let them throw it anyway?
                     message("That is not throwable!");
+                }
                 
                 break;
             }
