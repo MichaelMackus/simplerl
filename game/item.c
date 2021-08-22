@@ -289,6 +289,7 @@ Item *quarterstaff()
     weapon->damage.max = 6;
     weapon->damage.type = WEAPON_BLUNT & WEAPON_TWOHANDED;
     weapon->name = weapon->unknownName = "quarterstaff";
+    weapon->pluralName = "quarterstaves";
 
     return weapon;
 }
