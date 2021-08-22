@@ -56,6 +56,7 @@ typedef struct {
     int type; // one of ITEM consts
     int amount; // amount of items
     const char *name; // real (identified) name
+    const char *pluralName; // plural version fo name
     const char *unknownName; // random (unidentified) name
     union {
         ItemAttributes attributes;
@@ -64,39 +65,14 @@ typedef struct {
     };
 } Item;
 
-// TODO remove this and replace with priority queue
-// TODO can sort priority by A-Z index order
-typedef struct {
-    size_t count;
-    size_t size;
-    Item **content;
-} Items;
-
 char item_symbol(int itemType);
-char inventory_symbol(const Item *item, Items items); // signifies selection spot in inventory
+char item_menu_symbol(int itemNum); // signifies selection spot in inventory
 
 // calculate total amount of gold in inventory
-int total_gold(Items items);
+/* int total_gold(Items items); */
 
 // return a random item for the specified dungeon depth
 Item *create_item(int depth, int type);
-
-// initialize our item list
-Items initialize_items();
-
-// insert item into variable-length list
-// *NOTE*: this will free the item if it already exists, hence "move"
-Item *move_item(Item *item, Items *items);
-
-// take top item from list
-Item *take_item(Items *items);
-
-// copy item contents from one container to another
-// *NOTE*: this will free the item(s) from src if they already exists, hence "move"
-int move_items(Items *src, Items *target);
-
-// free our item list
-void free_items(Items items);
 
 // TODO only stack certain items?
 /* int is_stackable(Item item); */

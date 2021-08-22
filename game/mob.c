@@ -1,6 +1,7 @@
 #include "mob.h"
 #include "random.h"
 #include <stdlib.h>
+#include <memory.h>
 
 Mob *enemy(int hp, int minDamage, int maxDamage, char symbol, int form);
 Mob *create_mob(int depth, rl_coords coords)
@@ -63,7 +64,7 @@ Mob *create_mob(int depth, rl_coords coords)
     if (m->form & MOB_FORM_BIPED)
     {
         // give mob some gold
-        move_item(create_item(depth, ITEM_GOLD), &m->items);
+        give_mob_item(m, create_item(depth, ITEM_GOLD));
 
         // give mob default weapon
         if (m->equipment.weapon == NULL)
@@ -77,7 +78,8 @@ Mob *create_mob(int depth, rl_coords coords)
                 if (m == NULL)
                     return NULL;
 
-                m->equipment.weapon = move_item(item, &m->items);
+                if (give_mob_item(m, item))
+                    m->equipment.weapon = item;
             }
         }
 
@@ -93,7 +95,8 @@ Mob *create_mob(int depth, rl_coords coords)
                 if (m == NULL)
                     return NULL;
 
-                m->equipment.armor = move_item(item, &m->items);
+                if (give_mob_item(m, item))
+                    m->equipment.armor = item;
             }
         }
     }
@@ -111,7 +114,7 @@ int attack(Mob *attacker, Mob *target)
     if (attacker == NULL || target == NULL)
         return 0;
 
-    int damage = 5;
+    int damage = 0;
     if (attacker->equipment.weapon != NULL)
     {
         // calculate based on equipped weapon
@@ -147,9 +150,9 @@ Mob *enemy(int hp, int minDamage, int maxDamage, char symbol, int form)
     m->symbol = symbol;
     m->type = MOB_ENEMY;
     m->form = form;
-    m->items = initialize_items();
-    m->equipment.weapon = NULL;
-    m->equipment.armor = NULL;
+    m->itemCount = 0;
+    m->equipment = (Equipment) {0};
+    memset(m->items, 0, MAX_INVENTORY_ITEMS*sizeof(Item*));
 
     return m;
 }
@@ -195,15 +198,6 @@ int insert_mob(Mob *mob, Mob **mobs)
 /*     return 1; */
 /* } */
 
-Mobs initialize_mobs()
-{
-    Mobs mobs;
-    mobs.size = mobs.count = 0;
-    mobs.content = NULL;
-
-    return mobs;
-}
-
 const char* mob_name(char symbol)
 {
     switch (symbol)
@@ -237,4 +231,31 @@ const char* mob_name(char symbol)
         default:
             return "unknown";
     }
+}
+
+int give_mob_item(Mob *mob, Item *item)
+{
+    // if item is gold, merge with existing gold or add to end of items
+    /* int lastItem = MAX_INVENTORY_ITEMS - 1; */
+    /* if (item->type == ITEM_GOLD && mob->items[lastItem] && mob->items[lastItem]->type == ITEM_GOLD) { */
+    /*     mob->items[lastItem]->amount += item->amount; */
+
+    /*     return 1; */
+    /* } */
+
+    // append amount to existing item(s)
+    for (int i = 0; i < mob->itemCount; ++i) {
+        if (mob->items[i]->name == item->name) { // TODO make more sophisticated
+            mob->items[i]->amount += item->amount;
+            item->amount = mob->items[i]->amount; // ensure pointer amount equals item
+
+            return;
+        }
+    }
+
+    if (mob->itemCount >= MAX_INVENTORY_ITEMS) return 0;
+
+    mob->items[(mob->itemCount)++] = item;
+
+    return 1;
 }

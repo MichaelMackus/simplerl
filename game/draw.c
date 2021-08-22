@@ -33,6 +33,7 @@ void render_messages();
 void render_message(const char *message, int y, int x); // TODO use this for other messages
 void draw(const char drawBuffer[][MAX_WIDTH], const char prevDrawBuffer[][MAX_WIDTH]);
 void draw_status(const Dungeon *dungeon);
+char get_symbol(Level *level, rl_coords coords);
 void render(const Dungeon *dungeon)
 {
     const Mob *player = dungeon->player;
@@ -54,21 +55,18 @@ void render(const Dungeon *dungeon)
 
     if (get_menu())
     {
-        if (player->items.count)
+        if (player->itemCount)
         {
             Equipment equipment = player->equipment;
 
-            // render inventory, TODO paginate
+            // render inventory
             char *buffer = malloc(sizeof(char) * (MAX_WIDTH + 1)); // width + 1 for null byte
             char equippedStr[MAX_WIDTH + 1];
             int y = 0;
             if (buffer != NULL)
-                for (int i = 0; i < player->items.count; ++i)
+                for (int i = 0; i < player->itemCount; ++i)
                 {
-                    Item *item = player->items.content[i];
-
-                    if (item->type == ITEM_GOLD)
-                        continue;
+                    Item *item = player->items[i];
 
                     if (item->type == ITEM_WEAPON &&
                             equipment.weapon != NULL &&
@@ -81,18 +79,29 @@ void render(const Dungeon *dungeon)
                     else
                         strcpy(equippedStr, "");
 
+                    char sym;
+                    if (i == 0) sym = '$'; // gold inventory symbol
+                    else sym = item_menu_symbol(i - 1);
+
                     if (item->amount == 1)
                         snprintf(buffer, MAX_WIDTH + 1, "%c - %d %s%s",
-                                inventory_symbol(item, player->items),
+                                sym,
                                 item->amount,
                                 item->name,
                                 equippedStr);
                     else // pluralize
-                        snprintf(buffer, MAX_WIDTH + 1, "%c - %d %ss%s",
-                                inventory_symbol(item, player->items),
-                                item->amount,
-                                item->name,
-                                equippedStr);
+                        if (item->pluralName)
+                            snprintf(buffer, MAX_WIDTH + 1, "%c - %d %s%s",
+                                    sym,
+                                    item->amount,
+                                    item->pluralName,
+                                    equippedStr);
+                        else
+                            snprintf(buffer, MAX_WIDTH + 1, "%c - %d %ss%s",
+                                    sym,
+                                    item->amount,
+                                    item->name,
+                                    equippedStr);
 
                     render_message((const char*) buffer, y++, 0);
                 }
@@ -158,7 +167,7 @@ void draw_status(const Dungeon *dungeon)
     addstr(status);
     sprintf(status, "Depth: %d\n", dungeon->level->depth);
     addstr(status);
-    sprintf(status, "Gold: %d\n", total_gold(dungeon->level->player->items));
+    sprintf(status, "Gold: %d\n", total_gold(dungeon->level->player->items, dungeon->level->player->itemCount));
     addstr(status);
 
     // re-render messages
@@ -173,34 +182,98 @@ void draw_status(const Dungeon *dungeon)
     refresh();
 }
 
-void print_mob_list(Mobs mobs)
+/* void print_mob_list(Mobs mobs) */
+/* { */
+/*     // mob counts, indexed by the ASCII code of the mob symbol for now */
+/*     int maxCount = (int) 'z' + 1; */
+/*     int count[maxCount]; */
+
+/*     // reset the array to all zeros */
+/*     memset(count, 0, sizeof(int)*maxCount); */
+
+/*     for (int i = 0; i < mobs.count; ++i) */
+/*     { */
+/*         Mob *mob = mobs.content[i]; */
+/*         if (mob == NULL) */
+/*             continue; */
+
+/*         // increment count based on ascii code of mob */
+/*         int code = (int) mob->symbol; */
+/*         ++count[code]; */
+/*     } */
+
+/*     for (int i = 0; i < maxCount; ++i) */
+/*         if (count[i] > 0) */
+/*         { */
+/*             const char *name = mob_name((char) i); */
+/*             if (count[i] == 1) */
+/*                 printf("%d %s\n", count[i], name); */
+/*             else */
+/*                 // simple plural check */
+/*                 printf("%d %ss\n", count[i], name); */
+/*         } */
+/* } */
+
+char get_symbol(Level *level, rl_coords coords)
 {
-    // mob counts, indexed by the ASCII code of the mob symbol for now
-    int maxCount = (int) 'z' + 1;
-    int count[maxCount];
+    rl_map *map = level->map;
+    Mob *player = level->player;
+    int x = coords.x, y = coords.y;
 
-    // reset the array to all zeros
-    memset(count, 0, sizeof(int)*maxCount);
-
-    for (int i = 0; i < mobs.count; ++i)
+    if (!rl_in_map_bounds(map, coords) ||
+            (!can_see(player->coords, coords, level->tiles) &&
+             !level->tiles[y][x].seen))
     {
-        Mob *mob = mobs.content[i];
-        if (mob == NULL)
-            continue;
-
-        // increment count based on ascii code of mob
-        int code = (int) mob->symbol;
-        ++count[code];
+        return ' ';
     }
 
-    for (int i = 0; i < maxCount; ++i)
-        if (count[i] > 0)
-        {
-            const char *name = mob_name((char) i);
-            if (count[i] == 1)
-                printf("%d %s\n", count[i], name);
-            else
-                // simple plural check
-                printf("%d %ss\n", count[i], name);
-        }
+    /**
+     * Monster symbol
+     */
+    for (int i = 0; i < MAX_MOBS; ++i)
+    {
+        const Mob *mob = get_mob(level, coords);
+        if (mob != NULL && can_see(player->coords, mob->coords, level->tiles))
+            return mob->symbol;
+    }
+
+    /**
+     * Item symbol
+     */
+    Tile t = level->tiles[y][x];
+    if (t.items) {
+        Item *i = rl_peek(t.items);
+
+        return item_symbol(i->type);
+    }
+
+    /**
+     * Stairs symbol
+     */
+    if (level->upstair_loc.x == x && level->upstair_loc.y == y)
+        return '<';
+    if (level->downstair_loc.x == x && level->downstair_loc.y == y)
+        return '>';
+
+    /**
+     * type symbol
+     */
+    rl_tile type = rl_get_tile(map, coords);
+    if (type == RL_TILE_ROOM)    return '.';
+    if (type == RL_TILE_PASSAGE) return '#';
+    if (type == RL_TILE_DOORWAY) return '+';
+    if (type == RL_TILE_WALL)
+    {
+        // show different char depending on side of wall
+        char connections = rl_wall_connections(map, coords) | rl_door_connections(map, coords);
+
+        if (connections & RL_CONNECTION_R || connections & RL_CONNECTION_L)
+            return '-';
+        else if (connections & RL_CONNECTION_U || connections & RL_CONNECTION_D)
+            return '|';
+        else
+            return '0';
+    }
+
+    return ' ';
 }

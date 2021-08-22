@@ -3,13 +3,13 @@
 #include <lib/mapgen.h>
 #include <stdlib.h>
 #include <memory.h>
+#include <assert.h>
 
 typedef struct {
     int xdir;
     int ydir;
 } Direction;
 
-Level *create_level(int depth);
 Dungeon *create_dungeon()
 {
     // do this otherwise initial seed will always be the same
@@ -46,17 +46,22 @@ Dungeon *create_dungeon()
     player->maxHP = 10;
     player->minDamage = 1;
     player->maxDamage = 3;
-    player->equipment.weapon = NULL;
-    player->equipment.armor = NULL;
-    player->attrs.exp = 0;
+    player->equipment = (Equipment) {0};
+    player->attrs = (PlayerAttributes) {0};
     player->attrs.expNext = 1000;
     player->attrs.level = 1;
+    player->itemCount = 0;
+    memset(player->items, 0, MAX_INVENTORY_ITEMS);
 
     // give player some simple equipment
+    Item *gold = create_item(1, ITEM_GOLD);
     Item *armor = leather();
     Item *weapon = quarterstaff();
-    player->equipment.armor = move_item(armor, &player->items);
-    player->equipment.weapon = move_item(weapon, &player->items);
+    give_mob_item(player, gold);
+    if (give_mob_item(player, armor))
+        player->equipment.armor = armor;
+    if (give_mob_item(player, weapon))
+        player->equipment.weapon = weapon;
 
     // initialize first level
     Level *level = create_level(1);
@@ -83,6 +88,8 @@ int max_depth(Dungeon *dungeon)
     return cur->depth;
 }
 
+void randomly_fill_tiles(Level *level);
+void randomly_fill_mobs(Level *level, int max);
 int init_level(Level *level, Mob *player)
 {
     if (level == NULL)
@@ -167,6 +174,7 @@ void randomly_fill_tiles(Level *level)
     // populate our internal tiles array
     for (int x = 0; x < MAX_WIDTH; ++x) {
         for (int y = 0; y < MAX_HEIGHT; ++y) {
+            level->tiles[y][x] = (Tile) {0};
             level->tiles[y][x].type = rl_get_tile(level->map, RL_XY(x, y));
         }
     }
@@ -348,63 +356,33 @@ int move_mob(Mob *mob, rl_coords coords, Level *level)
         return 0;
 }
 
-char get_symbol(Level *level, rl_coords coords)
+int can_see(rl_coords from, rl_coords to, Tile tiles[MAX_HEIGHT][MAX_WIDTH])
 {
-    rl_map *map = level->map;
-    Mob *player = level->player;
-    int x = coords.x, y = coords.y;
-
-    if (!rl_in_map_bounds(map, coords) ||
-            (!can_see(player->coords, coords, level->tiles) &&
-             !level->tiles[y][x].seen))
+    int ret = 0;
+    int length = 0;
+    rl_path *path = rl_get_line(from, to);
+    const rl_coords *loc;
+    while ((loc = rl_walk_path(path)) != NULL)
     {
-        return ' ';
+        // if the line ends at the point we're looking at, we can see it!
+        if (loc->x == to.x && loc->y == to.y)
+        {
+            ret = 1;
+            break;
+        }
+
+        // if the current coord blocks the view and is at least 1 space
+        // away, we can't see it
+        if (loc->x < MAX_WIDTH && loc->y < MAX_HEIGHT && loc->x >= 0 && loc->y >= 0) {
+            rl_tile type = tiles[loc->y][loc->x].type;
+            if ((type == RL_TILE_BLOCK || type == RL_TILE_WALL || type == RL_TILE_PASSAGE) && length)
+                break;
+        }
+
+        ++length;
     }
+    rl_clear_path(path);
 
-    /**
-     * Monster symbol
-     */
-    for (int i = 0; i < MAX_MOBS; ++i)
-    {
-        const Mob *mob = get_mob(level, coords);
-        if (mob != NULL && can_see(player->coords, mob->coords, level->tiles))
-            return mob->symbol;
-    }
-
-    /**
-     * Item symbol
-     */
-    Tile t = level->tiles[y][x];
-    if (t.items.count > 0)
-        return item_symbol(t.items.content[t.items.count - 1]->type);
-
-    /**
-     * Stairs symbol
-     */
-    if (level->upstair_loc.x == x && level->upstair_loc.y == y)
-        return '<';
-    if (level->downstair_loc.x == x && level->downstair_loc.y == y)
-        return '>';
-
-    /**
-     * type symbol
-     */
-    rl_tile type = rl_get_tile(map, coords);
-    if (type == RL_TILE_ROOM)    return '.';
-    if (type == RL_TILE_PASSAGE) return '#';
-    if (type == RL_TILE_DOORWAY) return '+';
-    if (type == RL_TILE_WALL)
-    {
-        // show different char depending on side of wall
-        char connections = rl_wall_connections(map, coords) | rl_door_connections(map, coords);
-
-        if (connections & RL_CONNECTION_R || connections & RL_CONNECTION_L)
-            return '-';
-        else if (connections & RL_CONNECTION_U || connections & RL_CONNECTION_D)
-            return '|';
-        else
-            return '0';
-    }
-
-    return ' ';
+    return ret;
 }
+

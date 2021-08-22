@@ -26,7 +26,4 @@ int handle_input(Dungeon *dungeon);
 // return one of MENU_* consts if in menu
 int get_menu();
 
-// simple lighting function to see if mob can see x and y
-int can_see(rl_coords from, rl_coords to, Tile tiles[MAX_HEIGHT][MAX_WIDTH]);
-
 #endif

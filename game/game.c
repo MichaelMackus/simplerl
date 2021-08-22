@@ -78,10 +78,16 @@ int gameloop(Dungeon *dungeon, char input)
         case 'g':
             ;
             // get all items from floor
-            Tile tile = level->tiles[player->coords.y][player->coords.x];
+            Tile *tile = &level->tiles[player->coords.y][player->coords.x];
             Item *item;
-            while ((item = take_item(&tile.items)) != NULL)
-                move_item(item, &player->items);
+            while (item = rl_pop(&tile->items))
+            {
+                if (!give_mob_item(player, item)) {
+                    // abort if player inventory is full
+                    rl_push(&tile->items, item, 0);
+                    break;
+                }
+            }
 
             break;
 
@@ -350,17 +356,20 @@ void cleanup(Dungeon *dungeon)
     {
         if (level->mobs[i] != NULL)
         {
+            // kill mob if HP 0
             Mob *mob = level->mobs[i];
             if (mob->hp <= 0)
             {
-                // transfer items to floor
-                Tile t = level->tiles[mob->coords.y][mob->coords.x];
-
                 // transfer items & equipment to floor
-                move_items(&mob->items, &t.items);
-
-                // add to killed mobs
-                /* kill_mob(mob, &dungeon->killed); */
+                Item *item;
+                Tile *t = &level->tiles[mob->coords.y][mob->coords.x];
+                rl_queue *items = NULL;
+                rl_array_to_queue(&items, mob->items, mob->itemCount);
+                while (item = rl_pop(&items))
+                {
+                    rl_push(&t->items, item, 0);
+                }
+                Item *itemb = rl_peek(t->items);
 
                 // clear mob in level & reward exp
                 reward_exp(player, mob);
@@ -524,47 +533,15 @@ int can_smell(rl_coords coords, Level *level)
     return 0;
 }
 
-int can_see(rl_coords from, rl_coords to, Tile tiles[MAX_HEIGHT][MAX_WIDTH])
-{
-    int ret = 0;
-    int length = 0;
-    rl_path *path = rl_get_line(from, to);
-    const rl_coords *loc;
-    while ((loc = rl_walk_path(path)) != NULL)
-    {
-        // if the line ends at the point we're looking at, we can see it!
-        if (loc->x == to.x && loc->y == to.y)
-        {
-            ret = 1;
-            break;
-        }
-
-        // if the current coord blocks the view and is at least 1 space
-        // away, we can't see it
-        if (loc->x < MAX_WIDTH && loc->y < MAX_HEIGHT && loc->x >= 0 && loc->y >= 0) {
-            rl_tile type = tiles[loc->y][loc->x].type;
-            if ((type == RL_TILE_BLOCK || type == RL_TILE_WALL || type == RL_TILE_PASSAGE) && length)
-                break;
-        }
-
-        ++length;
-    }
-    rl_clear_path(path);
-
-    return ret;
-}
-
 void inventory_management(char input, Mob *player)
 {
-    Items inventory = player->items;
-
     if (inMenu == MENU_WIELD)
     {
         // wield chosen weapon
-        for (int i = 0; i < inventory.count; ++i)
+        for (int i = 0; i < player->itemCount; ++i)
         {
-            Item *item = inventory.content[i];
-            if (inventory_symbol(item, inventory) == input)
+            Item *item = player->items[i];
+            if (item_menu_symbol(i - 1) == input)
             {
                 if (item->type == ITEM_WEAPON)
                     player->equipment.weapon = item;
@@ -579,10 +556,10 @@ void inventory_management(char input, Mob *player)
     if (inMenu == MENU_WEAR)
     {
         // wear chosen armor
-        for (int i = 0; i < inventory.count; ++i)
+        for (int i = 0; i < player->itemCount; ++i)
         {
-            Item *item = inventory.content[i];
-            if (inventory_symbol(item, inventory) == input)
+            Item *item = player->items[i];
+            if (item_menu_symbol(i - 1) == input)
             {
                 if (item->type == ITEM_ARMOR)
                     player->equipment.armor = item;
@@ -597,10 +574,10 @@ void inventory_management(char input, Mob *player)
     if (inMenu == MENU_THROW)
     {
         // throw chosen projectile
-        for (int i = 0; i < inventory.count; ++i)
+        for (int i = 0; i < player->itemCount; ++i)
         {
-            Item *item = inventory.content[i];
-            if (inventory_symbol(item, inventory) == input)
+            Item *item = player->items[i];
+            if (item_menu_symbol(i - 1) == input)
             {
                 if (item->type == ITEM_WEAPON || item->type == ITEM_PROJECTILE)
                 {

@@ -26,14 +26,13 @@ char item_symbol(int itemType)
     }
 }
 
-char inventory_symbol(const Item *item, Items items)
+char item_menu_symbol(int num)
 {
     int start = (int) 'a';
     int max = (int) 'z' + 1;
     for (int i = 0; i < max; ++i)
     {
-        Item *cur = items.content[i];
-        if (item->name == cur->name)
+        if (num == i)
             return (char) (start + i);
     }
 
@@ -41,12 +40,12 @@ char inventory_symbol(const Item *item, Items items)
     return '\0';
 }
 
-int total_gold(Items items)
+int total_gold(Item **items, int itemCount)
 {
     int total = 0;
-    for (int i = 0; i < items.count; ++i)
-        if (items.content[i]->type == ITEM_GOLD)
-            total += items.content[i]->amount;
+    for (int i = 0; i < itemCount; ++i)
+        if (items[i]->type == ITEM_GOLD)
+            total += items[i]->amount;
 
     return total;
 }
@@ -67,109 +66,6 @@ Item *create_item(int depth, int type)
     return NULL;
 }
 
-#define ITEM_SIZE_INCREMENT 10
-
-Items initialize_items()
-{
-    Items items;
-    items.content = NULL;
-    items.size = items.count = 0;
-
-    return items;
-}
-
-int insert_item(Item *item, Items *items)
-{
-    if (item == NULL)
-        return 0;
-
-    size_t count = items ? items->count : 0;
-    size_t size = items ? items->size : 0;
-
-    if (size <= count)
-    {
-        Item **tmp = realloc(items->content, sizeof(Item*) * (size + ITEM_SIZE_INCREMENT));
-
-        if (tmp == NULL)
-            return 0;
-
-        items->content = tmp;
-        items->size += ITEM_SIZE_INCREMENT;
-    }
-
-    items->content[count] = item;
-    ++items->count;
-
-    return 1;
-}
-
-Item *move_item(Item *item, Items *items)
-{
-    if (item == NULL)
-        return NULL;
-
-    size_t count = items ? items->count : 0;
-
-    // search for item in list & increase count of item to simplify inventory management
-    for (int i = 0; i < count; ++i)
-        if (items->content[i]->name == item->name)
-        {
-            items->content[i]->amount += item->amount;
-            free(item);
-
-            return items->content[i];
-        }
-
-    if (insert_item(item, items) == 0)
-        return NULL;
-
-    return item;
-}
-
-Item *take_item(Items *items)
-{
-    if (items == NULL || items->count <= 0)
-        return NULL;
-
-    Item *item = items->content[items->count - 1];
-    items->content[items->count - 1] = NULL;
-    --items->count;
-
-    return item;
-}
-
-int move_items(Items *src, Items *target)
-{
-    for (int i = 0; i < src->count; ++i)
-    {
-        if (move_item(src->content[i], target) != NULL)
-        {
-            src->content[i] = NULL;
-        }
-        else
-        {
-            // OOM error
-            return 0;
-        }
-    }
-
-    free(src->content);
-    src->content = NULL;
-    src->count = src->size = 0;
-
-    return 1;
-}
-
-void free_items(Items items)
-{
-    if (items.content != NULL)
-        for (int i = 0; i < items.count; ++i)
-            if (items.content[i] != NULL)
-                free(items.content[i]);
-    free(items.content);
-}
-
-
 // type-specific item generators
 
 Item *generate_gold(int depth)
@@ -179,10 +75,13 @@ Item *generate_gold(int depth)
     if (item == NULL)
         return NULL;
 
+    *item = (Item) {0};
+
     // generate depth*50/2 - depth*50 gold
     item->amount = generate(depth*50/2, depth*50);
     item->type = ITEM_GOLD;
-    item->name = item->unknownName = "Gold";
+    item->name = item->unknownName = "gold";
+    item->pluralName = "gold";
 
     return item;
 }
@@ -200,6 +99,8 @@ Item *init_armor()
 
     if (item == NULL)
         return NULL;
+
+    *item = (Item) {0};
 
     // weapon defaults
     item->type = ITEM_ARMOR;
@@ -331,6 +232,8 @@ Item *init_weapon()
 
     if (item == NULL)
         return NULL;
+
+    *item = (Item) {0};
 
     // weapon defaults
     item->type = ITEM_WEAPON;

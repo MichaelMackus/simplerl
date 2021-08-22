@@ -18,9 +18,10 @@
 #include "mob.h"
 #include <lib/path.h>
 #include <lib/map.h>
+#include <lib/queue.h>
 
 typedef struct {
-    Items items;
+    rl_queue *items;
     rl_tile type; // underlying tile type
     int seen;     // seen by player?
     int smell;    // when player passes onto tile, set this to INITIAL_SMELL and decrement each turn
@@ -50,6 +51,8 @@ typedef struct {
 // dungeon members
 Dungeon *create_dungeon();
 
+Level *create_level(int depth);
+
 // get max dungeon depth
 int max_depth(Dungeon *dungeon);
 
@@ -62,8 +65,12 @@ void taint(const rl_coords playerCoords, Level *level);
 // return random coordinates that are passable and do not have a mob
 rl_coords random_passable_coords(Level *level);
 
+// simple lighting function to see if mob can see x and y
+int can_see(rl_coords from, rl_coords to, Tile tiles[MAX_HEIGHT][MAX_WIDTH]);
+
 Mob *get_mob(const Level *level, rl_coords coords);
 Mob *get_enemy(const Level *level, rl_coords coords);
 char get_symbol(Level *level, rl_coords coords);
+int move_mob(Mob *mob, rl_coords coords, Level *level);
 
 #endif

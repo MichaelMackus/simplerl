@@ -67,10 +67,13 @@ int main()
     /* printf("\n"); */
     /* print_mob_list(dungeon->killed); */
     printf("\n");
-    printf("You reached dungeon level %d. Your player was level %d and collected %d gold.\n\n",
+    printf("You reached dungeon level %d. Your player was level %d.\n\n",
             max_depth(dungeon),
-            dungeon->player->attrs.level,
-            total_gold(dungeon->player->items));
+            dungeon->player->attrs.level);
+    /* printf("You reached dungeon level %d. Your player was level %d and collected %d gold.\n\n", */
+    /*         max_depth(dungeon), */
+    /*         dungeon->player->attrs.level, */
+    /*         total_gold(dungeon->player->items)); */
 
     return 0;
 }

@@ -1,8 +1,9 @@
 #ifndef MOB_H
 #define MOB_H
 
-#define MAX_MOBS   20
-#define MAX_PLAYER_LEVEL 20
+#define MAX_MOBS            20
+#define MAX_PLAYER_LEVEL    20
+#define MAX_INVENTORY_ITEMS 25 // 1 spot for gold + 24 inventory letters
 
 #define MOB_PLAYER 1
 #define MOB_ENEMY  2
@@ -35,19 +36,14 @@ typedef struct {
     int type;
     int form;
     char symbol;
-    Items items;
+    Item *items[MAX_INVENTORY_ITEMS];
+    int itemCount;
     Equipment equipment;
     union {
         PlayerAttributes attrs;
-        int difficulty;
+        int difficulty; // TODO use this for exp
     };
 } Mob;
-
-typedef struct {
-    size_t count;
-    size_t size;
-    Mob **content;
-} Mobs;
 
 // return a random mob for the specified dungeon depth
 Mob *create_mob(int depth, rl_coords coords);
@@ -60,13 +56,10 @@ int attack(Mob *attacker, Mob *target);
 // insert mob into mobs list
 int insert_mob(Mob *mob, Mob **mobs);
 
-// insert into killed mobs array
-int kill_mob(Mob *mob, Mobs *mobs);
-
-// allocate mobs list
-Mobs initialize_mobs();
-
 // return mob name for symbol
 const char* mob_name(char symbol);
+
+// give item to mob
+int give_mob_item(Mob *mob, Item *item);
 
 #endif
