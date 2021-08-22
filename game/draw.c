@@ -267,6 +267,7 @@ char get_symbol(Level *level, rl_coords coords)
     if (type == RL_TILE_ROOM)    return '.';
     if (type == RL_TILE_PASSAGE) return '#';
     if (type == RL_TILE_DOORWAY) return '+';
+    if (type == RL_TILE_INVALID) return '?';
     if (type == RL_TILE_WALL)
     {
         // show different char depending on side of wall

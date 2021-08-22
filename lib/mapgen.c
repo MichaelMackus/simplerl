@@ -226,11 +226,6 @@ void rl_connect_corridors_chaotic(rl_map *map, rl_bsp *root, rl_generator_f gene
     unsigned int map_width = rl_get_map_width(map);
     unsigned int map_height = rl_get_map_height(map);
 
-    struct rl_node_connection {
-        rl_bsp *from;
-        rl_bsp *to;
-    };
-
     rl_queue *queue = rl_get_bsp_leaves(root);
     int bsp_size = rl_queue_size(queue);
     rl_bsp **nodes = rl_queue_to_array(&queue);
@@ -243,13 +238,16 @@ void rl_connect_corridors_chaotic(rl_map *map, rl_bsp *root, rl_generator_f gene
         while (a == b) {
             b = generator(0, bsp_size - 1);
         }
+        assert(b != a);
 
         rl_bsp *node_a = nodes[a];
         rl_bsp *node_b = nodes[b];
+        assert(node_a && node_b);
+        assert(node_a != node_b);
 
         // pick random passable point within node A and B
         rl_coords a_coords = {-1,-1};
-        while (!rl_is_passable(map, a_coords)) {
+        while (!rl_is_room(map, a_coords)) { // always start from room to ensure all rooms are connected
             a_coords.x = generator(rl_get_bsp_loc(node_a).x, rl_get_bsp_loc(node_a).x + rl_get_bsp_width(node_a));
             a_coords.y = generator(rl_get_bsp_loc(node_a).y, rl_get_bsp_loc(node_a).y + rl_get_bsp_height(node_a));
         }
@@ -262,6 +260,7 @@ void rl_connect_corridors_chaotic(rl_map *map, rl_bsp *root, rl_generator_f gene
         // draw path using A* to node B
         rl_path *path = rl_find_path_cb(a_coords, b_coords, 0, &manhattan_distance, &rl_corridors_passable_f, map);
         rl_coords *coords;
+        assert(path);
         while (coords = rl_walk_path(path)) {
             if (rl_is_wall(map, *coords))
                 rl_set_tile(map, *coords, RL_TILE_DOORWAY);

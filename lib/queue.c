@@ -89,13 +89,6 @@ void **rl_queue_to_array(rl_queue **queue)
         tip = tip->next;
     }
 
-    if (data_size <= 0) {
-        // free queue
-        while (rl_pop(queue)) {}
-
-        return NULL;
-    }
-
     void **arr = malloc(data_size);
 
     if (arr == NULL) {
