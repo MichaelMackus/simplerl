@@ -22,7 +22,7 @@ typedef struct DrawTile {
 // temporary global to hold previous map state, so we only draw what was changed
 DrawTile drawBuffer[MAX_HEIGHT][MAX_WIDTH];
 
-int init()
+int init(int enableColor)
 {
     initscr();            /* Start curses mode         */
     raw();                /* Line buffering disabled    */
@@ -35,7 +35,7 @@ int init()
     if (mx < MAX_WIDTH || my < MAX_HEIGHT)
         return 0;
 
-    hasColor = has_colors();
+    hasColor = enableColor ? has_colors() : 0;
     if (hasColor) {
         start_color();
         use_default_colors();

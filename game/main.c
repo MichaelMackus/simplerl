@@ -11,10 +11,23 @@
 #define ERROR_INIT 2 // curses initialization error
 #define ERROR_GAME 3 // internal game error
 
-int main()
+int usage()
 {
+    printf("Usage: simplerl [--no-color]\n");
+
+    return 99;
+}
+
+int main(int argc, const char **argv)
+{
+    int enableColor = 1;
+    if (argc > 1 && strcmp(argv[1], "--no-color") == 0)
+        enableColor = 0;
+    if (argc > 1 && (!strcmp(argv[1], "-h") || !strcmp(argv[1], "--help")))
+        return usage();
+
     // initialize curses
-    if (!init())
+    if (!init(enableColor))
         return ERROR_INIT;
 
     // initialize dungeon
