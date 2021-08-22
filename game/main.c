@@ -32,7 +32,7 @@ int main()
     render(dungeon);
 
     int result = GAME_PLAYING;
-    char input;
+    int input;
     while (result == GAME_PLAYING)
     {
         // render & update curses

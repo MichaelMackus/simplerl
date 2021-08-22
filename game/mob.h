@@ -27,6 +27,7 @@ typedef struct {
 typedef struct {
     Item *weapon;
     Item *armor;
+    Item *readied; // readied item to throw/fire
 } Equipment;
 
 typedef struct {
@@ -51,7 +52,7 @@ Mob *create_mob(int depth, rl_coords coords);
 // try to attack x, y
 // if no mob found at x, y do nothing
 // return damage
-int attack(Mob *attacker, Mob *target);
+int attack(Mob *attacker, Mob *target, Item *weapon);
 
 // insert mob into mobs list
 int insert_mob(Mob *mob, Mob **mobs);
@@ -61,5 +62,13 @@ const char* mob_name(char symbol);
 
 // give item to mob
 int give_mob_item(Mob *mob, Item *item);
+
+// decrement item from mob (this decrements quantity by 1 if >1)
+// returns 1 if item has been removed from mob inventory, 
+// or -1 if amount of item in inventory decremented (0 on error)
+int decrement_mob_item(Mob *mob, Item *item);
+
+// remove item from mob entirely
+int remove_mob_item(Mob *mob, Item *item);
 
 #endif

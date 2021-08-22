@@ -51,7 +51,7 @@ void render(const Dungeon *dungeon)
         }
     }
 
-    if (get_menu())
+    if (get_menu() && get_menu() != MENU_DIRECTION)
     {
         if (player->itemCount)
         {

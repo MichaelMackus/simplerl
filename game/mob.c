@@ -109,19 +109,14 @@ Mob *create_mob(int depth, rl_coords coords)
 
 // try to attack x, y
 // if no mob found at x, y do nothing
-int attack(Mob *attacker, Mob *target)
+int attack(Mob *attacker, Mob *target, Item *weapon)
 {
     if (attacker == NULL || target == NULL)
         return 0;
 
     int damage = 0;
-    if (attacker->equipment.weapon != NULL)
-    {
-        // calculate based on equipped weapon
-        damage = generate(
-                attacker->equipment.weapon->damage.min,
-                attacker->equipment.weapon->damage.max);
-    }
+    if (weapon != NULL)
+        damage = generate(weapon->damage.min, weapon->damage.max);
     else
         damage = generate(attacker->minDamage, attacker->maxDamage);
 
@@ -235,21 +230,13 @@ const char* mob_name(char symbol)
 
 int give_mob_item(Mob *mob, Item *item)
 {
-    // if item is gold, merge with existing gold or add to end of items
-    /* int lastItem = MAX_INVENTORY_ITEMS - 1; */
-    /* if (item->type == ITEM_GOLD && mob->items[lastItem] && mob->items[lastItem]->type == ITEM_GOLD) { */
-    /*     mob->items[lastItem]->amount += item->amount; */
-
-    /*     return 1; */
-    /* } */
-
     // append amount to existing item(s)
     for (int i = 0; i < mob->itemCount; ++i) {
         if (mob->items[i]->name == item->name) { // TODO make more sophisticated
             mob->items[i]->amount += item->amount;
             item->amount = mob->items[i]->amount; // ensure pointer amount equals item
 
-            return;
+            return 1;
         }
     }
 
@@ -258,4 +245,61 @@ int give_mob_item(Mob *mob, Item *item)
     mob->items[(mob->itemCount)++] = item;
 
     return 1;
+}
+
+// shift everything left after item & remove it from inventory
+void shift_mob_item(Mob *mob, int i)
+{
+    Item *item = mob->items[i];
+    mob->items[i] = NULL;
+
+    // reset equipped & readied if set
+    if (mob->equipment.readied && mob->equipment.readied->name == item->name)
+        mob->equipment.readied = NULL;
+    if (mob->equipment.weapon && mob->equipment.weapon->name == item->name)
+        mob->equipment.weapon = NULL;
+    if (mob->equipment.armor && mob->equipment.armor->name == item->name)
+        mob->equipment.armor = NULL;
+
+    Item *next;
+    for (int j = i + 1; j < mob->itemCount; ++j) {
+        mob->items[i] = mob->items[j];
+        i++;
+    }
+    mob->itemCount--;
+}
+
+int decrement_mob_item(Mob *mob, Item *item)
+{
+    // append amount to existing item(s)
+    for (int i = 0; i < mob->itemCount; ++i) {
+        if (mob->items[i]->name == item->name) { // TODO make more sophisticated
+            mob->items[i]->amount -= 1;
+
+            // remove item if amount 0
+            if (mob->items[i]->amount == 0) {
+                shift_mob_item(mob, i);
+
+                return 1;
+            }
+
+            return -1;
+        }
+    }
+
+    return 0;
+}
+
+int remove_mob_item(Mob *mob, Item *item)
+{
+    for (int i = 0; i < mob->itemCount; ++i) {
+        if (mob->items[i]->name == item->name) { // TODO make more sophisticated
+            shift_mob_item(mob, i);
+
+            return 1;
+        }
+    }
+
+    return 0;
+
 }

@@ -9,15 +9,16 @@
 #define GAME_ERROR 5
 
 #define MENU_INVENTORY 1
-#define MENU_WIELD 2
-#define MENU_WEAR 3
-#define MENU_THROW 4
+#define MENU_WIELD     2
+#define MENU_WEAR      3
+#define MENU_THROW     4
 #define MENU_DIRECTION 5
+#define MENU_DROP      6
 
 #include "dungeon.h"
 
 // return GAME constant
-int gameloop(Dungeon *dungeon, char input);
+int gameloop(Dungeon *dungeon, int input);
 
 // does thing like autorest, and TODO automove
 // return 1 if we should grab input this turn

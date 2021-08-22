@@ -12,6 +12,9 @@
 #define MAX_CELLS 12
 #define MAX_RANDOM_RECURSION 100
 
+// macro helper
+#define DIRECTION(x, y) (Direction) {x, y}
+
 #include "random.h"
 
 #include "item.h"
@@ -46,6 +49,11 @@ typedef struct {
     int turn; // turn number
     rl_queue *killed; // mobs player has killed
 } Dungeon;
+
+typedef struct {
+    int xdir;
+    int ydir;
+} Direction;
 
 // create a new dungeon (once per game)
 // returns NULL if there was any issues allocating memory for

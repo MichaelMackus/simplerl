@@ -2,14 +2,9 @@
 #include "message.h"
 #include <stdlib.h>
 #include <memory.h>
+#include <ncurses.h>
 
 #include <lib/map.h>
-
-typedef struct {
-    int xdir;
-    int ydir;
-} Direction;
-Direction direction(int xdir, int ydir) { return (Direction) { xdir, ydir }; }
 
 int resting = 0; // 1 if player resting
 int inMenu = 0; // one of MENU consts if in menu
@@ -25,15 +20,15 @@ void run_player(Mob *player, Direction dir, Level *level);
 void tick(Dungeon *dungeon);
 void tick_mobs(Level *level);
 void cleanup(Dungeon *dungeon);
-void inventory_management(char input, Mob *player);
-int gameloop(Dungeon *dungeon, char input)
+void menu_management(int input, Level *level);
+int gameloop(Dungeon *dungeon, int input)
 {
     Level *level = dungeon->level;
     Mob *player = dungeon->player;
 
     if (inMenu)
     {
-        inventory_management(input, player);
+        menu_management(input, level);
         input = '.'; // do nothing
     }
 
@@ -48,30 +43,34 @@ int gameloop(Dungeon *dungeon, char input)
         case 'Q':
             return GAME_QUIT;
 
+        case KEY_LEFT:
         case 'h':
             move_player(player, RL_XY(player->coords.x - 1, player->coords.y), level);
             break;
+        case KEY_RIGHT:
         case 'l':
             move_player(player, RL_XY(player->coords.x + 1, player->coords.y), level);
             break;
+        case KEY_DOWN:
         case 'j':
             move_player(player, RL_XY(player->coords.x, player->coords.y + 1), level);
             break;
+        case KEY_UP:
         case 'k':
             move_player(player, RL_XY(player->coords.x, player->coords.y - 1), level);
             break;
 
         case 'H':
-            run_player(player, direction(-1, 0), level);
+            run_player(player, DIRECTION(-1, 0), level);
             break;
         case 'L':
-            run_player(player, direction(1, 0), level);
+            run_player(player, DIRECTION(1, 0), level);
             break;
         case 'J':
-            run_player(player, direction(0, 1), level);
+            run_player(player, DIRECTION(0, 1), level);
             break;
         case 'K':
-            run_player(player, direction(0, -1), level);
+            run_player(player, DIRECTION(0, -1), level);
             break;
 
         case ',':
@@ -110,6 +109,11 @@ int gameloop(Dungeon *dungeon, char input)
         case 't':
             // open throw menu
             inMenu = MENU_THROW;
+            break;
+
+        case 'd':
+            // open throw menu
+            inMenu = MENU_DROP;
             break;
 
         case 'R':
@@ -185,7 +189,7 @@ void move_player(Mob *player, rl_coords coords, Level *level)
     if (target != NULL)
     {
         // there was an enemy there!
-        int dmg = attack(player, target);
+        int dmg = attack(player, target, player->equipment.weapon);
 
         if (dmg > 0)
             message("You hit the %s for %d damage!",
@@ -251,7 +255,7 @@ int move_or_attack(Mob *attacker, rl_coords coords, Level *level)
     Mob *target = get_mob(level, coords);
 
     if (target != NULL)
-        return attack(attacker, target);
+        return attack(attacker, target, attacker->equipment.weapon);
     else
         move_mob(attacker, coords, level);
 
@@ -377,6 +381,8 @@ void cleanup(Dungeon *dungeon)
                 // clear mob in level & reward exp
                 reward_exp(player, mob);
                 level->mobs[i] = NULL;
+
+                message("The %s has died.", mob_name(mob->symbol));
             }
         }
     }
@@ -470,12 +476,12 @@ int handle_input(Dungeon *dungeon)
         for (int i = 0; i < MAX_MOBS; ++i)
             if (level->mobs[i] != NULL &&
                     can_see(player->coords, level->mobs[i]->coords, level->tiles))
-                runDir = direction(0, 0);
+                runDir = DIRECTION(0, 0);
 
         if (!rl_is_passable(level->map, target) ||
                 get_enemy(level, target) != NULL)
         {
-            runDir = direction(0, 0);
+            runDir = DIRECTION(0, 0);
         }
 
         // if we're still running, move the player and don't handle input
@@ -536,8 +542,11 @@ int can_smell(rl_coords coords, Level *level)
     return 0;
 }
 
-void inventory_management(char input, Mob *player)
+Mob *mob_in_dir(Level *level, Direction dir);
+void menu_management(int input, Level *level)
 {
+    Mob *player = level->player;
+
     if (inMenu == MENU_WIELD)
     {
         // wield chosen weapon
@@ -574,6 +583,25 @@ void inventory_management(char input, Mob *player)
         }
     }
 
+    if (inMenu == MENU_DROP)
+    {
+        // drop chosen item
+        for (int i = 0; i < player->itemCount; ++i)
+        {
+            Item *item = player->items[i];
+            if (item_menu_symbol(i - 1) == input)
+            {
+                // transfer to ground tile
+                if (remove_mob_item(player, item)) {
+                    Tile *tile = &level->tiles[player->coords.y][player->coords.x];
+                    rl_push(&tile->items, item, 0);
+                }
+
+                break;
+            }
+        }
+    }
+
     if (inMenu == MENU_THROW)
     {
         // throw chosen projectile
@@ -582,16 +610,69 @@ void inventory_management(char input, Mob *player)
             Item *item = player->items[i];
             if (item_menu_symbol(i - 1) == input)
             {
-                if (item->type == ITEM_WEAPON || item->type == ITEM_PROJECTILE)
+                if (item->type == ITEM_WEAPON || item->type == ITEM_PROJECTILE || item->type == ITEM_ROCK)
                 {
+                    player->equipment.readied = item; // ready item for throwing
+                    message("Choose a direction");
                     inMenu = MENU_DIRECTION;
+
+                    return;
                 }
                 else
                     // TODO let them throw it anyway?
                     message("That is not throwable!");
-
+                
                 break;
             }
+        }
+    }
+
+    if (inMenu == MENU_DIRECTION)
+    {
+        Item *item = player->equipment.readied;
+        Direction dir = {0};
+
+        // throw chosen projectile in directions 
+        // TODO actually throw the projectile
+        switch (input)
+        {
+            case KEY_LEFT:
+            case 'h':
+                decrement_mob_item(player, item);
+                dir = DIRECTION(-1, 0);
+                break;
+            case KEY_RIGHT:
+            case 'l':
+                decrement_mob_item(player, item);
+                dir = DIRECTION(1,  0);
+                break;
+            case KEY_DOWN:
+            case 'j':
+                decrement_mob_item(player, item);
+                dir = DIRECTION(0,  1);
+                break;
+            case KEY_UP:
+            case 'k':
+                decrement_mob_item(player, item);
+                dir = DIRECTION(0, -1);
+                break;
+
+            default:
+                message("That is an invalid direction");
+                break;
+        }
+
+        Mob *target = mob_in_dir(level, dir);
+        if (target) {
+            int dmg = attack(player, target, item);
+
+            if (dmg > 0)
+                message("You hit the %s for %d damage!",
+                        mob_name(target->symbol),
+                        dmg);
+            else if (dmg == 0)
+                message("You missed the %s!",
+                        mob_name(target->symbol));
         }
     }
 
@@ -599,3 +680,27 @@ void inventory_management(char input, Mob *player)
     inMenu = 0;
 }
 
+// get mob in dir from player
+Mob *mob_in_dir(Level *level, Direction dir)
+{
+    if (dir.xdir == 0 && dir.ydir == 0) return NULL;
+
+    Mob *player = level->player;
+    for (int x = player->coords.x; x < MAX_WIDTH && x >= 0;) {
+        for (int y = player->coords.y; y < MAX_HEIGHT && y >= 0;) {
+            x += dir.xdir;
+            y += dir.ydir;
+
+            if (!rl_is_passable(level->map, RL_XY(x, y))) {
+                return NULL;
+            }
+
+            Mob *m = get_enemy(level, RL_XY(x, y));
+            if (m) {
+                return m;
+            }
+        }
+    }
+
+    return NULL;
+}
