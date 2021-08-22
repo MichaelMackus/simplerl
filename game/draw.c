@@ -38,11 +38,9 @@ void render(const Dungeon *dungeon)
 {
     const Mob *player = dungeon->player;
 
-    // fill previous map
+    // store previous buffer for comparison
     char prevDrawBuffer[MAX_HEIGHT][MAX_WIDTH];
-    for (int y = 0; y < MAX_HEIGHT; ++y)
-        for (int x = 0; x < MAX_WIDTH; ++x)
-            prevDrawBuffer[y][x] = drawBuffer[y][x];
+    memcpy(prevDrawBuffer, drawBuffer, sizeof(char) * MAX_HEIGHT * MAX_WIDTH);
 
     // render onto our current map
     for (int y = 0; y < MAX_HEIGHT; ++y)
