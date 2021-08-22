@@ -328,7 +328,7 @@ char get_symbol(Level *level, rl_coords coords)
 
 int get_color(Level *level, rl_coords coords)
 {
-    if (!rl_in_map_bounds(level, coords)) return COLOR_PAIR_DEFAULT;
+    if (!rl_in_map_bounds(level->map, coords)) return COLOR_PAIR_DEFAULT;
 
     /**
      * Item colors
