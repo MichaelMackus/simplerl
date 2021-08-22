@@ -230,13 +230,15 @@ const char* mob_name(char symbol)
 
 int give_mob_item(Mob *mob, Item *item)
 {
-    // append amount to existing item(s)
-    for (int i = 0; i < mob->itemCount; ++i) {
-        if (mob->items[i]->name == item->name) { // TODO make more sophisticated
-            mob->items[i]->amount += item->amount;
-            item->amount = mob->items[i]->amount; // ensure pointer amount equals item
+    if (is_stackable(*item)) {
+        // append amount to existing item(s)
+        for (int i = 0; i < mob->itemCount; ++i) {
+            if (mob->items[i]->name == item->name) {
+                mob->items[i]->amount += item->amount;
+                // TODO need to free item!
 
-            return 1;
+                return 1;
+            }
         }
     }
 
@@ -254,11 +256,11 @@ void shift_mob_item(Mob *mob, int i)
     mob->items[i] = NULL;
 
     // reset equipped & readied if set
-    if (mob->equipment.readied && mob->equipment.readied->name == item->name)
+    if (mob->equipment.readied && mob->equipment.readied->id == item->id)
         mob->equipment.readied = NULL;
-    if (mob->equipment.weapon && mob->equipment.weapon->name == item->name)
+    if (mob->equipment.weapon && mob->equipment.weapon->id == item->id)
         mob->equipment.weapon = NULL;
-    if (mob->equipment.armor && mob->equipment.armor->name == item->name)
+    if (mob->equipment.armor && mob->equipment.armor->id == item->id)
         mob->equipment.armor = NULL;
 
     Item *next;
@@ -271,9 +273,13 @@ void shift_mob_item(Mob *mob, int i)
 
 int decrement_mob_item(Mob *mob, Item *item)
 {
-    // append amount to existing item(s)
+    if (!is_stackable(*item)) {
+        return remove_mob_item(mob, item);
+    }
+
+    // decrement amount of existing item(s)
     for (int i = 0; i < mob->itemCount; ++i) {
-        if (mob->items[i]->name == item->name) { // TODO make more sophisticated
+        if (mob->items[i]->name == item->name) {
             mob->items[i]->amount -= 1;
 
             // remove item if amount 0
@@ -293,7 +299,7 @@ int decrement_mob_item(Mob *mob, Item *item)
 int remove_mob_item(Mob *mob, Item *item)
 {
     for (int i = 0; i < mob->itemCount; ++i) {
-        if (mob->items[i]->name == item->name) { // TODO make more sophisticated
+        if (mob->items[i]->id == item->id) {
             shift_mob_item(mob, i);
 
             return 1;

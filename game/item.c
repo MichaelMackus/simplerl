@@ -50,20 +50,43 @@ int total_gold(Item **items, int itemCount)
     return total;
 }
 
+int is_stackable(Item item)
+{
+    switch (item.type) {
+        case ITEM_GOLD:
+        case ITEM_PROJECTILE:
+        case ITEM_ROCK:
+        case ITEM_POTION:
+        case ITEM_SCROLL:
+            return 1;
+
+        case ITEM_WEAPON:
+            if (item.name == "dagger") return 1;
+
+            break;
+    }
+
+    return 0;
+}
+
+int latestItemId = 0;
+
 Item *generate_gold(int depth);
 Item *generate_weapon(int depth);
 Item *generate_armor(int depth);
 Item *create_item(int depth, int type)
 {
+    Item *i = NULL;
+
     if (type == ITEM_GOLD)
-        return generate_gold(depth);
+        i = generate_gold(depth);
     else if (type == ITEM_WEAPON)
-        return generate_weapon(depth);
+        i = generate_weapon(depth);
     else if (type == ITEM_ARMOR)
-        return generate_armor(depth);
+        i = generate_armor(depth);
     // TODO rest of item types
 
-    return NULL;
+    return i;
 }
 
 // type-specific item generators
@@ -82,6 +105,7 @@ Item *generate_gold(int depth)
     item->type = ITEM_GOLD;
     item->name = item->unknownName = "gold";
     item->pluralName = "gold";
+    item->id = latestItemId++; // give item random ID
 
     return item;
 }
@@ -106,6 +130,7 @@ Item *init_armor()
     item->type = ITEM_ARMOR;
     item->amount = 1;
     item->armor.material = MATERIAL_METAL;
+    item->id = latestItemId++; // give item random ID
 
     return item;
 }
@@ -241,6 +266,7 @@ Item *init_weapon()
     item->damage.type = WEAPON_SLASH;
     item->damage.min = 1;
     item->damage.range = 5;
+    item->id = latestItemId++; // give item random ID
 
     return item;
 }

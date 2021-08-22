@@ -68,11 +68,11 @@ void render(const Dungeon *dungeon)
 
                     if (item->type == ITEM_WEAPON &&
                             equipment.weapon != NULL &&
-                            equipment.weapon->name == item->name)
+                            equipment.weapon->id == item->id)
                         strcpy(equippedStr, " (equipped)");
                     else if (item->type == ITEM_ARMOR &&
                             equipment.armor != NULL &&
-                            equipment.armor->name == item->name)
+                            equipment.armor->id == item->id)
                         strcpy(equippedStr, " (equipped)");
                     else
                         strcpy(equippedStr, "");
@@ -82,9 +82,8 @@ void render(const Dungeon *dungeon)
                     else sym = item_menu_symbol(i - 1);
 
                     if (item->amount == 1)
-                        snprintf(buffer, MAX_WIDTH + 1, "%c - %d %s%s",
+                        snprintf(buffer, MAX_WIDTH + 1, "%c - %s%s",
                                 sym,
-                                item->amount,
                                 item->name,
                                 equippedStr);
                     else // pluralize

@@ -53,6 +53,7 @@ typedef struct {
 } ArmorAttributes;
 
 typedef struct {
+    int id; // unique ID for item
     int type; // one of ITEM consts
     int amount; // amount of items
     const char *name; // real (identified) name
@@ -69,13 +70,13 @@ char item_symbol(int itemType);
 char item_menu_symbol(int itemNum); // signifies selection spot in inventory
 
 // calculate total amount of gold in inventory
-/* int total_gold(Items items); */
+int total_gold(Item **items, int itemCount);
 
 // return a random item for the specified dungeon depth
 Item *create_item(int depth, int type);
 
-// TODO only stack certain items?
-/* int is_stackable(Item item); */
+// returns 1 if item is stackable
+int is_stackable(Item item);
 
 // TODO need to sort items by type for inventory management
 

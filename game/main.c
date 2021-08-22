@@ -71,7 +71,7 @@ int main()
     printf("You reached dungeon level %d. Your player was level %d and collected %d gold.\n\n",
             max_depth(dungeon),
             dungeon->player->attrs.level,
-            total_gold(dungeon->player->items));
+            total_gold(dungeon->player->items, dungeon->player->itemCount));
 
     return 0;
 }
