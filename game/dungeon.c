@@ -25,6 +25,7 @@ Dungeon *create_dungeon()
         return NULL;
 
     dungeon->turn = 0;
+    dungeon->killed = NULL;
 
     // allocate player
     Mob *player;

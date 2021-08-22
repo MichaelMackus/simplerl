@@ -44,6 +44,7 @@ typedef struct {
     Mob *player;
     Level *level;
     int turn; // turn number
+    rl_queue *killed; // mobs player has killed
 } Dungeon;
 
 // create a new dungeon (once per game)

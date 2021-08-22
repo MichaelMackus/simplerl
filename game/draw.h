@@ -13,4 +13,7 @@ void deinit();
 // update & refresh the screen
 void render(const Dungeon *dungeon);
 
+// print the killed mob list
+void print_mob_list(Mob **mobs, int mobCount);
+
 #endif

@@ -64,16 +64,14 @@ int main()
         printf("Undefined game loop result...\n");
 
     // print some things that might be interesting to the user
-    /* printf("\n"); */
-    /* print_mob_list(dungeon->killed); */
     printf("\n");
-    printf("You reached dungeon level %d. Your player was level %d.\n\n",
+    int mobCount = rl_queue_size(dungeon->killed);
+    print_mob_list(rl_queue_to_array(&dungeon->killed), mobCount);
+    printf("\n");
+    printf("You reached dungeon level %d. Your player was level %d and collected %d gold.\n\n",
             max_depth(dungeon),
-            dungeon->player->attrs.level);
-    /* printf("You reached dungeon level %d. Your player was level %d and collected %d gold.\n\n", */
-    /*         max_depth(dungeon), */
-    /*         dungeon->player->attrs.level, */
-    /*         total_gold(dungeon->player->items)); */
+            dungeon->player->attrs.level,
+            total_gold(dungeon->player->items));
 
     return 0;
 }

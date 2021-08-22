@@ -182,37 +182,44 @@ void draw_status(const Dungeon *dungeon)
     refresh();
 }
 
-/* void print_mob_list(Mobs mobs) */
-/* { */
-/*     // mob counts, indexed by the ASCII code of the mob symbol for now */
-/*     int maxCount = (int) 'z' + 1; */
-/*     int count[maxCount]; */
+void print_mob_list(Mob **mobs, int mobCount)
+{
+    char mobsIndexed[mobCount]; // array of symbols (currently symbol is mob ID)
+    int amountKilled[mobCount];
+    int amountIndexed = 0;
+    for (int i = 0; i < mobCount; ++i) {
+        Mob *m = mobs[i];
+        if (m == NULL) return;
 
-/*     // reset the array to all zeros */
-/*     memset(count, 0, sizeof(int)*maxCount); */
+        // ensure mob hasn't already been indexed
+        int j;
+        for (j = 0; j < mobCount; ++j) {
+            if (mobsIndexed[j] == m->symbol) break;
+        }
+        if (mobsIndexed[j] == m->symbol) break;
 
-/*     for (int i = 0; i < mobs.count; ++i) */
-/*     { */
-/*         Mob *mob = mobs.content[i]; */
-/*         if (mob == NULL) */
-/*             continue; */
+        // count mobs
+        amountKilled[i] = 0;
+        for (j = 0; j < mobCount; ++j) {
+            if (mobs[j] == NULL) return;
+            if (mobs[j]->symbol == m->symbol) ++amountKilled[i];
+        }
+        mobsIndexed[i] = m->symbol;
+        ++amountIndexed;
+    }
 
-/*         // increment count based on ascii code of mob */
-/*         int code = (int) mob->symbol; */
-/*         ++count[code]; */
-/*     } */
+    for (int i = 0; i < amountIndexed; ++i)
+    {
+        Mob *mob = mobs[i];
 
-/*     for (int i = 0; i < maxCount; ++i) */
-/*         if (count[i] > 0) */
-/*         { */
-/*             const char *name = mob_name((char) i); */
-/*             if (count[i] == 1) */
-/*                 printf("%d %s\n", count[i], name); */
-/*             else */
-/*                 // simple plural check */
-/*                 printf("%d %ss\n", count[i], name); */
-/*         } */
-/* } */
+        const char *name = mob_name(mob->symbol);
+        if (amountKilled[i] == 1)
+            printf("%d %s\n", amountKilled[i], name);
+        else
+            // simple plural check
+            printf("%d %ss\n", amountKilled[i], name);
+    }
+}
 
 char get_symbol(Level *level, rl_coords coords)
 {

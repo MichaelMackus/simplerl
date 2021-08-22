@@ -371,6 +371,9 @@ void cleanup(Dungeon *dungeon)
                 }
                 Item *itemb = rl_peek(t->items);
 
+                // add to killed mobs queue
+                rl_push(&dungeon->killed, mob, 0);
+
                 // clear mob in level & reward exp
                 reward_exp(player, mob);
                 level->mobs[i] = NULL;
