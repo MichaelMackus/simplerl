@@ -371,7 +371,7 @@ int can_see(rl_coords from, rl_coords to, Tile tiles[MAX_HEIGHT][MAX_WIDTH])
         // away, we can't see it
         if (loc->x < MAX_WIDTH && loc->y < MAX_HEIGHT && loc->x >= 0 && loc->y >= 0) {
             rl_tile type = tiles[loc->y][loc->x].type;
-            if ((type == RL_TILE_BLOCK || type == RL_TILE_WALL || type == RL_TILE_PASSAGE) && length)
+            if ((type == RL_TILE_BLOCK || type == RL_TILE_WALL || type == RL_TILE_PASSAGE || type == RL_TILE_DOORWAY) && length)
                 break;
         }
 

@@ -4,6 +4,24 @@
 #include <string.h>
 #include <stdlib.h>
 
+int hasColor;
+
+typedef struct DrawTile {
+    char symbol;
+    int colorPair; // for curses color
+    int attr;              // bold, etc.
+} DrawTile;
+
+#define COLOR_PAIR_DEFAULT 1
+#define COLOR_PAIR_GREEN   2
+#define COLOR_PAIR_BROWN   3
+#define COLOR_PAIR_YELLOW  4
+#define COLOR_PAIR_BLACK   5
+#define COLOR_PAIR_PURPLE  6
+
+// temporary global to hold previous map state, so we only draw what was changed
+DrawTile drawBuffer[MAX_HEIGHT][MAX_WIDTH];
+
 int init()
 {
     initscr();            /* Start curses mode         */
@@ -17,6 +35,18 @@ int init()
     if (mx < MAX_WIDTH || my < MAX_HEIGHT)
         return 0;
 
+    hasColor = has_colors();
+    if (hasColor) {
+        start_color();
+        use_default_colors();
+        init_pair(COLOR_PAIR_DEFAULT, -1,            -1);
+        init_pair(COLOR_PAIR_GREEN,   COLOR_GREEN,   -1);
+        init_pair(COLOR_PAIR_BROWN,   COLOR_RED,     -1);
+        init_pair(COLOR_PAIR_YELLOW,  COLOR_YELLOW,  -1);
+        init_pair(COLOR_PAIR_BLACK,   COLOR_BLACK,   -1);
+        init_pair(COLOR_PAIR_PURPLE,  COLOR_MAGENTA, -1);
+    }
+
     return 1;
 }
 
@@ -25,29 +55,25 @@ void deinit()
     endwin();             /* End curses mode          */
 }
 
-// temporary global to hold previous map state, so we only draw what was changed
-// THANKS curses!
-char drawBuffer[MAX_HEIGHT][MAX_WIDTH];
-
 void render_messages();
 void render_message(const char *message, int y, int x); // TODO use this for other messages
-void draw(const char drawBuffer[][MAX_WIDTH], const char prevDrawBuffer[][MAX_WIDTH]);
+void draw(const DrawTile drawBuffer[][MAX_WIDTH], const DrawTile prevDrawBuffer[][MAX_WIDTH]);
 void draw_status(const Dungeon *dungeon);
-char get_symbol(Level *level, rl_coords coords);
+DrawTile get_tile(Level *level, rl_coords coords);
 void render(const Dungeon *dungeon)
 {
     const Mob *player = dungeon->player;
 
     // store previous buffer for comparison
-    char prevDrawBuffer[MAX_HEIGHT][MAX_WIDTH];
-    memcpy(prevDrawBuffer, drawBuffer, sizeof(char) * MAX_HEIGHT * MAX_WIDTH);
+    DrawTile prevDrawBuffer[MAX_HEIGHT][MAX_WIDTH];
+    memcpy(prevDrawBuffer, drawBuffer, sizeof(DrawTile) * MAX_HEIGHT * MAX_WIDTH);
 
     // render onto our current map
     for (int y = 0; y < MAX_HEIGHT; ++y)
     {
         for (int x = 0; x < MAX_WIDTH; ++x)
         {
-            drawBuffer[y][x] = get_symbol(dungeon->level, RL_XY(x, y));
+            drawBuffer[y][x] = get_tile(dungeon->level, RL_XY(x, y));
         }
     }
 
@@ -123,24 +149,42 @@ void render(const Dungeon *dungeon)
 
 void render_message(const char *message, int y, int x)
 {
-    for (int i = 0; i < strlen(message); ++i)
-        drawBuffer[y][x + i] = message[i];
+    for (int i = 0; i < strlen(message); ++i) {
+        DrawTile t = {0};
+        t.symbol = message[i];
+        t.attr = A_BOLD;
+        t.colorPair = COLOR_PAIR_DEFAULT;
+        drawBuffer[y][x + i] = t;
+    }
 }
 
 // only draw difference in map to curses window
-void draw(const char drawBuffer[][MAX_WIDTH], const char prevDrawBuffer[][MAX_WIDTH])
+void draw(const DrawTile drawBuffer[][MAX_WIDTH], const DrawTile prevDrawBuffer[][MAX_WIDTH])
 {
     for (int y = 0; y < MAX_HEIGHT; ++y)
     {
         for (int x = 0; x < MAX_WIDTH; ++x)
         {
-            if (drawBuffer[y][x] != prevDrawBuffer[y][x])
+            if (drawBuffer[y][x].symbol != prevDrawBuffer[y][x].symbol ||
+                drawBuffer[y][x].attr != prevDrawBuffer[y][x].attr ||
+                drawBuffer[y][x].colorPair != prevDrawBuffer[y][x].colorPair)
             {
-                mvaddch(y, x, drawBuffer[y][x]);
-                refresh();
+                if (hasColor) {
+                    attron(COLOR_PAIR(drawBuffer[y][x].colorPair));
+                    if (drawBuffer[y][x].attr)
+                        attron(drawBuffer[y][x].attr);
+                }
+                mvaddch(y, x, drawBuffer[y][x].symbol);
+                if (hasColor) {
+                    attroff(COLOR_PAIR(drawBuffer[y][x].colorPair));
+                    if (drawBuffer[y][x].attr)
+                        attroff(drawBuffer[y][x].attr);
+                }
             }
         }
     }
+
+    refresh();
 }
 
 // draw status
@@ -266,7 +310,6 @@ char get_symbol(Level *level, rl_coords coords)
     if (type == RL_TILE_ROOM)    return '.';
     if (type == RL_TILE_PASSAGE) return '#';
     if (type == RL_TILE_DOORWAY) return '+';
-    if (type == RL_TILE_INVALID) return '?';
     if (type == RL_TILE_WALL)
     {
         // show different char depending on side of wall
@@ -281,4 +324,76 @@ char get_symbol(Level *level, rl_coords coords)
     }
 
     return ' ';
+}
+
+int get_color(Level *level, rl_coords coords)
+{
+    if (!rl_in_map_bounds(level, coords)) return COLOR_PAIR_DEFAULT;
+
+    /**
+     * Item colors
+     */
+    Tile t = level->tiles[coords.y][coords.x];
+    const Mob *mob = get_mob(level, coords);
+    if (mob == NULL && t.items) {
+        Item *i = rl_peek(t.items);
+
+        if (i->type == ITEM_ARMOR) {
+            switch (i->armor.material) {
+                case MATERIAL_METAL:
+                    return COLOR_PAIR_DEFAULT;
+                case MATERIAL_LEATHER:
+                    return COLOR_PAIR_BROWN;
+                case MATERIAL_DRAGON:
+                    return COLOR_PAIR_PURPLE;
+            }
+        }
+
+        if (i->type == ITEM_WEAPON) {
+            if (i->damage.type == WEAPON_BLUNT) {
+                return COLOR_PAIR_BROWN;
+            } else {
+                return COLOR_PAIR_DEFAULT;
+            }
+        }
+    }
+
+    char symbol = get_symbol(level, coords);
+    switch (symbol) {
+        case 'g':
+            return COLOR_PAIR_GREEN;
+        case 'o':
+        case '$':
+            return COLOR_PAIR_YELLOW;
+        case 'r':
+        case '+':
+            if (can_see(level->player->coords, coords, level->tiles))
+                return COLOR_PAIR_BROWN;
+            else
+                return COLOR_PAIR_DEFAULT;
+        case '*':
+            return COLOR_PAIR_BLACK;
+        case 'k':
+            return COLOR_PAIR_PURPLE;
+
+        default:
+            return COLOR_PAIR_DEFAULT;
+    }
+}
+
+DrawTile get_tile(Level *level, rl_coords coords)
+{
+    Mob *player = level->player;
+
+    DrawTile t = {0};
+    t.symbol = get_symbol(level, coords);
+    t.colorPair = get_color(level, coords);
+
+    if (t.colorPair != COLOR_PAIR_BROWN &&
+        can_see(player->coords, coords, level->tiles))
+    {
+        t.attr = A_BOLD;
+    }
+
+    return t;
 }
