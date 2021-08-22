@@ -45,11 +45,10 @@ void rl_push(rl_queue **queue, void *data, int priority)
         return;
     }
 
-    // TODO opposite order?
     rl_queue *current = *queue;
     while (current->next != NULL) {
         // found the spot to insert
-        if (current->next->priority > priority)
+        if (priority <= current->next->priority)
             break;
 
         current = current->next;
