@@ -111,6 +111,16 @@ int gameloop(Dungeon *dungeon, int input)
             inMenu = MENU_THROW;
             break;
 
+        case 'q':
+            // open quaff menu
+            inMenu = MENU_QUAFF;
+            break;
+
+        case 'r':
+            // open read menu
+            inMenu = MENU_READ;
+            break;
+
         case 'd':
             // open throw menu
             inMenu = MENU_DROP;
@@ -543,6 +553,7 @@ int can_smell(rl_coords coords, Level *level)
 }
 
 Mob *mob_in_dir(Level *level, Direction dir);
+int apply_item_effects(Level *level, Mob *mob, Item *item);
 void menu_management(int input, Level *level)
 {
     Mob *player = level->player;
@@ -602,6 +613,53 @@ void menu_management(int input, Level *level)
         }
     }
 
+    if (inMenu == MENU_QUAFF)
+    {
+        // quaff potion
+        for (int i = 0; i < player->itemCount; ++i)
+        {
+            Item *item = player->items[i];
+            if (item_menu_symbol(i - 1) == input)
+            {
+                if (item->type == ITEM_POTION)
+                {
+                    apply_item_effects(level, player, item);
+
+                    decrement_mob_item(player, item);
+                }
+                else
+                {
+                    message("That is not drinkable!");
+                }
+                
+                break;
+            }
+        }
+    }
+
+    if (inMenu == MENU_READ)
+    {
+        // read scroll
+        for (int i = 0; i < player->itemCount; ++i)
+        {
+            Item *item = player->items[i];
+            if (item_menu_symbol(i - 1) == input)
+            {
+                if (item->type == ITEM_SCROLL)
+                {
+                    apply_item_effects(level, player, item);
+                    decrement_mob_item(player, item);
+                }
+                else
+                {
+                    message("That is not readable!");
+                }
+                
+                break;
+            }
+        }
+    }
+
     if (inMenu == MENU_THROW)
     {
         // throw chosen projectile
@@ -610,7 +668,7 @@ void menu_management(int input, Level *level)
             Item *item = player->items[i];
             if (item_menu_symbol(i - 1) == input)
             {
-                if (item->type == ITEM_WEAPON || item->type == ITEM_PROJECTILE || item->type == ITEM_ROCK)
+                if (item->type == ITEM_WEAPON || item->type == ITEM_PROJECTILE || item->type == ITEM_ROCK || item->type == ITEM_POTION)
                 {
                     player->equipment.readied = item; // ready item for throwing
                     message("Choose a direction");
@@ -666,15 +724,23 @@ void menu_management(int input, Level *level)
 
         Mob *target = mob_in_dir(level, dir);
         if (target) {
-            int dmg = attack(player, target, item);
+            if (item->type == ITEM_POTION) {
+                apply_item_effects(level, target, item);
+            } else {
+                int dmg = attack(level, target, item);
 
-            if (dmg > 0)
-                message("You hit the %s for %d damage!",
-                        mob_name(target->symbol),
-                        dmg);
-            else if (dmg == 0)
-                message("You missed the %s!",
-                        mob_name(target->symbol));
+                if (dmg > 0)
+                    message("You hit the %s for %d damage!",
+                            mob_name(target->symbol),
+                            dmg);
+                else if (dmg == 0)
+                    message("You missed the %s!",
+                            mob_name(target->symbol));
+                if (dmg < 0)
+                    message("You healed the %s for %d damage!",
+                            mob_name(target->symbol),
+                            -1 * dmg);
+            }
         }
     }
 
@@ -705,4 +771,69 @@ Mob *mob_in_dir(Level *level, Direction dir)
     }
 
     return NULL;
+}
+
+// apply effects of item invoked by mob
+int apply_item_effects(Level *level, Mob *mob, Item *item)
+{
+    Mob *player = level->player;
+    int dmg;
+    if (item->type == ITEM_POTION) {
+        switch (item->potion) {
+            case POTION_ACID:
+                dmg = generate(1, 8);
+                mob->hp -= dmg;
+
+                break;
+            case POTION_HEAL:
+                dmg = -1 * generate(1, 8);
+                mob->hp -= dmg;
+                if (mob->hp > mob->maxHP)
+                    mob->hp = mob->maxHP;
+
+                break;
+
+            default:
+                return;
+        }
+
+        if (mob->coords.x == player->coords.x && mob->coords.y == player->coords.y) {
+            if (dmg > 0) {
+                message("Ouch, that burns! You were hurt for %d damage.", dmg);
+            } else if (dmg < 0) {
+                message("That feels better! You were healed for %d damage.", -1 * dmg);
+            }
+        } else {
+            if (dmg > 0) {
+                message("You burned the %s for %d damage.", mob_name(mob->symbol), dmg);
+            } else if (dmg < 0) {
+                message("You healed the %s for %d damage.", mob_name(mob->symbol), -1 * dmg);
+            }
+        }
+    }
+
+    if (item->type == ITEM_SCROLL) {
+        switch (item->scroll) {
+            case SCROLL_FIRE:
+                for (int i = 0; i < MAX_MOBS; ++i) {
+                    Mob *m = level->mobs[i];
+                    if (m && can_see(player->coords, m->coords, level->tiles)) {
+                        // damage mob
+                        int dmg = generate(1, 8);
+                        message("You scorched the %s for %d damage.", mob_name(m->symbol), dmg);
+                    }
+                }
+
+                break;
+            case SCROLL_TELEPORT:
+                message("You feel disoriented.");
+                rl_coords coords = random_passable_coords(level);
+                player->coords = coords;
+
+            default:
+                break;
+        }
+    }
+
+    return 0;
 }

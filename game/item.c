@@ -74,6 +74,8 @@ int latestItemId = 0;
 Item *generate_gold(int depth);
 Item *generate_weapon(int depth);
 Item *generate_armor(int depth);
+Item *generate_potion(int depth);
+Item *generate_scroll(int depth);
 Item *create_item(int depth, int type)
 {
     Item *i = NULL;
@@ -84,7 +86,10 @@ Item *create_item(int depth, int type)
         i = generate_weapon(depth);
     else if (type == ITEM_ARMOR)
         i = generate_armor(depth);
-    // TODO rest of item types
+    else if (type == ITEM_POTION)
+        i = generate_potion(depth);
+    else if (type == ITEM_SCROLL)
+        i = generate_scroll(depth);
 
     return i;
 }
@@ -106,6 +111,62 @@ Item *generate_gold(int depth)
     item->name = item->unknownName = "gold";
     item->pluralName = "gold";
     item->id = latestItemId++; // give item random ID
+
+    return item;
+}
+
+Item *generate_potion(int depth)
+{
+    Item *item = malloc(sizeof(Item));
+
+    if (item == NULL)
+        return NULL;
+
+    *item = (Item) {0};
+    item->amount = 1;
+    item->type = ITEM_POTION;
+    item->id = latestItemId++; // give item random ID
+
+    if (generate(1, 100) < 50) {
+        item->name = item->unknownName = "healing potion";
+        item->pluralName = "healing potions";
+        item->potion = POTION_HEAL;
+    } else {
+        item->name = item->unknownName = "acidic potion";
+        item->pluralName = "acidic potions";
+        item->potion = POTION_ACID;
+    }
+
+    return item;
+}
+
+Item *generate_scroll(int depth)
+{
+    Item *item = malloc(sizeof(Item));
+
+    if (item == NULL)
+        return NULL;
+
+    *item = (Item) {0};
+    item->amount = 1;
+    item->type = ITEM_SCROLL;
+    item->id = latestItemId++; // give item random ID
+
+    int r = generate(1, 100);
+    if (r < 33) {
+        item->name = item->unknownName = "scroll of fire";
+        item->pluralName = "scrolls of fire";
+        item->potion = SCROLL_FIRE;
+    } else {
+        item->name = item->unknownName = "scroll of teleportation";
+        item->pluralName = "scrolls of teleportation";
+        item->potion = SCROLL_TELEPORT;
+    /* Not really useful until we generate random item names... */
+    /* } else { */
+    /*     item->name = item->unknownName = "scroll of identify"; */
+    /*     item->pluralName = "scrolls of identify"; */
+    /*     item->potion = SCROLL_IDENTIFY; */
+    }
 
     return item;
 }

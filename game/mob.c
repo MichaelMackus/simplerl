@@ -99,6 +99,25 @@ Mob *create_mob(int depth, rl_coords coords)
                     m->equipment.armor = item;
             }
         }
+
+        // give mob potion or scroll
+        if (generate(1, 100) <= difficulty*5) {
+            Item *item = create_item(depth, ITEM_POTION);
+
+            // OOM check
+            if (m == NULL)
+                return NULL;
+
+            give_mob_item(m, item);
+        } else if (generate(1, 100) <= difficulty*5) {
+            Item *item = create_item(depth, ITEM_SCROLL);
+
+            // OOM check
+            if (m == NULL)
+                return NULL;
+
+            give_mob_item(m, item);
+        }
     }
 
     m->difficulty = difficulty;
@@ -115,7 +134,7 @@ int attack(Mob *attacker, Mob *target, Item *weapon)
         return 0;
 
     int damage = 0;
-    if (weapon != NULL)
+    if (weapon != NULL && weapon->type == ITEM_WEAPON)
         damage = generate(weapon->damage.min, weapon->damage.max);
     else
         damage = generate(attacker->minDamage, attacker->maxDamage);

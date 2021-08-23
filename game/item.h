@@ -24,18 +24,14 @@
 #define MATERIAL_LEATHER 1
 #define MATERIAL_DRAGON 2
 
-#define ITEM_EFFECT_NONE 0
-#define ITEM_EFFECT_HEAL 1
-#define ITEM_EFFECT_TELEPORT 2
-#define ITEM_EFFECT_DAMAGE 3
+#define POTION_HEAL 1
+#define POTION_ACID 2
+
+#define SCROLL_FIRE     1
+#define SCROLL_TELEPORT 2
+#define SCROLL_IDENTIFY 3
 
 #define PROJECTILE_ARROW 1
-
-// for potions & scrolls
-typedef struct {
-    int effect; // one of ITEM_EFFECT consts
-    unsigned int strength; // strength of EFFECT
-} ItemAttributes;
 
 // for weapons
 typedef struct {
@@ -60,7 +56,8 @@ typedef struct {
     const char *pluralName; // plural version fo name
     const char *unknownName; // random (unidentified) name
     union {
-        ItemAttributes attributes;
+        int potion; // one of POTION_ consts
+        int scroll; // one of SCROLL_ consts
         WeaponAttributes damage;
         ArmorAttributes armor;
     };

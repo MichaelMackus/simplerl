@@ -14,6 +14,8 @@
 #define MENU_THROW     4
 #define MENU_DIRECTION 5
 #define MENU_DROP      6
+#define MENU_QUAFF     7
+#define MENU_READ      8
 
 #include "dungeon.h"
 
