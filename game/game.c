@@ -106,6 +106,12 @@ int gameloop(Dungeon *dungeon, int input)
             break;
 
         case 'f':
+            if (player->equipment.readied) {
+                // already readied projectile
+                message("Choose a direction");
+                inMenu = MENU_DIRECTION;
+                break;
+            }
         case 't':
             // open throw menu
             inMenu = MENU_THROW;
