@@ -848,6 +848,7 @@ int apply_item_effects(Level *level, Mob *mob, Item *item)
                         // damage mob
                         int dmg = generate(1, 8);
                         message("You scorched the %s for %d damage.", mob_name(m->symbol), dmg);
+                        m->hp -= dmg;
                     }
                 }
 
