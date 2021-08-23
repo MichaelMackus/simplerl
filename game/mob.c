@@ -134,7 +134,7 @@ int attack(Mob *attacker, Mob *target, Item *weapon)
         return 0;
 
     int damage = 0;
-    if (weapon != NULL && weapon->type == ITEM_WEAPON)
+    if (weapon != NULL)
         damage = generate(weapon->damage.min, weapon->damage.max);
     else
         damage = generate(attacker->minDamage, attacker->maxDamage);

@@ -19,8 +19,6 @@ char item_symbol(int itemType)
             return '?';
         case ITEM_POTION:
             return '!';
-        case ITEM_ROCK:
-            return '*';
         default:
             return '{'; // something is obviously wrong
     }
@@ -55,7 +53,6 @@ int is_stackable(Item item)
     switch (item.type) {
         case ITEM_GOLD:
         case ITEM_PROJECTILE:
-        case ITEM_ROCK:
         case ITEM_POTION:
         case ITEM_SCROLL:
             return 1;
@@ -455,20 +452,6 @@ Item *arrow()
     return weapon;
 }
 
-Item *rock()
-{
-    Item *weapon = init_weapon();
-    weapon->type = ITEM_ROCK;
-    weapon->damage.min = 1;
-    weapon->damage.max = 4;
-    weapon->damage.type = WEAPON_BLUNT;
-    weapon->name = weapon->unknownName = "rock";
-
-    return weapon;
-}
-
-
-
 Item *generate_weapon(int depth)
 {
     // percentile roll
@@ -479,9 +462,7 @@ Item *generate_weapon(int depth)
     // generate different weapons based on depth
     if (depth <= 2)
     {
-        if (percent <= 25)
-            return rock();
-        else if (percent <= 50)
+        if (percent <= 50)
             return dagger();
         else if (percent <= 75)
             return short_sword();
@@ -494,8 +475,6 @@ Item *generate_weapon(int depth)
             return dagger();
         else if (percent <= 30)
             return arrow();
-        else if (percent <= 45)
-            return rock();
         else if (percent <= 50)
             return mace();
         else if (percent <= 75)

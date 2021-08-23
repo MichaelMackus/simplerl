@@ -668,7 +668,7 @@ void menu_management(int input, Level *level)
             Item *item = player->items[i];
             if (item_menu_symbol(i - 1) == input)
             {
-                if (item->type == ITEM_WEAPON || item->type == ITEM_PROJECTILE || item->type == ITEM_ROCK || item->type == ITEM_POTION)
+                if (item->type == ITEM_WEAPON || item->type == ITEM_PROJECTILE || item->type == ITEM_POTION)
                 {
                     player->equipment.readied = item; // ready item for throwing
                     message("Choose a direction");
