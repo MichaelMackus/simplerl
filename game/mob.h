@@ -3,7 +3,7 @@
 
 #define MAX_MOBS            20
 #define MAX_PLAYER_LEVEL    20
-#define MAX_INVENTORY_ITEMS 25 // 1 spot for gold + 24 inventory letters
+#define MAX_INVENTORY_ITEMS 27 // 1 spot for gold + 26 inventory letters
 
 #define MOB_PLAYER 1
 #define MOB_ENEMY  2
