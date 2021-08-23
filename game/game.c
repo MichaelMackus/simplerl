@@ -75,15 +75,14 @@ int gameloop(Dungeon *dungeon, int input)
 
         case ',':
         case 'g':
-            ;
             // get all items from floor
-            Tile *tile = &level->tiles[player->coords.y][player->coords.x];
+            t = &level->tiles[player->coords.y][player->coords.x];
             Item *item;
-            while (item = rl_pop(&tile->items))
+            while (item = rl_pop(&t->items))
             {
                 if (!give_mob_item(player, item)) {
                     // abort if player inventory is full
-                    rl_push(&tile->items, item, 0);
+                    rl_push(&t->items, item, 0);
                     break;
                 }
             }
@@ -176,6 +175,28 @@ int gameloop(Dungeon *dungeon, int input)
 
     // heal player, increase turn count, and decrement smell
     tick(dungeon);
+
+    // display message for item(s) on current tile
+    Tile t = level->tiles[player->coords.y][player->coords.x];
+    if (t.items) {
+        int length = rl_queue_size(t.items);
+        Item *item = rl_peek(t.items);
+        char *buffer = malloc(sizeof(char) * MAX_WIDTH + 1);
+        if (item->amount == 1)
+            snprintf(buffer, MAX_WIDTH + 1, "You see %s", item->name);
+        else // pluralize
+            if (item->pluralName)
+                snprintf(buffer, MAX_WIDTH + 1, "You see %d %s",
+                        item->amount,
+                        item->pluralName);
+            else
+                snprintf(buffer, MAX_WIDTH + 1, "You see %d %ss",
+                        item->amount,
+                        item->name);
+        if (length > 1)
+            snprintf(buffer + strlen(buffer), MAX_WIDTH + 1 - strlen(buffer), " (and %d more items)", length - 1);
+        message(buffer);
+    }
 
     // be a bit kind & handle mob AI only when *not* changing depth
     if (level->depth == dungeon->level->depth)
