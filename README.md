@@ -1,5 +1,10 @@
 # simplerl
 
+NOTE: I've moved the library code here:
+https://github.com/MichaelMackus/libroguelike It is now a single header library
+with a much cleaner interface. A rewrite of this game is pending with the new
+library.
+
 This is a simple roguelike library, with an example game implementation.
 The library is a collection of tools such as dungeon generation,
 pathfinding, and more things that are useful for roguelikes and/or RPGs.
