@@ -1,8 +1,8 @@
 #include "item.h"
 #include "random.h"
 
-const char **unknownItems;
-const char **knownItems;
+static const char **unknownItems;
+static const char **knownItems;
 
 char item_symbol(int itemType)
 {
@@ -208,7 +208,7 @@ Item *ring_mail()
     Item *item = init_armor();
     item->name = item->unknownName = "ring mail";
     item->armor.damageReduction = 2;
-    
+
     return item;
 }
 
@@ -217,7 +217,7 @@ Item *splint_mail()
     Item *item = init_armor();
     item->name = item->unknownName = "splint mail";
     item->armor.damageReduction = 3;
-    
+
     return item;
 }
 
@@ -226,7 +226,7 @@ Item *plate_mail()
     Item *item = init_armor();
     item->name = item->unknownName = "plate mail";
     item->armor.damageReduction = 4;
-    
+
     return item;
 }
 
@@ -235,7 +235,7 @@ Item *full_plate()
     Item *item = init_armor();
     item->name = item->unknownName = "full plate";
     item->armor.damageReduction = 5;
-    
+
     return item;
 }
 
@@ -245,7 +245,7 @@ Item *dragon_hide()
     item->name = item->unknownName = "dragon hide";
     item->armor.damageReduction = 6;
     item->armor.material = MATERIAL_DRAGON;
-    
+
     return item;
 }
 
@@ -255,7 +255,7 @@ Item *dragon_plate()
     item->name = item->unknownName = "dragon plate";
     item->armor.damageReduction = 10;
     item->armor.material = MATERIAL_DRAGON;
-    
+
     return item;
 }
 

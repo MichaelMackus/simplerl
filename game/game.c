@@ -6,9 +6,9 @@
 
 #include <lib/map.h>
 
-int resting = 0; // 1 if player resting
-int inMenu = 0; // one of MENU consts if in menu
-Direction runDir = { 0, 0 }; // direction player is running
+static int resting = 0; // 1 if player resting
+static int inMenu = 0; // one of MENU consts if in menu
+static Direction runDir = { 0, 0 }; // direction player is running
 
 int get_menu() { return inMenu; }
 int is_running() { return runDir.xdir != 0 || runDir.ydir != 0; }
@@ -328,7 +328,7 @@ void tick_mob(Mob *mob, Level *level)
             return;
 
         if (dmg > 0)
-            message("You got hit by the %s for %d damage!", 
+            message("You got hit by the %s for %d damage!",
                     mob_name(mob->symbol),
                     dmg);
         else if (dmg == 0)
@@ -658,7 +658,7 @@ void menu_management(int input, Level *level)
                 {
                     message("That is not drinkable!");
                 }
-                
+
                 break;
             }
         }
@@ -681,7 +681,7 @@ void menu_management(int input, Level *level)
                 {
                     message("That is not readable!");
                 }
-                
+
                 break;
             }
         }
@@ -708,7 +708,7 @@ void menu_management(int input, Level *level)
                     // TODO let them throw it anyway?
                     message("That is not throwable!");
                 }
-                
+
                 break;
             }
         }
@@ -719,7 +719,7 @@ void menu_management(int input, Level *level)
         Item *item = player->equipment.readied;
         Direction dir = {0};
 
-        // throw chosen projectile in directions 
+        // throw chosen projectile in directions
         // TODO actually throw the projectile
         switch (input)
         {

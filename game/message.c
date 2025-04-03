@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <memory.h>
 
-const char **messages;
+static const char **messages;
 
 // TODO size param
 int init_messages()
