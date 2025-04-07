@@ -4,8 +4,7 @@
 
 static const char **messages;
 
-// TODO size param
-int init_messages()
+bool init_messages()
 {
     messages = malloc(sizeof(char*) * MAX_MESSAGE_LENGTH * MAX_MESSAGES);
 
@@ -17,7 +16,7 @@ const char *get_message(int index)
     return messages[index];
 }
 
-int insert_message(const char *message, const char **messages)
+bool insert_message(const char *message, const char **messages)
 {
     if (message == NULL)
         return 1;

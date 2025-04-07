@@ -4,7 +4,7 @@
 #include <memory.h>
 
 Mob *enemy(int hp, int minDamage, int maxDamage, char symbol, int form);
-Mob *create_mob(int depth, rl_coords coords)
+Mob *create_mob(int depth, RL_Point coords)
 {
     // difficulty ranges
     //
@@ -318,7 +318,7 @@ int decrement_mob_item(Mob *mob, Item *item)
 int remove_mob_item(Mob *mob, Item *item)
 {
     for (int i = 0; i < mob->itemCount; ++i) {
-        if (mob->items[i]->id == item->id) {
+        if (mob->items[i] == item) {
             shift_mob_item(mob, i);
 
             return 1;

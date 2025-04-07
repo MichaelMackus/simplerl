@@ -3,13 +3,20 @@
 #include <ncurses.h>
 #include <string.h>
 #include <stdlib.h>
+#include <assert.h>
+
+#if(NCURSES_WIDECHAR)
+#define SYMBOL wchar_t
+#else
+#define SYMBOL char
+#endif
 
 int hasColor;
 
 typedef struct DrawTile {
-    char symbol;
+    SYMBOL symbol;
     int colorPair; // for curses color
-    int attr;              // bold, etc.
+    int attr;      // bold, etc.
 } DrawTile;
 
 #define COLOR_PAIR_DEFAULT 1
@@ -22,8 +29,10 @@ typedef struct DrawTile {
 // temporary global to hold previous map state, so we only draw what was changed
 DrawTile drawBuffer[MAX_HEIGHT][MAX_WIDTH];
 
+#include <locale.h>
 int init(int enableColor)
 {
+    setlocale(LC_ALL, "");
     initscr();            /* Start curses mode         */
     raw();                /* Line buffering disabled    */
     keypad(stdscr, TRUE); /* We get F1, F2 etc..        */
@@ -31,9 +40,9 @@ int init(int enableColor)
     curs_set(0);          /* hide cursor */
 
     int mx, my;
-    getmaxyx(stdscr, my, mx);
-    if (mx < MAX_WIDTH || my < MAX_HEIGHT)
-        return 0;
+    /* getmaxyx(stdscr, my, mx); */
+    /* if (mx < MAX_WIDTH || my < MAX_HEIGHT) */
+    /*     return 0; */
 
     hasColor = enableColor ? has_colors() : 0;
     if (hasColor) {
@@ -59,7 +68,7 @@ void render_messages();
 void render_message(const char *message, int y, int x); // TODO use this for other messages
 void draw(const DrawTile drawBuffer[][MAX_WIDTH], const DrawTile prevDrawBuffer[][MAX_WIDTH]);
 void draw_status(const Dungeon *dungeon);
-DrawTile get_tile(Level *level, rl_coords coords);
+DrawTile get_tile(Level *level, RL_Point coords);
 void render(const Dungeon *dungeon)
 {
     const Mob *player = dungeon->player;
@@ -149,7 +158,7 @@ void render(const Dungeon *dungeon)
 
 void render_message(const char *message, int y, int x)
 {
-    for (int i = 0; i < strlen(message); ++i) {
+    for (size_t i = 0; i < strlen(message); ++i) {
         DrawTile t = {0};
         t.symbol = message[i];
         t.attr = A_BOLD;
@@ -174,7 +183,12 @@ void draw(const DrawTile drawBuffer[][MAX_WIDTH], const DrawTile prevDrawBuffer[
                     if (drawBuffer[y][x].attr)
                         attron(drawBuffer[y][x].attr);
                 }
+#if(NCURSES_WIDECHAR)
+                const wchar_t wch[2] = { drawBuffer[y][x].symbol, '\0' };
+                mvaddwstr(y, x, wch);
+#else
                 mvaddch(y, x, drawBuffer[y][x].symbol);
+#endif
                 if (hasColor) {
                     attroff(COLOR_PAIR(drawBuffer[y][x].colorPair));
                     if (drawBuffer[y][x].attr)
@@ -223,13 +237,16 @@ void draw_status(const Dungeon *dungeon)
     refresh();
 }
 
-void print_mob_list(Mob **mobs, int mobCount)
+void print_mob_list(RL_Heap *mobs)
 {
+    if (mobs == NULL) return;
+    int mobCount = rl_heap_length(mobs);
     char mobsIndexed[mobCount]; // array of symbols (currently symbol is mob ID)
     int amountKilled[mobCount];
     int amountIndexed = 0;
+
     for (int i = 0; i < mobCount; ++i) {
-        Mob *m = mobs[i];
+        Mob *m = mobs->heap[i];
         if (m == NULL) return;
 
         // ensure mob hasn't already been indexed
@@ -242,8 +259,9 @@ void print_mob_list(Mob **mobs, int mobCount)
         // count mobs
         amountKilled[i] = 0;
         for (j = 0; j < mobCount; ++j) {
-            if (mobs[j] == NULL) return;
-            if (mobs[j]->symbol == m->symbol) ++amountKilled[i];
+            if (mobs->heap[j] == NULL) continue;
+            Mob *m2 = mobs->heap[j];
+            if (m2->symbol == m->symbol) ++amountKilled[i];
         }
         mobsIndexed[i] = m->symbol;
         ++amountIndexed;
@@ -251,7 +269,7 @@ void print_mob_list(Mob **mobs, int mobCount)
 
     for (int i = 0; i < amountIndexed; ++i)
     {
-        Mob *mob = mobs[i];
+        Mob *mob = mobs->heap[i];
 
         const char *name = mob_name(mob->symbol);
         if (amountKilled[i] == 1)
@@ -262,15 +280,17 @@ void print_mob_list(Mob **mobs, int mobCount)
     }
 }
 
-char get_symbol(Level *level, rl_coords coords)
+SYMBOL get_symbol(Level *level, RL_Point coords)
 {
-    rl_map *map = level->map;
+    RL_Map *map = level->map;
     Mob *player = level->player;
     int x = coords.x, y = coords.y;
 
-    if (!rl_in_map_bounds(map, coords) ||
-            (!can_see(player->coords, coords, level->tiles) &&
-             !level->tiles[y][x].seen))
+    /* if (!rl_map_in_bounds(map, coords)) */
+    /*     return ' '; */
+    if (!rl_map_in_bounds(map, coords) ||
+            (!rl_map_is_visible(level->map, coords) &&
+             !rl_map_is_seen(level->map, RL_XY(x, y))))
     {
         return ' ';
     }
@@ -281,17 +301,16 @@ char get_symbol(Level *level, rl_coords coords)
     for (int i = 0; i < MAX_MOBS; ++i)
     {
         const Mob *mob = get_mob(level, coords);
-        if (mob != NULL && can_see(player->coords, mob->coords, level->tiles))
+        if (mob != NULL && rl_map_is_visible(level->map, mob->coords))
             return mob->symbol;
     }
 
     /**
      * Item symbol
      */
-    Tile t = level->tiles[y][x];
-    if (t.items) {
-        Item *i = rl_peek(t.items);
-
+    RL_Heap *is = level->items[y][x];
+    Item *i = NULL;
+    if (is && (i = rl_heap_peek(is))) {
         return item_symbol(i->type);
     }
 
@@ -306,39 +325,66 @@ char get_symbol(Level *level, rl_coords coords)
     /**
      * type symbol
      */
-    rl_tile type = rl_get_tile(map, coords);
-    if (type == RL_TILE_ROOM)    return '.';
-    if (type == RL_TILE_PASSAGE) return '#';
-    if (type == RL_TILE_DOORWAY) return '+';
-    if (type == RL_TILE_WALL)
+    RL_Tile *type = rl_map_tile(map, coords);
+    assert(type);
+    if (*type == RL_TileRoom)     return '.';
+    if (*type == RL_TileCorridor) return '#';
+    if (*type == RL_TileDoor)     return '+';
+    if (*type == RL_TileRock && rl_map_is_wall(map, coords))
     {
         // show different char depending on side of wall
-        char connections = rl_wall_connections(map, coords) | rl_door_connections(map, coords);
-
-        if (connections & RL_CONNECTION_R || connections & RL_CONNECTION_L)
+        // TODO take into account FOV to make this look nicer for connections we can't see
+#if(NCURSES_WIDECHAR)
+        int connections = rl_map_wall(map, coords);
+        if (connections & RL_WallToEast && connections & RL_WallToWest && connections & RL_WallToNorth && connections & RL_WallToSouth)
+            return L'┼';
+        if (connections & RL_WallToEast && connections & RL_WallToWest && connections & RL_WallToSouth)
+            return L'┬';
+        if (connections & RL_WallToEast && connections & RL_WallToWest && connections & RL_WallToNorth)
+            return L'┴';
+        if (connections & RL_WallToNorth && connections & RL_WallToSouth && connections & RL_WallToWest)
+            return L'┤';
+        if (connections & RL_WallToNorth && connections & RL_WallToSouth && connections & RL_WallToEast)
+            return L'├';
+        if (connections & RL_WallToSouth && connections & RL_WallToEast)
+            return L'┌';
+        if (connections & RL_WallToNorth && connections & RL_WallToEast)
+            return L'└';
+        if (connections & RL_WallToNorth && connections & RL_WallToWest)
+            return L'┘';
+        if (connections & RL_WallToSouth && connections & RL_WallToWest)
+            return L'┐';
+        if (connections & RL_WallToEast || connections & RL_WallToWest)
+            return L'─';
+        else if (connections & RL_WallToNorth || connections & RL_WallToSouth)
+            return L'│';
+#else
+        int connections = rl_map_room_wall(map, coords);
+        if (connections & RL_WallToEast || connections & RL_WallToWest)
             return '-';
-        else if (connections & RL_CONNECTION_U || connections & RL_CONNECTION_D)
+        else if (connections & RL_WallToNorth || connections & RL_WallToSouth)
             return '|';
+#endif
         else
-            return '0';
+            return ' ';
     }
 
     return ' ';
 }
 
-int get_color(Level *level, rl_coords coords)
+int get_color(Level *level, RL_Point coords)
 {
-    if (!rl_in_map_bounds(level->map, coords)) return COLOR_PAIR_DEFAULT;
+    if (!rl_map_in_bounds(level->map, coords)) return COLOR_PAIR_DEFAULT;
 
     /**
      * Item colors
      */
-    Tile t = level->tiles[coords.y][coords.x];
+    RL_Heap *is = level->items[(int)coords.y][(int)coords.x];
     const Mob *mob = get_mob(level, coords);
-    if (mob == NULL && t.items) {
-        Item *i = rl_peek(t.items);
+    if (mob == NULL && is) {
+        Item *i = rl_heap_peek(is);
 
-        if (i->type == ITEM_ARMOR) {
+        if (i && i->type == ITEM_ARMOR) {
             switch (i->armor.material) {
                 case MATERIAL_METAL:
                     return COLOR_PAIR_DEFAULT;
@@ -349,7 +395,7 @@ int get_color(Level *level, rl_coords coords)
             }
         }
 
-        if (i->type == ITEM_WEAPON) {
+        if (i && i->type == ITEM_WEAPON) {
             if (i->damage.type == WEAPON_BLUNT) {
                 return COLOR_PAIR_BROWN;
             } else {
@@ -358,7 +404,7 @@ int get_color(Level *level, rl_coords coords)
         }
     }
 
-    char symbol = get_symbol(level, coords);
+    SYMBOL symbol = get_symbol(level, coords);
     switch (symbol) {
         case 'g':
             return COLOR_PAIR_GREEN;
@@ -367,7 +413,7 @@ int get_color(Level *level, rl_coords coords)
             return COLOR_PAIR_YELLOW;
         case 'r':
         case '+':
-            if (can_see(level->player->coords, coords, level->tiles))
+            if (rl_map_is_visible(level->map, coords))
                 return COLOR_PAIR_BROWN;
             else
                 return COLOR_PAIR_DEFAULT;
@@ -381,7 +427,7 @@ int get_color(Level *level, rl_coords coords)
     }
 }
 
-DrawTile get_tile(Level *level, rl_coords coords)
+DrawTile get_tile(Level *level, RL_Point coords)
 {
     Mob *player = level->player;
 
@@ -389,9 +435,7 @@ DrawTile get_tile(Level *level, rl_coords coords)
     t.symbol = get_symbol(level, coords);
     t.colorPair = get_color(level, coords);
 
-    if (t.colorPair != COLOR_PAIR_BROWN &&
-        can_see(player->coords, coords, level->tiles))
-    {
+    if (t.colorPair != COLOR_PAIR_BROWN && rl_map_is_visible(level->map, coords)) {
         t.attr = A_BOLD;
     }
 

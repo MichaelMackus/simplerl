@@ -3,8 +3,16 @@
 #include <stdlib.h>
 #include <memory.h>
 #include <ncurses.h>
+#include <assert.h>
 
-#include <lib/map.h>
+// shortcut to push to a non-pointer
+// TODO verify this works
+#define RL_PUSH(heap, item) \
+    if (heap == NULL) { \
+        *(&heap) = rl_heap_create(1, NULL); \
+        assert(heap); \
+    } \
+    rl_heap_insert(heap, item);
 
 static int resting = 0; // 1 if player resting
 static int inMenu = 0; // one of MENU consts if in menu
@@ -15,7 +23,7 @@ int is_running() { return runDir.xdir != 0 || runDir.ydir != 0; }
 
 int increase_depth(Dungeon *dungeon);
 int decrease_depth(Dungeon *dungeon);
-void move_player(Mob *player, rl_coords coords, Level *level);
+void move_player(Mob *player, RL_Point coords, Level *level);
 void run_player(Mob *player, Direction dir, Level *level);
 void tick(Dungeon *dungeon);
 void tick_mobs(Level *level);
@@ -37,7 +45,6 @@ int gameloop(Dungeon *dungeon, int input)
 
     switch (input)
     {
-        const Tile *t;
         const Mob *m;
 
         case 'Q':
@@ -76,13 +83,12 @@ int gameloop(Dungeon *dungeon, int input)
         case ',':
         case 'g':
             // get all items from floor
-            t = &level->tiles[player->coords.y][player->coords.x];
             Item *item;
-            while (item = rl_pop(&t->items))
+            while (item = rl_heap_pop(level->items[(int)player->coords.y][(int)player->coords.x]))
             {
                 if (!give_mob_item(player, item)) {
                     // abort if player inventory is full
-                    rl_push(&t->items, item, 0);
+                    RL_PUSH(level->items[(int)player->coords.y][(int)player->coords.x], item);
                     break;
                 }
             }
@@ -109,8 +115,8 @@ int gameloop(Dungeon *dungeon, int input)
                 // already readied projectile
                 message("Choose a direction");
                 inMenu = MENU_DIRECTION;
-                break;
             }
+            break;
         case 't':
             // open throw menu
             inMenu = MENU_THROW;
@@ -176,26 +182,31 @@ int gameloop(Dungeon *dungeon, int input)
     // heal player, increase turn count, and decrement smell
     tick(dungeon);
 
+    // update seen tiles (need to update before AI)
+    rl_fov_calculate_for_map(level->map, player->coords, FOV_RADIUS, rl_distance_manhattan);
+
     // display message for item(s) on current tile
-    Tile t = level->tiles[player->coords.y][player->coords.x];
-    if (t.items) {
-        int length = rl_queue_size(t.items);
-        Item *item = rl_peek(t.items);
-        char *buffer = malloc(sizeof(char) * MAX_WIDTH + 1);
-        if (item->amount == 1)
-            snprintf(buffer, MAX_WIDTH + 1, "You see %s", item->name);
-        else // pluralize
-            if (item->pluralName)
-                snprintf(buffer, MAX_WIDTH + 1, "You see %d %s",
-                        item->amount,
-                        item->pluralName);
-            else
-                snprintf(buffer, MAX_WIDTH + 1, "You see %d %ss",
-                        item->amount,
-                        item->name);
-        if (length > 1)
-            snprintf(buffer + strlen(buffer), MAX_WIDTH + 1 - strlen(buffer), " (and %d more items)", length - 1);
-        message(buffer);
+    RL_Heap *is = level->items[(int)player->coords.y][(int)player->coords.x];
+    if (is) {
+        int length = rl_heap_length(is);
+        Item *item = rl_heap_peek(is);
+        if (item && length > 0) {
+            char *buffer = malloc(sizeof(char) * MAX_WIDTH + 1);
+            if (item->amount == 1)
+                snprintf(buffer, MAX_WIDTH + 1, "You see %s", item->name);
+            else // pluralize
+                if (item->pluralName)
+                    snprintf(buffer, MAX_WIDTH + 1, "You see %d %s",
+                            item->amount,
+                            item->pluralName);
+                else
+                    snprintf(buffer, MAX_WIDTH + 1, "You see %d %ss",
+                            item->amount,
+                            item->name);
+            if (length > 1)
+                snprintf(buffer + strlen(buffer), MAX_WIDTH + 1 - strlen(buffer), " (and %d more items)", length - 1);
+            message(buffer);
+        }
     }
 
     // be a bit kind & handle mob AI only when *not* changing depth
@@ -218,7 +229,7 @@ int gameloop(Dungeon *dungeon, int input)
 /**         **/
 /*************/
 
-void move_player(Mob *player, rl_coords coords, Level *level)
+void move_player(Mob *player, RL_Point coords, Level *level)
 {
     // first, check for mob
     Mob *target = get_mob(level, coords);
@@ -254,8 +265,8 @@ void run_player(Mob *player, Direction dir, Level *level)
 // TODO add simple mob movement (instead of just sitting there)
 // TODO add simple sound AI (i.e. mob should be able to hear combat further than they can smell, and also remember that)
 void tick_mob(Mob *mob, Level *level);
-rl_coords smelliest(rl_coords coords, Level *level);
-int can_smell(rl_coords coords, Level *level);
+RL_Point smelliest(RL_Point coords, Level *level);
+int can_smell(RL_Point coords, Level *level);
 void tick_mobs(Level *level)
 {
     for (int i = 0; i < MAX_MOBS; ++i)
@@ -266,8 +277,8 @@ void tick_mobs(Level *level)
     if (generate(1, 10) == 10)
     {
         // get random coordinates for new mob, must not be near player
-        rl_coords coords = random_passable_coords(level);
-        while (can_see(coords, level->player->coords, level->tiles) ||
+        RL_Point coords = random_passable_coords(level);
+        while (rl_map_is_visible(level->map, coords) ||
                 can_smell(coords, level) ||
                 (level->upstair_loc.x == coords.x && level->upstair_loc.y == coords.y) ||
                 (level->downstair_loc.x == coords.x && level->downstair_loc.y == coords.y))
@@ -286,7 +297,7 @@ void tick_mobs(Level *level)
 }
 
 // returns -1 on move, 0 or more damage on attack
-int move_or_attack(Mob *attacker, rl_coords coords, Level *level)
+int move_or_attack(Mob *attacker, RL_Point coords, Level *level)
 {
     // first, check for mob
     Mob *target = get_mob(level, coords);
@@ -303,25 +314,25 @@ void tick_mob(Mob *mob, Level *level)
 {
     Mob *player = level->player;
 
-    if (can_see(mob->coords, player->coords, level->tiles))
+    if (rl_map_is_visible(level->map, mob->coords))
     {
         int dmg = -1;
 
         // advance mob towards player, if there is no enemy at target spot
         if (player->coords.x > mob->coords.x &&
-                rl_is_passable(level->map, RL_XY(mob->coords.x + 1, mob->coords.y)) &&
+                rl_map_is_passable(level->map, RL_XY(mob->coords.x + 1, mob->coords.y)) &&
                 get_enemy(level, RL_XY(mob->coords.x + 1, mob->coords.y)) == NULL)
             dmg = move_or_attack(mob, RL_XY(mob->coords.x + 1, mob->coords.y), level);
         else if (player->coords.x < mob->coords.x &&
-                rl_is_passable(level->map, RL_XY(mob->coords.x - 1, mob->coords.y)) &&
+                rl_map_is_passable(level->map, RL_XY(mob->coords.x - 1, mob->coords.y)) &&
                 get_enemy(level, RL_XY(mob->coords.x - 1, mob->coords.y)) == NULL)
             dmg = move_or_attack(mob, RL_XY(mob->coords.x - 1, mob->coords.y), level);
         else if (player->coords.y > mob->coords.y &&
-                rl_is_passable(level->map, RL_XY(mob->coords.x, mob->coords.y + 1)) &&
+                rl_map_is_passable(level->map, RL_XY(mob->coords.x, mob->coords.y + 1)) &&
                 get_enemy(level, RL_XY(mob->coords.x, mob->coords.y + 1)) == NULL)
             dmg = move_or_attack(mob, RL_XY(mob->coords.x, mob->coords.y + 1), level);
         else if (player->coords.y < mob->coords.y &&
-                rl_is_passable(level->map, RL_XY(mob->coords.x, mob->coords.y - 1)) &&
+                rl_map_is_passable(level->map, RL_XY(mob->coords.x, mob->coords.y - 1)) &&
                 get_enemy(level, RL_XY(mob->coords.x, mob->coords.y - 1)) == NULL)
             dmg = move_or_attack(mob, RL_XY(mob->coords.x, mob->coords.y - 1), level);
         else
@@ -339,7 +350,7 @@ void tick_mob(Mob *mob, Level *level)
         // if mob can't see, they can still smell the player (thanks NetHack!)
         if (can_smell(mob->coords, level))
         {
-            rl_coords coords = smelliest(mob->coords, level);
+            RL_Point coords = smelliest(mob->coords, level);
             move_or_attack(mob, coords, level);
         }
     }
@@ -374,8 +385,8 @@ void tick(Dungeon *dungeon)
     for (int y = 0; y < MAX_HEIGHT; ++y)
         for (int x = 0; x < MAX_WIDTH; ++x)
             if (!(player->coords.x == x && player->coords.y == y) &&
-                    level->tiles[y][x].smell > 0)
-                --level->tiles[y][x].smell;
+                    level->smell[y][x] > 0)
+                --level->smell[y][x];
 
     if (dungeon->turn % 10 == 0)
     {
@@ -403,17 +414,13 @@ void cleanup(Dungeon *dungeon)
             {
                 // transfer items & equipment to floor
                 Item *item;
-                Tile *t = &level->tiles[mob->coords.y][mob->coords.x];
-                rl_queue *items = NULL;
-                rl_array_to_queue(&items, mob->items, mob->itemCount);
-                while (item = rl_pop(&items))
-                {
-                    rl_push(&t->items, item, 0);
+                for (int i=0; i<mob->itemCount; i++) {
+                    item = mob->items[i];
+                    RL_PUSH(level->items[(int)mob->coords.y][(int)mob->coords.x], item);
                 }
-                Item *itemb = rl_peek(t->items);
 
                 // add to killed mobs queue
-                rl_push(&dungeon->killed, mob, 0);
+                RL_PUSH(dungeon->killed, mob);
 
                 // clear mob in level & reward exp
                 reward_exp(player, mob);
@@ -455,6 +462,9 @@ int increase_depth(Dungeon *dungeon)
     // place player on upstair
     dungeon->player->coords = dungeon->level->upstair_loc;
 
+    // update FOV
+    rl_fov_calculate_for_map(dungeon->level->map, dungeon->player->coords, FOV_RADIUS, rl_distance_manhattan);
+
     return 1;
 }
 
@@ -480,14 +490,6 @@ int handle_input(Dungeon *dungeon)
     Mob *player = dungeon->player;
     Level *level = dungeon->level;
 
-    // update seen tiles (done here to update before first turn)
-    // TODO make more efficient
-    if (!resting)
-        for (int y = 0; y < MAX_HEIGHT; ++y)
-            for (int x = 0; x < MAX_WIDTH; ++x)
-                if (can_see(player->coords, RL_XY(x, y), level->tiles))
-                    level->tiles[y][x].seen = 1;
-
     if (resting)
     {
         if (player->hp >= player->maxHP)
@@ -495,9 +497,8 @@ int handle_input(Dungeon *dungeon)
 
         // if player can see any mobs, reset resting flag
         for (int i = 0; i < MAX_MOBS; ++i)
-            if (level->mobs[i] != NULL &&
-                can_see(player->coords, level->mobs[i]->coords, level->tiles))
-                    resting = 0;
+            if (level->mobs[i] != NULL && rl_map_is_visible(level->map, level->mobs[i]->coords))
+                resting = 0;
 
         // if we're still resting, don't handle input
         if (resting)
@@ -507,15 +508,14 @@ int handle_input(Dungeon *dungeon)
     if (is_running())
     {
         Direction dir = runDir;
-        rl_coords target = RL_XY(player->coords.x + dir.xdir, player->coords.y + dir.ydir);
+        RL_Point target = RL_XY(player->coords.x + dir.xdir, player->coords.y + dir.ydir);
 
         // if player can see any mobs, reset running flag
         for (int i = 0; i < MAX_MOBS; ++i)
-            if (level->mobs[i] != NULL &&
-                    can_see(player->coords, level->mobs[i]->coords, level->tiles))
+            if (level->mobs[i] != NULL && rl_map_is_visible(level->map, level->mobs[i]->coords))
                 runDir = DIRECTION(0, 0);
 
-        if (!rl_is_passable(level->map, target) ||
+        if (!rl_map_is_passable(level->map, target) ||
                 get_enemy(level, target) != NULL)
         {
             runDir = DIRECTION(0, 0);
@@ -534,12 +534,12 @@ int handle_input(Dungeon *dungeon)
 }
 
 // TODO allow mobs to smell diagonally
-rl_coords smelliest(rl_coords coords, Level *level)
+RL_Point smelliest(RL_Point coords, Level *level)
 {
-    rl_coords smelliest = coords;
+    RL_Point smelliest = coords;
     int smell = 0;
 
-    rl_coords nearby_coords[4] = {
+    RL_Point nearby_coords[4] = {
         RL_XY(coords.x,     coords.y + 1),
         RL_XY(coords.x,     coords.y - 1),
         RL_XY(coords.x + 1, coords.y),
@@ -547,21 +547,20 @@ rl_coords smelliest(rl_coords coords, Level *level)
     };
 
     for (int i = 0; i < 4; ++i) {
-        if (!rl_is_passable(level->map, nearby_coords[i])) continue;
-        Tile tile = level->tiles[nearby_coords[i].y][nearby_coords[i].x];
+        if (!rl_map_is_passable(level->map, nearby_coords[i])) continue;
         Mob *mob = get_enemy(level, nearby_coords[i]);
-        if (mob == NULL && tile.smell > smell) {
+        if (mob == NULL && level->smell[(int)nearby_coords[i].y][(int)nearby_coords[i].x] > smell) {
             smelliest = nearby_coords[i];
-            smell = tile.smell;
+            smell = level->smell[(int)nearby_coords[i].y][(int)nearby_coords[i].x];
         }
     }
 
     return smelliest;
 }
 
-int can_smell(rl_coords coords, Level *level)
+int can_smell(RL_Point coords, Level *level)
 {
-    rl_coords nearby_coords[4] = {
+    RL_Point nearby_coords[4] = {
         RL_XY(coords.x,     coords.y + 1),
         RL_XY(coords.x,     coords.y - 1),
         RL_XY(coords.x + 1, coords.y),
@@ -569,10 +568,10 @@ int can_smell(rl_coords coords, Level *level)
     };
 
     for (int i = 0; i < 4; ++i) {
-        if (!rl_is_passable(level->map, nearby_coords[i])) continue;
+        if (!rl_map_is_passable(level->map, nearby_coords[i])) continue;
         Mob *mob = get_enemy(level, nearby_coords[i]);
-        Tile tile = level->tiles[nearby_coords[i].y][nearby_coords[i].x];
-        if (mob == NULL && tile.smell)
+        int smell = level->smell[(int)nearby_coords[i].y][(int)nearby_coords[i].x];
+        if (mob == NULL && smell)
             return 1;
     }
 
@@ -580,7 +579,7 @@ int can_smell(rl_coords coords, Level *level)
 }
 
 Mob *mob_in_dir(Level *level, Direction dir);
-int apply_item_effects(Level *level, Mob *mob, Item *item);
+void apply_item_effects(Level *level, Mob *mob, Item *item);
 void menu_management(int input, Level *level)
 {
     Mob *player = level->player;
@@ -631,8 +630,7 @@ void menu_management(int input, Level *level)
             {
                 // transfer to ground tile
                 if (remove_mob_item(player, item)) {
-                    Tile *tile = &level->tiles[player->coords.y][player->coords.x];
-                    rl_push(&tile->items, item, 0);
+                    RL_PUSH(level->items[(int)player->coords.y][(int)player->coords.x], item);
                 }
 
                 break;
@@ -754,7 +752,7 @@ void menu_management(int input, Level *level)
             if (item->type == ITEM_POTION) {
                 apply_item_effects(level, target, item);
             } else {
-                int dmg = attack(level, target, item);
+                int dmg = attack(level->player, target, item);
 
                 if (dmg > 0)
                     message("You hit the %s for %d damage!",
@@ -786,7 +784,7 @@ Mob *mob_in_dir(Level *level, Direction dir)
             x += dir.xdir;
             y += dir.ydir;
 
-            if (!rl_is_passable(level->map, RL_XY(x, y))) {
+            if (!rl_map_is_passable(level->map, RL_XY(x, y))) {
                 return NULL;
             }
 
@@ -801,7 +799,7 @@ Mob *mob_in_dir(Level *level, Direction dir)
 }
 
 // apply effects of item invoked by mob
-int apply_item_effects(Level *level, Mob *mob, Item *item)
+void apply_item_effects(Level *level, Mob *mob, Item *item)
 {
     Mob *player = level->player;
     int dmg;
@@ -844,7 +842,7 @@ int apply_item_effects(Level *level, Mob *mob, Item *item)
             case SCROLL_FIRE:
                 for (int i = 0; i < MAX_MOBS; ++i) {
                     Mob *m = level->mobs[i];
-                    if (m && can_see(player->coords, m->coords, level->tiles)) {
+                    if (m && rl_map_is_visible(level->map, m->coords)) {
                         // damage mob
                         int dmg = generate(1, 8);
                         message("You scorched the %s for %d damage.", mob_name(m->symbol), dmg);
@@ -855,13 +853,11 @@ int apply_item_effects(Level *level, Mob *mob, Item *item)
                 break;
             case SCROLL_TELEPORT:
                 message("You feel disoriented.");
-                rl_coords coords = random_passable_coords(level);
+                RL_Point coords = random_passable_coords(level);
                 player->coords = coords;
 
             default:
                 break;
         }
     }
-
-    return 0;
 }

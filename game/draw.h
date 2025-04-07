@@ -2,6 +2,7 @@
 #define DRAW_H
 
 #include "dungeon.h"
+#include "lib/roguelike.h"
 
 // initialize our screen
 // returns 0 on success
@@ -14,6 +15,6 @@ void deinit();
 void render(const Dungeon *dungeon);
 
 // print the killed mob list
-void print_mob_list(Mob **mobs, int mobCount);
+void print_mob_list(RL_Heap *heap);
 
 #endif

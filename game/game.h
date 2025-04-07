@@ -17,7 +17,10 @@
 #define MENU_QUAFF     7
 #define MENU_READ      8
 
+#define FOV_RADIUS 8
+
 #include "dungeon.h"
+#include "lib/roguelike.h"
 
 // return GAME constant
 int gameloop(Dungeon *dungeon, int input);

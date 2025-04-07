@@ -16,7 +16,7 @@
 #define MOB_FORM_FLYING 4
 
 #include "item.h"
-#include <lib/path.h>
+#include "lib/roguelike.h"
 
 typedef struct {
     int exp;
@@ -32,7 +32,7 @@ typedef struct {
 
 typedef struct {
     int hp, maxHP;
-    rl_coords coords;
+    RL_Point coords;
     int minDamage, maxDamage;
     int type;
     int form;
@@ -47,7 +47,7 @@ typedef struct {
 } Mob;
 
 // return a random mob for the specified dungeon depth
-Mob *create_mob(int depth, rl_coords coords);
+Mob *create_mob(int depth, RL_Point coords);
 
 // try to attack x, y
 // if no mob found at x, y do nothing
@@ -64,7 +64,7 @@ const char* mob_name(char symbol);
 int give_mob_item(Mob *mob, Item *item);
 
 // decrement item from mob (this decrements quantity by 1 if >1)
-// returns 1 if item has been removed from mob inventory, 
+// returns 1 if item has been removed from mob inventory,
 // or -1 if amount of item in inventory decremented (0 on error)
 int decrement_mob_item(Mob *mob, Item *item);
 

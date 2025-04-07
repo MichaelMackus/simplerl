@@ -1,13 +1,20 @@
 PROGRAM = simplerl
-LIB = libsimplerl.a
+SRCS = $(wildcard game/*.c)
+OBJS = $(SRCS:%.c=%.o)
+CFLAGS = -W -Werror -ggdb -I./
+#CFLAGS = -DNCURSES_WIDECHAR=1 -W -Werror -ggdb -I./
+LIBFLAGS = -lcurses -lm
+#LIBFLAGS = -lcursesw -lm
 
-all:
-	make -C lib
-	make -C game
+$(PROGRAM): $(OBJS)
+	gcc -o $(PROGRAM) $(CFLAGS) $(OBJS) $(LIBFLAGS)
 
-lib/$(LIB):
-	make -C lib
+%.o: %.c
+	gcc -o $@ $(CFLAGS) -c $<
 
 clean:
-	make -C lib clean
-	make -C game clean
+	rm game/*.o
+	rm $(PROGRAM)
+
+test:
+	gcc -o test $(CFLAGS) test.c $(LIBFLAGS)

@@ -1,15 +1,13 @@
 #include "dungeon.h"
-#include <lib/bsp.h>
-#include <lib/mapgen.h>
 #include <stdlib.h>
 #include <memory.h>
 #include <assert.h>
+#include <time.h>
 
 Dungeon *create_dungeon()
 {
     // do this otherwise initial seed will always be the same
-    init_random();
-    seed_random();
+    init_random(time(0));
 
     // allocate dungeon
     Dungeon *dungeon;
@@ -97,11 +95,11 @@ int init_level(Level *level, Mob *player)
     // randomly generate map
     randomly_fill_tiles(level);
 
-    // randomly populate *new* levels with max of MAX_MOBS / 2
-    randomly_fill_mobs(level, MAX_MOBS / 2);
-
     // place player on upstair
     player->coords = level->upstair_loc;
+
+    // randomly populate *new* levels with max of MAX_MOBS / 2
+    randomly_fill_mobs(level, MAX_MOBS / 2);
 
     // set smell around player before movement (also done in move_player)
     taint(player->coords, level);
@@ -110,7 +108,7 @@ int init_level(Level *level, Mob *player)
 }
 
 // taint smell aura around player
-void taint(const rl_coords playerCoords, Level *level)
+void taint(const RL_Point playerCoords, Level *level)
 {
     // NOTE: all these tiles *except* the current player tile will get
     // decremented by 1 in gameloop after this code is run
@@ -132,15 +130,15 @@ void taint(const rl_coords playerCoords, Level *level)
 
     for (int i = 0; i < 13; ++i)
     {
-        rl_coords location = RL_XY(coords[i][0], coords[i][1]);
+        RL_Point location = RL_XY(coords[i][0], coords[i][1]);
         int smell = coords[i][2];
 
         // out of bounds, skip coord
-        if (!rl_in_map_bounds(level->map, location)) continue;
+        if (!rl_map_in_bounds(level->map, location)) continue;
 
         // set smell if tile & greater than current smell
-        if (level->tiles[location.y][location.x].smell < smell)
-            level->tiles[location.y][location.x].smell = smell;
+        if (level->smell[(int)location.y][(int)location.x] < smell)
+            level->smell[(int)location.y][(int)location.x] = smell;
     }
 }
 
@@ -155,51 +153,40 @@ void taint(const rl_coords playerCoords, Level *level)
 void randomly_fill_tiles(Level *level)
 {
     if (level == NULL) return;
-    rl_bsp *bsp = rl_create_bsp(MAX_WIDTH, MAX_HEIGHT);
-    if (bsp == NULL) return;
-    rl_recursively_split_bsp(bsp, &rl_rng_twister_generate, 6, 6, 0.5, 4);
-    level->map = rl_create_map_from_bsp(bsp, &rl_rng_twister_generate, 4, 4, 8, 8, 1);
-    if (level->map == NULL) return;
-
-    // randomize corridor generation
-    if (generate(0, 1))
-        rl_connect_corridors_chaotic(level->map, bsp, &rl_rng_twister_generate);
-    else
-        rl_connect_corridors_to_random_siblings(level->map, bsp, &rl_rng_twister_generate);
-
-    // populate our internal tiles array
-    for (int x = 0; x < MAX_WIDTH; ++x) {
-        for (int y = 0; y < MAX_HEIGHT; ++y) {
-            level->tiles[y][x] = (Tile) {0};
-            level->tiles[y][x].type = rl_get_tile(level->map, RL_XY(x, y));
-        }
-    }
+    level->map = rl_map_create(MAX_WIDTH, MAX_HEIGHT);
+    assert(level->map);
+    RL_BSP *bsp = rl_mapgen_bsp(level->map, (RL_MapgenConfigBSP) { 3, 5, 3, 5, 1, 1, 1, 1 });
 
     // randomly place upstairs
-    rl_coords up;
+    RL_Point up;
     int i = 0;
     while (i < MAX_RANDOM_RECURSION) {
         up = random_passable_coords(level);
-        if (rl_is_room(level->map, up)) {
+        if (rl_map_tile_is(level->map, up, RL_TileRoom)) {
             level->upstair_loc = up;
             break;
         }
     }
+    assert(i < MAX_RANDOM_RECURSION);
+    assert(rl_map_tile_is(level->map, level->upstair_loc, RL_TileRoom));
 
     // randomly place downstairs
     // TODO place downstairs at greater distance from upstairs
     // TODO once win condition is defined, don't place downstairs on last level
-    rl_coords down;
+    RL_Point down;
     i = 0;
     while (i < MAX_RANDOM_RECURSION) {
         down = random_passable_coords(level);
-        if (rl_is_room(level->map, down)) {
+        if (rl_map_tile_is(level->map, down, RL_TileRoom) &&
+                !(level->upstair_loc.x == down.x && level->upstair_loc.y == down.y)) {
             level->downstair_loc = down;
             break;
         }
     }
+    assert(i < MAX_RANDOM_RECURSION);
+    assert(rl_map_tile_is(level->map, level->downstair_loc, RL_TileRoom));
 
-    rl_free_bsp(bsp);
+    rl_bsp_destroy(bsp);
 }
 
 void randomly_fill_mobs(Level *level, int max)
@@ -210,14 +197,14 @@ void randomly_fill_mobs(Level *level, int max)
     int amount = generate(0, max);
     for (int i = 0; i < amount; ++i)
     {
-        rl_coords coords = random_passable_coords(level);
+        RL_Point coords = random_passable_coords(level);
         Mob *mob = create_mob(level->depth, coords);
 
         if (mob == NULL)
             return;
 
         // don't spawn mobs on stairs
-        while ((level->upstair_loc.x == coords.x && level->upstair_loc.y == coords.y) || 
+        while ((level->upstair_loc.x == coords.x && level->upstair_loc.y == coords.y) ||
                 (level->downstair_loc.x == coords.x && level->downstair_loc.y == coords.y))
         {
             coords = random_passable_coords(level);
@@ -233,9 +220,9 @@ void randomly_fill_mobs(Level *level, int max)
 /**         **/
 /*************/
 
-rl_coords random_coords(Level *level)
+RL_Point random_coords(Level *level)
 {
-    rl_coords coords;
+    RL_Point coords;
     coords.x = generate(0, MAX_WIDTH - 1);
     coords.y = generate(0, MAX_HEIGHT - 1);
 
@@ -243,28 +230,29 @@ rl_coords random_coords(Level *level)
 }
 
 // FIXME these two functions are a quick fix
-rl_coords empty_coords()
+RL_Point empty_coords()
 {
-    rl_coords coords;
+    RL_Point coords;
     coords.x = MAX_WIDTH;
     coords.y = MAX_HEIGHT;
 
     return coords;
 }
 
-Mob *get_mob(const Level *level, rl_coords coords);
-rl_coords random_passable_coords(Level *level)
+Mob *get_mob(const Level *level, RL_Point coords);
+RL_Point random_passable_coords(Level *level)
 {
     // do simple brute force attempt to get a passable coord
     int i = 0;
     while (i < MAX_RANDOM_RECURSION)
     {
-        rl_coords coords = random_coords(level);
+        RL_Point coords = random_coords(level);
         Mob *m = get_mob(level, coords);
-        if (rl_is_passable(level->map, coords) && m == NULL)
+        if (rl_map_is_passable(level->map, coords) && m == NULL)
             return coords;
         ++i;
     }
+    assert(i < MAX_RANDOM_RECURSION);
 
     return empty_coords();
 }
@@ -278,15 +266,8 @@ Level *create_level(int depth)
     if (level == NULL)
         return NULL;
 
-    // initialize mobs & tiles array
+    // initialize mobs
     for (int i = 0; i < MAX_MOBS; ++i) level->mobs[i] = NULL;
-    for (int y = 0; y < MAX_HEIGHT; ++y)
-    {
-        for (int x = 0; x < MAX_WIDTH; ++x)
-        {
-            level->tiles[y][x] = (Tile){0};
-        }
-    }
 
     // initialize depth
     level->depth = depth;
@@ -295,10 +276,18 @@ Level *create_level(int depth)
     level->next = NULL;
     level->prev = NULL;
 
+    // initialize smells & items
+    for (int y=0; y<MAX_HEIGHT; ++y) {
+        for (int x=0; x<MAX_WIDTH; ++x) {
+            level->smell[y][x] = 0;
+            level->items[y][x] = NULL;
+        }
+    }
+
     return level;
 }
 
-Mob *get_enemy(const Level *level, rl_coords coords)
+Mob *get_enemy(const Level *level, RL_Point coords)
 {
     if (coords.y >= MAX_HEIGHT || coords.x >= MAX_WIDTH || coords.y < 0 || coords.x < 0)
         return NULL;
@@ -315,7 +304,7 @@ Mob *get_enemy(const Level *level, rl_coords coords)
     return NULL;
 }
 
-Mob *get_mob(const Level *level, rl_coords coords)
+Mob *get_mob(const Level *level, RL_Point coords)
 {
     if (coords.y >= MAX_HEIGHT || coords.x >= MAX_WIDTH || coords.y < 0 || coords.x < 0)
         return NULL;
@@ -330,7 +319,7 @@ Mob *get_mob(const Level *level, rl_coords coords)
 }
 
 // TODO handle NULL exception
-int move_mob(Mob *mob, rl_coords coords, Level *level)
+int move_mob(Mob *mob, RL_Point coords, Level *level)
 {
     if (mob == NULL)
         return 0;
@@ -341,7 +330,7 @@ int move_mob(Mob *mob, rl_coords coords, Level *level)
     if (target != NULL)
         return 0;
 
-    if (rl_is_passable(level->map, coords))
+    if (rl_map_is_passable(level->map, coords))
     {
         mob->coords.x = coords.x;
         mob->coords.y = coords.y;
@@ -351,34 +340,3 @@ int move_mob(Mob *mob, rl_coords coords, Level *level)
     else
         return 0;
 }
-
-int can_see(rl_coords from, rl_coords to, Tile tiles[MAX_HEIGHT][MAX_WIDTH])
-{
-    int ret = 0;
-    int length = 0;
-    rl_path *path = rl_get_line(from, to);
-    const rl_coords *loc;
-    while ((loc = rl_walk_path(path)) != NULL)
-    {
-        // if the line ends at the point we're looking at, we can see it!
-        if (loc->x == to.x && loc->y == to.y)
-        {
-            ret = 1;
-            break;
-        }
-
-        // if the current coord blocks the view and is at least 1 space
-        // away, we can't see it
-        if (loc->x < MAX_WIDTH && loc->y < MAX_HEIGHT && loc->x >= 0 && loc->y >= 0) {
-            rl_tile type = tiles[loc->y][loc->x].type;
-            if ((type == RL_TILE_BLOCK || type == RL_TILE_WALL || type == RL_TILE_PASSAGE || type == RL_TILE_DOORWAY) && length)
-                break;
-        }
-
-        ++length;
-    }
-    rl_clear_path(path);
-
-    return ret;
-}
-

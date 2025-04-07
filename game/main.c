@@ -1,3 +1,5 @@
+#define RL_IMPLEMENTATION
+#include "lib/roguelike.h"
 #include "draw.h"
 #include "game.h"
 #include "message.h"
@@ -10,6 +12,9 @@
 #define ERROR_OOM 1  // out of memory error
 #define ERROR_INIT 2 // curses initialization error
 #define ERROR_GAME 3 // internal game error
+
+
+// TODO define rl_assert as something that always aborts
 
 int usage()
 {
@@ -36,13 +41,16 @@ int main(int argc, const char **argv)
         return ERROR_OOM;
 
     // allocate messages array
-    if (init_messages() == NULL)
+    if (!init_messages())
         return ERROR_OOM;
 
     // randomize initial level
     if (!init_level(dungeon->level, dungeon->player))
         return ERROR_OOM;
     render(dungeon);
+
+    // update initial FOV
+    rl_fov_calculate_for_map(dungeon->level->map, dungeon->player->coords, FOV_RADIUS, rl_distance_manhattan);
 
     int result = GAME_PLAYING;
     int input;
@@ -78,8 +86,7 @@ int main(int argc, const char **argv)
 
     // print some things that might be interesting to the user
     printf("\n");
-    int mobCount = rl_queue_size(dungeon->killed);
-    print_mob_list(rl_queue_to_array(&dungeon->killed), mobCount);
+    print_mob_list(dungeon->killed);
     printf("\n");
     printf("You reached dungeon level %d. Your player was level %d and collected %d gold.\n\n",
             max_depth(dungeon),
