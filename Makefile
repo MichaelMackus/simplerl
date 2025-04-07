@@ -6,15 +6,18 @@ CFLAGS = -W -Werror -ggdb -I./
 LIBFLAGS = -lcurses -lm
 #LIBFLAGS = -lcursesw -lm
 
-$(PROGRAM): $(OBJS)
-	gcc -o $(PROGRAM) $(CFLAGS) $(OBJS) $(LIBFLAGS)
+$(PROGRAM): lib/roguelike.h $(OBJS)
+	cc -o $(PROGRAM) $(CFLAGS) $(OBJS) $(LIBFLAGS)
+
+lib/roguelike.h:
+	git submodule update
 
 %.o: %.c
-	gcc -o $@ $(CFLAGS) -c $<
+	cc -o $@ $(CFLAGS) -c $<
 
 clean:
 	rm game/*.o
 	rm $(PROGRAM)
 
 test:
-	gcc -o test $(CFLAGS) test.c $(LIBFLAGS)
+	cc -o test $(CFLAGS) test.c $(LIBFLAGS)

@@ -7,14 +7,11 @@ more things that are useful for roguelikes and/or RPGs.
 
 # Building
 
-To build the library simply run `make`. To build the library and game
-you run `make all`.
+To build the game simply run `make`. This does require git for the submodule
+and GCC + the curses library for building.
 
-The only dependency for the library are libm (which is part of the C
-standard library and should be included by default on your platform).
-The only dependencies for the game are libm and libcurses. Windows
-building *should* work, but this has been untested and might require
-further tweaking (please create any relevant github issues).
+Windows building *should* work with pdcurses, but this has been untested and
+might require further tweaking (please create any relevant github issues).
 
 If you'd like to use wide-character support (for "prettier" drawing of dungeon
 walls), you can do so by uncommenting the relevant lines in the Makefile. This
