@@ -18,6 +18,3 @@ might require further tweaking (please create any relevant github issues).
 If you'd like to use wide-character support (for "prettier" drawing of dungeon
 walls), you can do so by uncommenting the relevant lines in the Makefile. This
 requires curses built with wide-character support.
-
-The resulting (static) library will be built at lib/libsimplerl.a and
-the game will be built at game/simplerl
