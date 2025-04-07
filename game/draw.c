@@ -242,8 +242,7 @@ void print_mob_list(RL_Heap *mobs)
     if (mobs == NULL) return;
     int mobCount = rl_heap_length(mobs);
     char mobsIndexed[mobCount]; // array of symbols (currently symbol is mob ID)
-    int amountKilled[mobCount];
-    int amountIndexed = 0;
+    int amountKilled = 0;
 
     for (int i = 0; i < mobCount; ++i) {
         Mob *m = mobs->heap[i];
@@ -254,29 +253,23 @@ void print_mob_list(RL_Heap *mobs)
         for (j = 0; j < mobCount; ++j) {
             if (mobsIndexed[j] == m->symbol) break;
         }
-        if (mobsIndexed[j] == m->symbol) break;
+        if (mobsIndexed[j] == m->symbol) continue;
 
         // count mobs
-        amountKilled[i] = 0;
+        amountKilled = 0;
         for (j = 0; j < mobCount; ++j) {
             if (mobs->heap[j] == NULL) continue;
             Mob *m2 = mobs->heap[j];
-            if (m2->symbol == m->symbol) ++amountKilled[i];
+            if (m2->symbol == m->symbol) ++amountKilled;
         }
         mobsIndexed[i] = m->symbol;
-        ++amountIndexed;
-    }
 
-    for (int i = 0; i < amountIndexed; ++i)
-    {
-        Mob *mob = mobs->heap[i];
-
-        const char *name = mob_name(mob->symbol);
-        if (amountKilled[i] == 1)
-            printf("%d %s\n", amountKilled[i], name);
+        const char *name = mob_name(m->symbol);
+        if (amountKilled == 1)
+            printf("%d %s\n", amountKilled, name);
         else
             // simple plural check
-            printf("%d %ss\n", amountKilled[i], name);
+            printf("%d %ss\n", amountKilled, name);
     }
 }
 
