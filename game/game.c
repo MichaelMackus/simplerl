@@ -6,7 +6,6 @@
 #include <assert.h>
 
 // shortcut to push to a non-pointer
-// TODO verify this works
 #define RL_PUSH(heap, item) \
     if (heap == NULL) { \
         *(&heap) = rl_heap_create(1, NULL); \

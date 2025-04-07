@@ -318,7 +318,6 @@ Mob *get_mob(const Level *level, RL_Point coords)
     return get_enemy(level, coords);
 }
 
-// TODO handle NULL exception
 int move_mob(Mob *mob, RL_Point coords, Level *level)
 {
     if (mob == NULL)

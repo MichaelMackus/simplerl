@@ -13,9 +13,6 @@
 #define ERROR_INIT 2 // curses initialization error
 #define ERROR_GAME 3 // internal game error
 
-
-// TODO define rl_assert as something that always aborts
-
 int usage()
 {
     printf("Usage: simplerl [--no-color]\n");
