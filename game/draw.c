@@ -328,7 +328,11 @@ SYMBOL get_symbol(Level *level, RL_Point coords)
     RL_Tile *type = rl_map_tile(map, coords);
     assert(type);
     if (*type == RL_TileRoom)     return '.';
+#if(NCURSES_WIDECHAR)
+    if (*type == RL_TileCorridor && rl_map_is_visible(map, coords)) return L'░';
+#else
     if (*type == RL_TileCorridor) return '#';
+#endif
     if (*type == RL_TileDoor)     return '+';
     if (*type == RL_TileRock && rl_map_is_wall(map, coords))
     {
