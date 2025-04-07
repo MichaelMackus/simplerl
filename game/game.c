@@ -236,11 +236,9 @@ void alert_mobs(Level *level, RL_Point coords)
         if (m) {
             double d = rl_distance_manhattan(coords, m->coords);
             if (d < MOB_ALERT_RADIUS) {
-                if (m->dijkstra_graph) {
-                    rl_graph_destroy(m->dijkstra_graph);
-                    m->dijkstra_graph = NULL;
+                if (m->dijkstra_graph == NULL) {
+                    m->dijkstra_graph = rl_graph_create(level->map, rl_map_is_passable, false);
                 }
-                m->dijkstra_graph = rl_graph_create(level->map, rl_map_is_passable, false);
                 assert(m->dijkstra_graph);
                 rl_dijkstra_score(m->dijkstra_graph, coords, rl_distance_manhattan);
             }
@@ -280,7 +278,6 @@ void run_player(Mob *player, Direction dir, Level *level)
 }
 
 // mob AI & spawning
-// TODO add simple mob movement (instead of just sitting there)
 void tick_mob(Mob *mob, Level *level);
 void tick_mobs(Level *level)
 {
@@ -316,11 +313,13 @@ int move_or_attack(Mob *attacker, RL_Point coords, Level *level)
     // first, check for mob
     Mob *target = get_mob(level, coords);
 
-    if (target != NULL) {
+    if (target != NULL)
+    {
         alert_mobs(level, coords);
 
         return attack(attacker, target, attacker->equipment.weapon);
-    } else
+    }
+    else
         move_mob(attacker, coords, level);
 
     return -1;
@@ -332,7 +331,17 @@ void tick_mob(Mob *mob, Level *level)
 
     if (rl_map_is_visible(level->map, mob->coords))
     {
-        if (mob->dijkstra_graph) rl_graph_destroy(mob->dijkstra_graph);
+        if (mob->dijkstra_graph == NULL) {
+            mob->dijkstra_graph = rl_graph_create(level->map, rl_map_is_passable, false);
+        }
+        assert(mob->dijkstra_graph);
+        rl_dijkstra_score(mob->dijkstra_graph, player->coords, rl_distance_manhattan);
+    }
+
+    if (mob->dijkstra_graph == NULL)
+    {
+        // walk to random tile
+        RL_Point coords = random_passable_coords(level);
         mob->dijkstra_graph = rl_graph_create(level->map, rl_map_is_passable, false);
         assert(mob->dijkstra_graph);
         rl_dijkstra_score(mob->dijkstra_graph, player->coords, rl_distance_manhattan);

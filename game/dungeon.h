@@ -12,7 +12,7 @@
 #define MAX_RANDOM_RECURSION 1000
 
 #define FOV_RAIDUS 8
-#define MOB_ALERT_RADIUS FOV_RADIUS*2
+#define MOB_ALERT_RADIUS FOV_RADIUS
 
 // macro helper
 #define DIRECTION(x, y) (Direction) {x, y}
