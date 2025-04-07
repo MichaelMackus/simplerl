@@ -4,10 +4,10 @@
 #include <assert.h>
 #include <time.h>
 
-Dungeon *create_dungeon()
+Dungeon *create_dungeon(unsigned long seed)
 {
     // do this otherwise initial seed will always be the same
-    init_random(time(0));
+    init_random(seed);
 
     // allocate dungeon
     Dungeon *dungeon;
@@ -101,45 +101,7 @@ int init_level(Level *level, Mob *player)
     // randomly populate *new* levels with max of MAX_MOBS / 2
     randomly_fill_mobs(level, MAX_MOBS / 2);
 
-    // set smell around player before movement (also done in move_player)
-    taint(player->coords, level);
-
     return 1;
-}
-
-// taint smell aura around player
-void taint(const RL_Point playerCoords, Level *level)
-{
-    // NOTE: all these tiles *except* the current player tile will get
-    // decremented by 1 in gameloop after this code is run
-    int coords[13][3] = {
-        { playerCoords.x, playerCoords.y, INITIAL_SMELL },
-        { playerCoords.x - 1, playerCoords.y, INITIAL_SMELL - 1 },
-        { playerCoords.x - 1, playerCoords.y - 1, INITIAL_SMELL - 1 },
-        { playerCoords.x - 1, playerCoords.y + 1, INITIAL_SMELL - 1 },
-        { playerCoords.x - 2, playerCoords.y, INITIAL_SMELL - 2 },
-        { playerCoords.x, playerCoords.y - 1, INITIAL_SMELL - 1 },
-        { playerCoords.x, playerCoords.y - 2, INITIAL_SMELL - 2 },
-        { playerCoords.x + 1, playerCoords.y, INITIAL_SMELL - 1 },
-        { playerCoords.x + 1, playerCoords.y - 1, INITIAL_SMELL - 1 },
-        { playerCoords.x + 1, playerCoords.y + 1, INITIAL_SMELL - 1 },
-        { playerCoords.x + 2, playerCoords.y, INITIAL_SMELL - 2 },
-        { playerCoords.x, playerCoords.y + 1, INITIAL_SMELL - 1 },
-        { playerCoords.x, playerCoords.y + 2, INITIAL_SMELL - 2 }
-    };
-
-    for (int i = 0; i < 13; ++i)
-    {
-        RL_Point location = RL_XY(coords[i][0], coords[i][1]);
-        int smell = coords[i][2];
-
-        // out of bounds, skip coord
-        if (!rl_map_in_bounds(level->map, location)) continue;
-
-        // set smell if tile & greater than current smell
-        if (level->smell[(int)location.y][(int)location.x] < smell)
-            level->smell[(int)location.y][(int)location.x] = smell;
-    }
 }
 
 /*************/
@@ -229,16 +191,6 @@ RL_Point random_coords(Level *level)
     return coords;
 }
 
-// FIXME these two functions are a quick fix
-RL_Point empty_coords()
-{
-    RL_Point coords;
-    coords.x = MAX_WIDTH;
-    coords.y = MAX_HEIGHT;
-
-    return coords;
-}
-
 Mob *get_mob(const Level *level, RL_Point coords);
 RL_Point random_passable_coords(Level *level)
 {
@@ -254,7 +206,7 @@ RL_Point random_passable_coords(Level *level)
     }
     assert(i < MAX_RANDOM_RECURSION);
 
-    return empty_coords();
+    return RL_XY(MAX_WIDTH, MAX_HEIGHT);
 }
 
 Level *create_level(int depth)
@@ -276,10 +228,9 @@ Level *create_level(int depth)
     level->next = NULL;
     level->prev = NULL;
 
-    // initialize smells & items
+    // initialize items
     for (int y=0; y<MAX_HEIGHT; ++y) {
         for (int x=0; x<MAX_WIDTH; ++x) {
-            level->smell[y][x] = 0;
             level->items[y][x] = NULL;
         }
     }

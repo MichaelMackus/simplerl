@@ -279,8 +279,6 @@ SYMBOL get_symbol(Level *level, RL_Point coords)
     Mob *player = level->player;
     int x = coords.x, y = coords.y;
 
-    /* if (!rl_map_in_bounds(map, coords)) */
-    /*     return ' '; */
     if (!rl_map_in_bounds(map, coords) ||
             (!rl_map_is_visible(level->map, coords) &&
              !rl_map_is_seen(level->map, RL_XY(x, y))))

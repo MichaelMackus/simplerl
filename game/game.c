@@ -178,7 +178,7 @@ int gameloop(Dungeon *dungeon, int input)
     // cleanup dead mobs
     cleanup(dungeon);
 
-    // heal player, increase turn count, and decrement smell
+    // heal player & increase turn count
     tick(dungeon);
 
     // update seen tiles (need to update before AI)
@@ -228,6 +228,26 @@ int gameloop(Dungeon *dungeon, int input)
 /**         **/
 /*************/
 
+// alert mobs to player movement or sound (attacks)
+void alert_mobs(Level *level, RL_Point coords)
+{
+    for (int i=0; i<MAX_MOBS; ++i) {
+        Mob *m = level->mobs[i];
+        if (m) {
+            double d = rl_distance_manhattan(coords, m->coords);
+            if (d < MOB_ALERT_RADIUS) {
+                if (m->dijkstra_graph) {
+                    rl_graph_destroy(m->dijkstra_graph);
+                    m->dijkstra_graph = NULL;
+                }
+                m->dijkstra_graph = rl_graph_create(level->map, rl_map_is_passable, false);
+                assert(m->dijkstra_graph);
+                rl_dijkstra_score(m->dijkstra_graph, coords, rl_distance_manhattan);
+            }
+        }
+    }
+}
+
 void move_player(Mob *player, RL_Point coords, Level *level)
 {
     // first, check for mob
@@ -237,6 +257,7 @@ void move_player(Mob *player, RL_Point coords, Level *level)
     {
         // there was an enemy there!
         int dmg = attack(player, target, player->equipment.weapon);
+        alert_mobs(level, player->coords);
 
         if (dmg > 0)
             message("You hit the %s for %d damage!",
@@ -248,9 +269,7 @@ void move_player(Mob *player, RL_Point coords, Level *level)
     }
     else
     {
-        // move & set the smell of the player again
         move_mob(player, coords, level);
-        taint(player->coords, level);
     }
 }
 
@@ -262,10 +281,7 @@ void run_player(Mob *player, Direction dir, Level *level)
 
 // mob AI & spawning
 // TODO add simple mob movement (instead of just sitting there)
-// TODO add simple sound AI (i.e. mob should be able to hear combat further than they can smell, and also remember that)
 void tick_mob(Mob *mob, Level *level);
-RL_Point smelliest(RL_Point coords, Level *level);
-int can_smell(RL_Point coords, Level *level);
 void tick_mobs(Level *level)
 {
     for (int i = 0; i < MAX_MOBS; ++i)
@@ -278,7 +294,6 @@ void tick_mobs(Level *level)
         // get random coordinates for new mob, must not be near player
         RL_Point coords = random_passable_coords(level);
         while (rl_map_is_visible(level->map, coords) ||
-                can_smell(coords, level) ||
                 (level->upstair_loc.x == coords.x && level->upstair_loc.y == coords.y) ||
                 (level->downstair_loc.x == coords.x && level->downstair_loc.y == coords.y))
         {
@@ -301,9 +316,11 @@ int move_or_attack(Mob *attacker, RL_Point coords, Level *level)
     // first, check for mob
     Mob *target = get_mob(level, coords);
 
-    if (target != NULL)
+    if (target != NULL) {
+        alert_mobs(level, coords);
+
         return attack(attacker, target, attacker->equipment.weapon);
-    else
+    } else
         move_mob(attacker, coords, level);
 
     return -1;
@@ -315,42 +332,42 @@ void tick_mob(Mob *mob, Level *level)
 
     if (rl_map_is_visible(level->map, mob->coords))
     {
-        int dmg = -1;
-
-        // advance mob towards player, if there is no enemy at target spot
-        if (player->coords.x > mob->coords.x &&
-                rl_map_is_passable(level->map, RL_XY(mob->coords.x + 1, mob->coords.y)) &&
-                get_enemy(level, RL_XY(mob->coords.x + 1, mob->coords.y)) == NULL)
-            dmg = move_or_attack(mob, RL_XY(mob->coords.x + 1, mob->coords.y), level);
-        else if (player->coords.x < mob->coords.x &&
-                rl_map_is_passable(level->map, RL_XY(mob->coords.x - 1, mob->coords.y)) &&
-                get_enemy(level, RL_XY(mob->coords.x - 1, mob->coords.y)) == NULL)
-            dmg = move_or_attack(mob, RL_XY(mob->coords.x - 1, mob->coords.y), level);
-        else if (player->coords.y > mob->coords.y &&
-                rl_map_is_passable(level->map, RL_XY(mob->coords.x, mob->coords.y + 1)) &&
-                get_enemy(level, RL_XY(mob->coords.x, mob->coords.y + 1)) == NULL)
-            dmg = move_or_attack(mob, RL_XY(mob->coords.x, mob->coords.y + 1), level);
-        else if (player->coords.y < mob->coords.y &&
-                rl_map_is_passable(level->map, RL_XY(mob->coords.x, mob->coords.y - 1)) &&
-                get_enemy(level, RL_XY(mob->coords.x, mob->coords.y - 1)) == NULL)
-            dmg = move_or_attack(mob, RL_XY(mob->coords.x, mob->coords.y - 1), level);
-        else
-            return;
-
-        if (dmg > 0)
-            message("You got hit by the %s for %d damage!",
-                    mob_name(mob->symbol),
-                    dmg);
-        else if (dmg == 0)
-            message("The %s missed!", mob_name(mob->symbol));
+        if (mob->dijkstra_graph) rl_graph_destroy(mob->dijkstra_graph);
+        mob->dijkstra_graph = rl_graph_create(level->map, rl_map_is_passable, false);
+        assert(mob->dijkstra_graph);
+        rl_dijkstra_score(mob->dijkstra_graph, player->coords, rl_distance_manhattan);
     }
-    else
+
+    if (mob->dijkstra_graph)
     {
-        // if mob can't see, they can still smell the player (thanks NetHack!)
-        if (can_smell(mob->coords, level))
-        {
-            RL_Point coords = smelliest(mob->coords, level);
-            move_or_attack(mob, coords, level);
+        // find mobs coords in graph and sellect smallest neighbor
+        RL_GraphNode *next_node = NULL;
+        for (size_t i=0; i<mob->dijkstra_graph->length; ++i) {
+            const RL_GraphNode *n = &mob->dijkstra_graph->nodes[i];
+            if (n->point.x == mob->coords.x && n->point.y == mob->coords.y) {
+                for (size_t j=0; j<n->neighbors_length; ++j) {
+                    if (next_node == NULL || n->neighbors[j]->score < next_node->score) {
+                        next_node = n->neighbors[j];
+                    }
+                }
+                break;
+            }
+        }
+        if (next_node) {
+            Mob *target = get_mob(level, next_node->point);
+            if (target == NULL || target == level->player) {
+                int dmg = move_or_attack(mob, next_node->point, level);
+                if (next_node->score == 0) {
+                    rl_graph_destroy(mob->dijkstra_graph);
+                    mob->dijkstra_graph = NULL;
+                }
+                if (dmg > 0)
+                    message("You got hit by the %s for %d damage!",
+                            mob_name(mob->symbol),
+                            dmg);
+                else if (dmg == 0)
+                    message("The %s missed!", mob_name(mob->symbol));
+            }
         }
     }
 }
@@ -379,13 +396,6 @@ void tick(Dungeon *dungeon)
 {
     Level *level = dungeon->level;
     Mob *player = level->player;
-
-    // reduce smell on all tiles not on current player x, y
-    for (int y = 0; y < MAX_HEIGHT; ++y)
-        for (int x = 0; x < MAX_WIDTH; ++x)
-            if (!(player->coords.x == x && player->coords.y == y) &&
-                    level->smell[y][x] > 0)
-                --level->smell[y][x];
 
     if (dungeon->turn % 10 == 0)
     {
@@ -418,6 +428,11 @@ void cleanup(Dungeon *dungeon)
                     RL_PUSH(level->items[(int)mob->coords.y][(int)mob->coords.x], item);
                 }
 
+                if (mob->dijkstra_graph) {
+                    rl_graph_destroy(mob->dijkstra_graph);
+                    mob->dijkstra_graph = NULL;
+                }
+
                 // add to killed mobs queue
                 RL_PUSH(dungeon->killed, mob);
 
@@ -434,7 +449,6 @@ void cleanup(Dungeon *dungeon)
 // change current depth to next level deep
 // if there is no next level, create one
 // return 0 on error
-// TODO should probably remove smells when changing depth
 int increase_depth(Dungeon *dungeon)
 {
     if (dungeon->level->depth == MAX_LEVEL)
@@ -469,7 +483,6 @@ int increase_depth(Dungeon *dungeon)
 
 // change current depth to previous level
 // return 0 on error
-// TODO should probably remove smells when changing depth
 int decrease_depth(Dungeon *dungeon)
 {
     if (dungeon->level->prev == NULL)
@@ -530,51 +543,6 @@ int handle_input(Dungeon *dungeon)
     }
 
     return 1;
-}
-
-// TODO allow mobs to smell diagonally
-RL_Point smelliest(RL_Point coords, Level *level)
-{
-    RL_Point smelliest = coords;
-    int smell = 0;
-
-    RL_Point nearby_coords[4] = {
-        RL_XY(coords.x,     coords.y + 1),
-        RL_XY(coords.x,     coords.y - 1),
-        RL_XY(coords.x + 1, coords.y),
-        RL_XY(coords.x - 1, coords.y),
-    };
-
-    for (int i = 0; i < 4; ++i) {
-        if (!rl_map_is_passable(level->map, nearby_coords[i])) continue;
-        Mob *mob = get_enemy(level, nearby_coords[i]);
-        if (mob == NULL && level->smell[(int)nearby_coords[i].y][(int)nearby_coords[i].x] > smell) {
-            smelliest = nearby_coords[i];
-            smell = level->smell[(int)nearby_coords[i].y][(int)nearby_coords[i].x];
-        }
-    }
-
-    return smelliest;
-}
-
-int can_smell(RL_Point coords, Level *level)
-{
-    RL_Point nearby_coords[4] = {
-        RL_XY(coords.x,     coords.y + 1),
-        RL_XY(coords.x,     coords.y - 1),
-        RL_XY(coords.x + 1, coords.y),
-        RL_XY(coords.x - 1, coords.y),
-    };
-
-    for (int i = 0; i < 4; ++i) {
-        if (!rl_map_is_passable(level->map, nearby_coords[i])) continue;
-        Mob *mob = get_enemy(level, nearby_coords[i]);
-        int smell = level->smell[(int)nearby_coords[i].y][(int)nearby_coords[i].x];
-        if (mob == NULL && smell)
-            return 1;
-    }
-
-    return 0;
 }
 
 Mob *mob_in_dir(Level *level, Direction dir);
@@ -752,6 +720,7 @@ void menu_management(int input, Level *level)
                 apply_item_effects(level, target, item);
             } else {
                 int dmg = attack(level->player, target, item);
+                alert_mobs(level, level->player->coords);
 
                 if (dmg > 0)
                     message("You hit the %s for %d damage!",

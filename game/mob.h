@@ -38,6 +38,7 @@ typedef struct {
     int form;
     char symbol;
     Item *items[MAX_INVENTORY_ITEMS];
+    RL_Graph *dijkstra_graph;
     int itemCount;
     Equipment equipment;
     union {

@@ -122,6 +122,7 @@ Mob *create_mob(int depth, RL_Point coords)
 
     m->difficulty = difficulty;
     m->coords = coords;
+    m->dijkstra_graph = NULL;
 
     return m;
 }

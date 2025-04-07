@@ -5,7 +5,6 @@
 #define MAX_LEVEL  10
 #define MAX_WIDTH  80
 #define MAX_HEIGHT 30
-#define INITIAL_SMELL 10
 
 // for dungeon generator
 #define MIN_CELLS 8
@@ -13,6 +12,7 @@
 #define MAX_RANDOM_RECURSION 1000
 
 #define FOV_RAIDUS 8
+#define MOB_ALERT_RADIUS FOV_RADIUS*2
 
 // macro helper
 #define DIRECTION(x, y) (Direction) {x, y}
@@ -28,7 +28,6 @@ typedef struct Level_t {
     Mob *mobs[MAX_MOBS];
     RL_Map *map;
     RL_Heap *items[MAX_HEIGHT][MAX_WIDTH]; // game-specific tile data (items, mob, etc.)
-    int smell[MAX_HEIGHT][MAX_WIDTH];      // when player passes onto tile, set this to INITIAL_SMELL and decrement each turn TODO replace with dijkstra?
 
     int depth;
     struct Level_t *prev;
@@ -52,7 +51,7 @@ typedef struct {
 // create a new dungeon (once per game)
 // returns NULL if there was any issues allocating memory for
 // dungeon members
-Dungeon *create_dungeon();
+Dungeon *create_dungeon(unsigned long seed);
 
 Level *create_level(int depth);
 
@@ -61,9 +60,6 @@ int max_depth(Dungeon *dungeon);
 
 // initialize random dungeon
 int init_level(Level *level, Mob *player);
-
-// taint tiles around player (for AI pathfinding)
-void taint(const RL_Point playerCoords, Level *level);
 
 // return random coordinates that are passable and do not have a mob
 RL_Point random_passable_coords(Level *level);

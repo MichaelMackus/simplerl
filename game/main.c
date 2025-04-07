@@ -33,7 +33,8 @@ int main(int argc, const char **argv)
         return ERROR_INIT;
 
     // initialize dungeon
-    Dungeon *dungeon = create_dungeon();
+    unsigned long seed = time(0);
+    Dungeon *dungeon = create_dungeon(seed);
     if (dungeon == NULL)
         return ERROR_OOM;
 
@@ -89,6 +90,8 @@ int main(int argc, const char **argv)
             max_depth(dungeon),
             dungeon->player->attrs.level,
             total_gold(dungeon->player->items, dungeon->player->itemCount));
+
+    printf("Seed: %zu\n", seed);
 
     return 0;
 }
