@@ -1,5 +1,7 @@
 # simplerl
 
+![Screenshot](screenshot.png)
+
 This is a simple roguelike game, using my single-header library
 [libroguelike](https://github.com/MichaelMackus/libroguelike). The library
 contains a collection of tools such as dungeon generation, pathfinding, and
