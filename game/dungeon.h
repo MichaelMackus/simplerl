@@ -12,7 +12,7 @@
 #define MAX_RANDOM_RECURSION 1000
 
 #define FOV_RAIDUS 8
-#define MOB_ALERT_RADIUS FOV_RADIUS
+#define MOB_ALERT_RADIUS FOV_RADIUS/2
 
 // macro helper
 #define DIRECTION(x, y) (Direction) {x, y}
@@ -27,6 +27,7 @@ typedef struct Level_t {
     Mob *player;
     Mob *mobs[MAX_MOBS];
     RL_Map *map;
+    RL_FOV *fov;
     RL_Heap *items[MAX_HEIGHT][MAX_WIDTH]; // game-specific tile data (items, mob, etc.)
 
     int depth;
@@ -63,6 +64,9 @@ int init_level(Level *level, Mob *player);
 
 // return random coordinates that are passable and do not have a mob
 RL_Point random_passable_coords(Level *level);
+
+// return random coordinates
+RL_Point random_coords(Level *level);
 
 Mob *get_mob(const Level *level, RL_Point coords);
 Mob *get_enemy(const Level *level, RL_Point coords);

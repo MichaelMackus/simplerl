@@ -6,7 +6,7 @@
 
 void init_random(unsigned int seed)
 {
-    rl_rng_seed(seed);
+    srand(seed);
 }
 
 int generate(int min, int max)

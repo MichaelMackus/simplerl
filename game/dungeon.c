@@ -45,7 +45,7 @@ Dungeon *create_dungeon(unsigned long seed)
     player->attrs.expNext = 1000;
     player->attrs.level = 1;
     player->itemCount = 0;
-    memset(player->items, 0, MAX_INVENTORY_ITEMS);
+    memset(player->items, 0, MAX_INVENTORY_ITEMS*sizeof(*player->items));
 
     // give player some simple equipment
     Item *gold = create_item(1, ITEM_GOLD);
@@ -117,7 +117,18 @@ void randomly_fill_tiles(Level *level)
     if (level == NULL) return;
     level->map = rl_map_create(MAX_WIDTH, MAX_HEIGHT);
     assert(level->map);
-    RL_BSP *bsp = rl_mapgen_bsp(level->map, (RL_MapgenConfigBSP) { 3, 5, 3, 5, 1, 1, 1, 1 });
+    rl_mapgen_bsp(level->map, (RL_MapgenConfigBSP) {
+        .room_min_width = 3,
+        .room_max_width = 6,
+        .room_min_height = 3,
+        .room_max_height = 6,
+        .room_padding = 1,
+        .max_bsp_splits = 5,
+        .draw_corridors = true,
+        .connect_corridors_randomly = true,
+        .draw_doors = true,
+    });
+    level->fov = rl_fov_create(MAX_WIDTH, MAX_HEIGHT);
 
     // randomly place upstairs
     RL_Point up;
@@ -147,15 +158,12 @@ void randomly_fill_tiles(Level *level)
     }
     assert(i < MAX_RANDOM_RECURSION);
     assert(rl_map_tile_is(level->map, level->downstair_loc, RL_TileRoom));
-
-    rl_bsp_destroy(bsp);
 }
 
 void randomly_fill_mobs(Level *level, int max)
 {
     Mob **mobs = level->mobs;
 
-    int mobIndex = 0;
     int amount = generate(0, max);
     for (int i = 0; i < amount; ++i)
     {
@@ -176,17 +184,11 @@ void randomly_fill_mobs(Level *level, int max)
     }
 }
 
-/*************/
-/**         **/
-/** private **/
-/**         **/
-/*************/
-
 RL_Point random_coords(Level *level)
 {
     RL_Point coords;
-    coords.x = generate(0, MAX_WIDTH - 1);
-    coords.y = generate(0, MAX_HEIGHT - 1);
+    coords.x = generate(0, level->map->width - 1);
+    coords.y = generate(0, level->map->height - 1);
 
     return coords;
 }
@@ -208,6 +210,12 @@ RL_Point random_passable_coords(Level *level)
 
     return RL_XY(MAX_WIDTH, MAX_HEIGHT);
 }
+
+/*************/
+/**         **/
+/** private **/
+/**         **/
+/*************/
 
 Level *create_level(int depth)
 {

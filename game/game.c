@@ -4,6 +4,7 @@
 #include <memory.h>
 #include <ncurses.h>
 #include <assert.h>
+#include <float.h>
 
 // shortcut to push to a non-pointer
 #define RL_PUSH(heap, item) \
@@ -44,8 +45,6 @@ int gameloop(Dungeon *dungeon, int input)
 
     switch (input)
     {
-        const Mob *m;
-
         case 'Q':
             return GAME_QUIT;
 
@@ -83,7 +82,7 @@ int gameloop(Dungeon *dungeon, int input)
         case 'g':
             // get all items from floor
             Item *item;
-            while (item = rl_heap_pop(level->items[(int)player->coords.y][(int)player->coords.x]))
+            while ((item = rl_heap_pop(level->items[(int)player->coords.y][(int)player->coords.x])))
             {
                 if (!give_mob_item(player, item)) {
                     // abort if player inventory is full
@@ -182,7 +181,7 @@ int gameloop(Dungeon *dungeon, int input)
     tick(dungeon);
 
     // update seen tiles (need to update before AI)
-    rl_fov_calculate_for_map(level->map, player->coords, FOV_RADIUS, rl_distance_manhattan);
+    rl_fov_calculate(level->fov, level->map, player->coords, FOV_RADIUS, rl_distance_manhattan);
 
     // display message for item(s) on current tile
     RL_Heap *is = level->items[(int)player->coords.y][(int)player->coords.x];
@@ -285,12 +284,12 @@ void tick_mobs(Level *level)
         if (level->mobs[i] != NULL)
             tick_mob(level->mobs[i], level);
 
-    // 1/10 chance of new mob every turn
-    if (generate(1, 10) == 10)
+    // 1/20 chance of new mob every turn
+    if (generate(1, 10) == 1)
     {
         // get random coordinates for new mob, must not be near player
         RL_Point coords = random_passable_coords(level);
-        while (rl_map_is_visible(level->map, coords) ||
+        while (rl_fov_is_visible(level->fov, coords) ||
                 (level->upstair_loc.x == coords.x && level->upstair_loc.y == coords.y) ||
                 (level->downstair_loc.x == coords.x && level->downstair_loc.y == coords.y))
         {
@@ -329,7 +328,7 @@ void tick_mob(Mob *mob, Level *level)
 {
     Mob *player = level->player;
 
-    if (rl_map_is_visible(level->map, mob->coords))
+    if (rl_fov_is_visible(level->fov, mob->coords))
     {
         if (mob->dijkstra_graph == NULL) {
             mob->dijkstra_graph = rl_graph_create(level->map, rl_map_is_passable, false);
@@ -341,16 +340,20 @@ void tick_mob(Mob *mob, Level *level)
     if (mob->dijkstra_graph == NULL)
     {
         // walk to random tile
-        RL_Point coords = random_passable_coords(level);
-        mob->dijkstra_graph = rl_graph_create(level->map, rl_map_is_passable, false);
-        assert(mob->dijkstra_graph);
-        rl_dijkstra_score(mob->dijkstra_graph, player->coords, rl_distance_manhattan);
+        RL_Point coords = random_coords(level);
+        if (rl_map_is_passable(level->map, coords))
+        {
+            mob->dijkstra_graph = rl_graph_create(level->map, rl_map_is_passable, false);
+            assert(mob->dijkstra_graph);
+            rl_dijkstra_score(mob->dijkstra_graph, coords, rl_distance_manhattan);
+        }
     }
 
     if (mob->dijkstra_graph)
     {
         // find mobs coords in graph and sellect smallest neighbor
         RL_GraphNode *next_node = NULL;
+        const RL_Point *target_coords = NULL;
         for (size_t i=0; i<mob->dijkstra_graph->length; ++i) {
             const RL_GraphNode *n = &mob->dijkstra_graph->nodes[i];
             if (n->point.x == mob->coords.x && n->point.y == mob->coords.y) {
@@ -359,23 +362,29 @@ void tick_mob(Mob *mob, Level *level)
                         next_node = n->neighbors[j];
                     }
                 }
-                break;
+            }
+            if (n->score == 0) {
+                target_coords = &n->point;
             }
         }
         if (next_node) {
             Mob *target = get_mob(level, next_node->point);
             if (target == NULL || target == level->player) {
                 int dmg = move_or_attack(mob, next_node->point, level);
-                if (next_node->score == 0) {
-                    rl_graph_destroy(mob->dijkstra_graph);
-                    mob->dijkstra_graph = NULL;
-                }
                 if (dmg > 0)
                     message("You got hit by the %s for %d damage!",
                             mob_name(mob->symbol),
                             dmg);
                 else if (dmg == 0)
                     message("The %s missed!", mob_name(mob->symbol));
+            } else if (target_coords) {
+                // running into mob - destroy graph
+                rl_graph_destroy(mob->dijkstra_graph);
+                mob->dijkstra_graph = NULL;
+            }
+            if (mob->dijkstra_graph && (next_node->score == 0 || next_node->score == DBL_MAX)) {
+                rl_graph_destroy(mob->dijkstra_graph);
+                mob->dijkstra_graph = NULL;
             }
         }
     }
@@ -485,7 +494,7 @@ int increase_depth(Dungeon *dungeon)
     dungeon->player->coords = dungeon->level->upstair_loc;
 
     // update FOV
-    rl_fov_calculate_for_map(dungeon->level->map, dungeon->player->coords, FOV_RADIUS, rl_distance_manhattan);
+    rl_fov_calculate(dungeon->level->fov, dungeon->level->map, dungeon->player->coords, FOV_RADIUS, rl_distance_manhattan);
 
     return 1;
 }
@@ -518,7 +527,7 @@ int handle_input(Dungeon *dungeon)
 
         // if player can see any mobs, reset resting flag
         for (int i = 0; i < MAX_MOBS; ++i)
-            if (level->mobs[i] != NULL && rl_map_is_visible(level->map, level->mobs[i]->coords))
+            if (level->mobs[i] != NULL && rl_fov_is_visible(level->fov, level->mobs[i]->coords))
                 resting = 0;
 
         // if we're still resting, don't handle input
@@ -533,7 +542,7 @@ int handle_input(Dungeon *dungeon)
 
         // if player can see any mobs, reset running flag
         for (int i = 0; i < MAX_MOBS; ++i)
-            if (level->mobs[i] != NULL && rl_map_is_visible(level->map, level->mobs[i]->coords))
+            if (level->mobs[i] != NULL && rl_fov_is_visible(level->fov, level->mobs[i]->coords))
                 runDir = DIRECTION(0, 0);
 
         if (!rl_map_is_passable(level->map, target) ||
@@ -756,8 +765,8 @@ Mob *mob_in_dir(Level *level, Direction dir)
     if (dir.xdir == 0 && dir.ydir == 0) return NULL;
 
     Mob *player = level->player;
-    for (int x = player->coords.x; x < MAX_WIDTH && x >= 0;) {
-        for (int y = player->coords.y; y < MAX_HEIGHT && y >= 0;) {
+    for (unsigned int x = player->coords.x; x < level->map->width;) {
+        for (unsigned int y = player->coords.y; y < level->map->height;) {
             x += dir.xdir;
             y += dir.ydir;
 
@@ -819,7 +828,7 @@ void apply_item_effects(Level *level, Mob *mob, Item *item)
             case SCROLL_FIRE:
                 for (int i = 0; i < MAX_MOBS; ++i) {
                     Mob *m = level->mobs[i];
-                    if (m && rl_map_is_visible(level->map, m->coords)) {
+                    if (m && rl_fov_is_visible(level->fov, m->coords)) {
                         // damage mob
                         int dmg = generate(1, 8);
                         message("You scorched the %s for %d damage.", mob_name(m->symbol), dmg);

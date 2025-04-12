@@ -283,7 +283,6 @@ void shift_mob_item(Mob *mob, int i)
     if (mob->equipment.armor && mob->equipment.armor->id == item->id)
         mob->equipment.armor = NULL;
 
-    Item *next;
     for (int j = i + 1; j < mob->itemCount; ++j) {
         mob->items[i] = mob->items[j];
         i++;

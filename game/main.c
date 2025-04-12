@@ -29,8 +29,10 @@ int main(int argc, const char **argv)
         return usage();
 
     // initialize curses
-    if (!init(enableColor))
+    if (!init(enableColor)) {
+        fprintf(stderr, "ERROR: Terminal size too small. The game requires a terminal of at least %d characters wide by %d characters tall.\n", MAX_WIDTH, MAX_HEIGHT);
         return ERROR_INIT;
+    }
 
     // initialize dungeon
     unsigned long seed = time(0);
@@ -48,7 +50,7 @@ int main(int argc, const char **argv)
     render(dungeon);
 
     // update initial FOV
-    rl_fov_calculate_for_map(dungeon->level->map, dungeon->player->coords, FOV_RADIUS, rl_distance_manhattan);
+    rl_fov_calculate(dungeon->level->fov, dungeon->level->map, dungeon->player->coords, FOV_RADIUS, rl_distance_manhattan);
 
     int result = GAME_PLAYING;
     int input;

@@ -1,8 +1,10 @@
+#include <string.h>
+
 #include "item.h"
 #include "random.h"
 
-static const char **unknownItems;
-static const char **knownItems;
+/* static const char **unknownItems; */
+/* static const char **knownItems; */
 
 char item_symbol(int itemType)
 {
@@ -58,7 +60,7 @@ int is_stackable(Item item)
             return 1;
 
         case ITEM_WEAPON:
-            if (item.name == "dagger") return 1;
+            if (strcmp(item.name, "dagger") == 0) return 1;
 
             break;
     }
@@ -114,6 +116,7 @@ Item *generate_gold(int depth)
 
 Item *generate_potion(int depth)
 {
+    (void) depth; // currently unused
     Item *item = malloc(sizeof(Item));
 
     if (item == NULL)
@@ -139,6 +142,7 @@ Item *generate_potion(int depth)
 
 Item *generate_scroll(int depth)
 {
+    (void) depth; // currently unused
     Item *item = malloc(sizeof(Item));
 
     if (item == NULL)

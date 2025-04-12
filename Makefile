@@ -1,8 +1,8 @@
 PROGRAM = simplerl
 SRCS = $(wildcard game/*.c)
 OBJS = $(SRCS:%.c=%.o)
-CFLAGS = -W -Werror -ggdb -I./
-#CFLAGS = -DNCURSES_WIDECHAR=1 -W -Werror -ggdb -I./
+CFLAGS = -W -Wall -Werror -ggdb -I./
+#CFLAGS = -DNCURSES_WIDECHAR=1 -W -Wall -Werror -ggdb -I./
 LIBFLAGS = -lcurses -lm
 #LIBFLAGS = -lcursesw -lm
 

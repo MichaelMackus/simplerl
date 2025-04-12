@@ -11,7 +11,7 @@
 #define SYMBOL char
 #endif
 
-int hasColor;
+static int hasColor;
 
 typedef struct DrawTile {
     SYMBOL symbol;
@@ -40,9 +40,12 @@ int init(int enableColor)
     curs_set(0);          /* hide cursor */
 
     int mx, my;
-    /* getmaxyx(stdscr, my, mx); */
-    /* if (mx < MAX_WIDTH || my < MAX_HEIGHT) */
-    /*     return 0; */
+    getmaxyx(stdscr, my, mx);
+    if (mx < MAX_WIDTH || my < MAX_HEIGHT) {
+        endwin();
+
+        return 0;
+    }
 
     hasColor = enableColor ? has_colors() : 0;
     if (hasColor) {
@@ -93,51 +96,47 @@ void render(const Dungeon *dungeon)
             Equipment equipment = player->equipment;
 
             // render inventory
-            char *buffer = malloc(sizeof(char) * (MAX_WIDTH + 1)); // width + 1 for null byte
-            char equippedStr[MAX_WIDTH + 1];
+            char buffer[MAX_WIDTH + 1]; // width + 1 for null byte
             int y = 0;
-            if (buffer != NULL)
-                for (int i = 0; i < player->itemCount; ++i)
-                {
-                    Item *item = player->items[i];
+            for (int i = 0; i < player->itemCount; ++i)
+            {
+                Item *item = player->items[i];
 
-                    if (item->type == ITEM_WEAPON &&
-                            equipment.weapon != NULL &&
-                            equipment.weapon->id == item->id)
-                        strcpy(equippedStr, " (equipped)");
-                    else if (item->type == ITEM_ARMOR &&
-                            equipment.armor != NULL &&
-                            equipment.armor->id == item->id)
-                        strcpy(equippedStr, " (equipped)");
-                    else
-                        strcpy(equippedStr, "");
+                bool isEquipped = false;
+                if (item->type == ITEM_WEAPON &&
+                        equipment.weapon != NULL &&
+                        equipment.weapon->id == item->id)
+                    isEquipped = true;
+                else if (item->type == ITEM_ARMOR &&
+                        equipment.armor != NULL &&
+                        equipment.armor->id == item->id)
+                    isEquipped = true;
 
-                    char sym;
-                    if (i == 0) sym = '$'; // gold inventory symbol
-                    else sym = item_menu_symbol(i - 1);
+                char sym;
+                if (i == 0) sym = '$'; // gold inventory symbol
+                else sym = item_menu_symbol(i - 1);
 
-                    if (item->amount == 1)
-                        snprintf(buffer, MAX_WIDTH + 1, "%c - %s%s",
+                if (item->amount == 1)
+                    snprintf(buffer, MAX_WIDTH + 1, "%c - %s%s",
+                            sym,
+                            item->name,
+                            isEquipped ? " (equipped)" : "");
+                else // pluralize
+                    if (item->pluralName)
+                        snprintf(buffer, MAX_WIDTH + 1, "%c - %d %s%s",
                                 sym,
+                                item->amount,
+                                item->pluralName,
+                                isEquipped ? " (equipped)" : "");
+                    else
+                        snprintf(buffer, MAX_WIDTH + 1, "%c - %d %ss%s",
+                                sym,
+                                item->amount,
                                 item->name,
-                                equippedStr);
-                    else // pluralize
-                        if (item->pluralName)
-                            snprintf(buffer, MAX_WIDTH + 1, "%c - %d %s%s",
-                                    sym,
-                                    item->amount,
-                                    item->pluralName,
-                                    equippedStr);
-                        else
-                            snprintf(buffer, MAX_WIDTH + 1, "%c - %d %ss%s",
-                                    sym,
-                                    item->amount,
-                                    item->name,
-                                    equippedStr);
+                                isEquipped ? " (equipped)" : "");
 
-                    render_message((const char*) buffer, y++, 0);
-                }
-            free(buffer);
+                render_message((const char*) buffer, y++, 0);
+            }
         }
         else
             render_message("No items in inventory.", 0, 0);
@@ -276,15 +275,17 @@ void print_mob_list(RL_Heap *mobs)
 SYMBOL get_symbol(Level *level, RL_Point coords)
 {
     RL_Map *map = level->map;
-    Mob *player = level->player;
     int x = coords.x, y = coords.y;
 
-    if (!rl_map_in_bounds(map, coords) ||
-            (!rl_map_is_visible(level->map, coords) &&
-             !rl_map_is_seen(level->map, RL_XY(x, y))))
-    {
+    if (!rl_map_in_bounds(map, coords)) {
         return ' ';
     }
+
+#ifndef DISABLE_FOV
+    if (!rl_fov_is_visible(level->fov, coords) && !rl_fov_is_seen(level->fov, RL_XY(x, y))) {
+        return ' ';
+    }
+#endif
 
     /**
      * Monster symbol
@@ -292,7 +293,10 @@ SYMBOL get_symbol(Level *level, RL_Point coords)
     for (int i = 0; i < MAX_MOBS; ++i)
     {
         const Mob *mob = get_mob(level, coords);
-        if (mob != NULL && rl_map_is_visible(level->map, mob->coords))
+        if (mob == NULL) continue;
+#ifndef DISABLE_FOV
+        if (rl_fov_is_visible(level->fov, mob->coords))
+#endif
             return mob->symbol;
     }
 
@@ -316,11 +320,11 @@ SYMBOL get_symbol(Level *level, RL_Point coords)
     /**
      * type symbol
      */
-    RL_Tile *type = rl_map_tile(map, coords);
+    RL_Byte *type = rl_map_tile(map, coords);
     assert(type);
     if (*type == RL_TileRoom)     return '.';
 #if(NCURSES_WIDECHAR)
-    if (*type == RL_TileCorridor && rl_map_is_visible(map, coords)) return L'░';
+    if (*type == RL_TileCorridor && rl_fov_is_visible(level->fov, coords)) return L'░';
 #else
     if (*type == RL_TileCorridor) return '#';
 #endif
@@ -408,7 +412,7 @@ int get_color(Level *level, RL_Point coords)
             return COLOR_PAIR_YELLOW;
         case 'r':
         case '+':
-            if (rl_map_is_visible(level->map, coords))
+            if (rl_fov_is_visible(level->fov, coords))
                 return COLOR_PAIR_BROWN;
             else
                 return COLOR_PAIR_DEFAULT;
@@ -424,13 +428,11 @@ int get_color(Level *level, RL_Point coords)
 
 DrawTile get_tile(Level *level, RL_Point coords)
 {
-    Mob *player = level->player;
-
     DrawTile t = {0};
     t.symbol = get_symbol(level, coords);
     t.colorPair = get_color(level, coords);
 
-    if (t.colorPair != COLOR_PAIR_BROWN && rl_map_is_visible(level->map, coords)) {
+    if (t.colorPair != COLOR_PAIR_BROWN && rl_fov_is_visible(level->fov, coords)) {
         t.attr = A_BOLD;
     }
 
