@@ -117,17 +117,7 @@ void randomly_fill_tiles(Level *level)
     if (level == NULL) return;
     level->map = rl_map_create(MAX_WIDTH, MAX_HEIGHT);
     assert(level->map);
-    rl_mapgen_bsp(level->map, (RL_MapgenConfigBSP) {
-        .room_min_width = 3,
-        .room_max_width = 6,
-        .room_min_height = 3,
-        .room_max_height = 6,
-        .room_padding = 1,
-        .max_bsp_splits = 5,
-        .draw_corridors = true,
-        .connect_corridors_randomly = true,
-        .draw_doors = true,
-    });
+    rl_mapgen_bsp(level->map, RL_MAPGEN_BSP_DEFAULTS);
     level->fov = rl_fov_create(MAX_WIDTH, MAX_HEIGHT);
 
     // randomly place upstairs

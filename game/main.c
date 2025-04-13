@@ -1,13 +1,15 @@
-#define RL_IMPLEMENTATION
-#include "lib/roguelike.h"
 #include "draw.h"
 #include "game.h"
 #include "message.h"
+
+#define RL_IMPLEMENTATION
+#include "lib/roguelike.h"
 
 #include <ncurses.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <memory.h>
+#include <time.h>
 
 #define ERROR_OOM 1  // out of memory error
 #define ERROR_INIT 2 // curses initialization error
