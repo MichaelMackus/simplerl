@@ -382,7 +382,7 @@ void tick_mob(Mob *mob, Level *level)
                 rl_graph_destroy(mob->dijkstra_graph);
                 mob->dijkstra_graph = NULL;
             }
-            if (mob->dijkstra_graph && (next_node->score == 0 || next_node->score == DBL_MAX)) {
+            if (mob->dijkstra_graph && (next_node->score == 0 || next_node->score == FLT_MAX)) {
                 rl_graph_destroy(mob->dijkstra_graph);
                 mob->dijkstra_graph = NULL;
             }

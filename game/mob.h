@@ -1,7 +1,7 @@
 #ifndef MOB_H
 #define MOB_H
 
-#define MAX_MOBS            20
+#define MAX_MOBS            10
 #define MAX_PLAYER_LEVEL    20
 #define MAX_INVENTORY_ITEMS 27 // 1 spot for gold + 26 inventory letters
 
