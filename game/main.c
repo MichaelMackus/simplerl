@@ -52,7 +52,7 @@ int main(int argc, const char **argv)
     render(dungeon);
 
     // update initial FOV
-    rl_fov_calculate(dungeon->level->fov, dungeon->level->map, dungeon->player->coords, FOV_RADIUS, rl_distance_manhattan);
+    rl_fov_calculate(dungeon->level->fov, dungeon->level->map, dungeon->player->coords.x, dungeon->player->coords.y, FOV_RADIUS);
 
     int result = GAME_PLAYING;
     int input;

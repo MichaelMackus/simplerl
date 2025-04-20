@@ -181,7 +181,7 @@ int gameloop(Dungeon *dungeon, int input)
     tick(dungeon);
 
     // update seen tiles (need to update before AI)
-    rl_fov_calculate(level->fov, level->map, player->coords, FOV_RADIUS, rl_distance_manhattan);
+    rl_fov_calculate(level->fov, level->map, player->coords.x, player->coords.y, FOV_RADIUS);
 
     // display message for item(s) on current tile
     RL_Heap *is = level->items[(int)player->coords.y][(int)player->coords.x];
@@ -266,6 +266,12 @@ void move_player(Mob *player, RL_Point coords, Level *level)
     }
     else
     {
+        // if there was a door, open it first
+        RL_Byte *t = rl_map_tile(level->map, player->coords.x, player->coords.y);
+        if (t && *t == RL_TileDoor) {
+            *t = RL_TileDoorOpen;
+        }
+        // then move the player
         move_mob(player, coords, level);
     }
 }
@@ -289,7 +295,7 @@ void tick_mobs(Level *level)
     {
         // get random coordinates for new mob, must not be near player
         RL_Point coords = random_passable_coords(level);
-        while (rl_fov_is_visible(level->fov, coords) ||
+        while (rl_fov_is_visible(level->fov, coords.x, coords.y) ||
                 (level->upstair_loc.x == coords.x && level->upstair_loc.y == coords.y) ||
                 (level->downstair_loc.x == coords.x && level->downstair_loc.y == coords.y))
         {
@@ -328,7 +334,7 @@ void tick_mob(Mob *mob, Level *level)
 {
     Mob *player = level->player;
 
-    if (rl_fov_is_visible(level->fov, mob->coords))
+    if (rl_fov_is_visible(level->fov, mob->coords.x, mob->coords.y))
     {
         if (mob->dijkstra_graph == NULL) {
             mob->dijkstra_graph = rl_graph_create(level->map, rl_map_is_passable, false);
@@ -341,7 +347,7 @@ void tick_mob(Mob *mob, Level *level)
     {
         // walk to random tile
         RL_Point coords = random_coords(level);
-        if (rl_map_is_passable(level->map, coords))
+        if (rl_map_is_passable(level->map, coords.x, coords.y))
         {
             mob->dijkstra_graph = rl_graph_create(level->map, rl_map_is_passable, false);
             assert(mob->dijkstra_graph);
@@ -494,7 +500,7 @@ int increase_depth(Dungeon *dungeon)
     dungeon->player->coords = dungeon->level->upstair_loc;
 
     // update FOV
-    rl_fov_calculate(dungeon->level->fov, dungeon->level->map, dungeon->player->coords, FOV_RADIUS, rl_distance_manhattan);
+    rl_fov_calculate(dungeon->level->fov, dungeon->level->map, dungeon->player->coords.x, dungeon->player->coords.y, FOV_RADIUS);
 
     return 1;
 }
@@ -527,7 +533,7 @@ int handle_input(Dungeon *dungeon)
 
         // if player can see any mobs, reset resting flag
         for (int i = 0; i < MAX_MOBS; ++i)
-            if (level->mobs[i] != NULL && rl_fov_is_visible(level->fov, level->mobs[i]->coords))
+            if (level->mobs[i] != NULL && rl_fov_is_visible(level->fov, level->mobs[i]->coords.x, level->mobs[i]->coords.y))
                 resting = 0;
 
         // if we're still resting, don't handle input
@@ -542,10 +548,10 @@ int handle_input(Dungeon *dungeon)
 
         // if player can see any mobs, reset running flag
         for (int i = 0; i < MAX_MOBS; ++i)
-            if (level->mobs[i] != NULL && rl_fov_is_visible(level->fov, level->mobs[i]->coords))
+            if (level->mobs[i] != NULL && rl_fov_is_visible(level->fov, level->mobs[i]->coords.x, level->mobs[i]->coords.y))
                 runDir = DIRECTION(0, 0);
 
-        if (!rl_map_is_passable(level->map, target) ||
+        if (!rl_map_is_passable(level->map, target.x, target.y) ||
                 get_enemy(level, target) != NULL)
         {
             runDir = DIRECTION(0, 0);
@@ -770,7 +776,7 @@ Mob *mob_in_dir(Level *level, Direction dir)
             x += dir.xdir;
             y += dir.ydir;
 
-            if (!rl_map_is_passable(level->map, RL_XY(x, y))) {
+            if (!rl_map_is_passable(level->map, x, y)) {
                 return NULL;
             }
 
@@ -828,7 +834,7 @@ void apply_item_effects(Level *level, Mob *mob, Item *item)
             case SCROLL_FIRE:
                 for (int i = 0; i < MAX_MOBS; ++i) {
                     Mob *m = level->mobs[i];
-                    if (m && rl_fov_is_visible(level->fov, m->coords)) {
+                    if (m && rl_fov_is_visible(level->fov, m->coords.x, m->coords.y)) {
                         // damage mob
                         int dmg = generate(1, 8);
                         message("You scorched the %s for %d damage.", mob_name(m->symbol), dmg);

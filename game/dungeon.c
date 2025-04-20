@@ -125,13 +125,13 @@ void randomly_fill_tiles(Level *level)
     int i = 0;
     while (i < MAX_RANDOM_RECURSION) {
         up = random_passable_coords(level);
-        if (rl_map_tile_is(level->map, up, RL_TileRoom)) {
+        if (rl_map_tile_is(level->map, up.x, up.y, RL_TileRoom)) {
             level->upstair_loc = up;
             break;
         }
     }
     assert(i < MAX_RANDOM_RECURSION);
-    assert(rl_map_tile_is(level->map, level->upstair_loc, RL_TileRoom));
+    assert(rl_map_tile_is(level->map, level->upstair_loc.x, level->upstair_loc.y, RL_TileRoom));
 
     // randomly place downstairs
     // TODO place downstairs at greater distance from upstairs
@@ -140,14 +140,14 @@ void randomly_fill_tiles(Level *level)
     i = 0;
     while (i < MAX_RANDOM_RECURSION) {
         down = random_passable_coords(level);
-        if (rl_map_tile_is(level->map, down, RL_TileRoom) &&
+        if (rl_map_tile_is(level->map, down.x, down.y, RL_TileRoom) &&
                 !(level->upstair_loc.x == down.x && level->upstair_loc.y == down.y)) {
             level->downstair_loc = down;
             break;
         }
     }
     assert(i < MAX_RANDOM_RECURSION);
-    assert(rl_map_tile_is(level->map, level->downstair_loc, RL_TileRoom));
+    assert(rl_map_tile_is(level->map, level->downstair_loc.x, level->downstair_loc.y, RL_TileRoom));
 }
 
 void randomly_fill_mobs(Level *level, int max)
@@ -192,7 +192,7 @@ RL_Point random_passable_coords(Level *level)
     {
         RL_Point coords = random_coords(level);
         Mob *m = get_mob(level, coords);
-        if (rl_map_is_passable(level->map, coords) && m == NULL)
+        if (rl_map_is_passable(level->map, coords.x, coords.y) && m == NULL)
             return coords;
         ++i;
     }
@@ -278,7 +278,7 @@ int move_mob(Mob *mob, RL_Point coords, Level *level)
     if (target != NULL)
         return 0;
 
-    if (rl_map_is_passable(level->map, coords))
+    if (rl_map_is_passable(level->map, coords.x, coords.y))
     {
         mob->coords.x = coords.x;
         mob->coords.y = coords.y;

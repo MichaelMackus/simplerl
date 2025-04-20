@@ -277,12 +277,12 @@ SYMBOL get_symbol(Level *level, RL_Point coords)
     RL_Map *map = level->map;
     int x = coords.x, y = coords.y;
 
-    if (!rl_map_in_bounds(map, coords)) {
+    if (!rl_map_in_bounds(map, coords.x, coords.y)) {
         return ' ';
     }
 
 #ifndef DISABLE_FOV
-    if (!rl_fov_is_visible(level->fov, coords) && !rl_fov_is_seen(level->fov, RL_XY(x, y))) {
+    if (!rl_fov_is_visible(level->fov, coords.x, coords.y) && !rl_fov_is_seen(level->fov, x, y)) {
         return ' ';
     }
 #endif
@@ -295,7 +295,7 @@ SYMBOL get_symbol(Level *level, RL_Point coords)
         const Mob *mob = get_mob(level, coords);
         if (mob == NULL) continue;
 #ifndef DISABLE_FOV
-        if (rl_fov_is_visible(level->fov, mob->coords))
+        if (rl_fov_is_visible(level->fov, mob->coords.x, mob->coords.y))
 #endif
             return mob->symbol;
     }
@@ -320,21 +320,22 @@ SYMBOL get_symbol(Level *level, RL_Point coords)
     /**
      * type symbol
      */
-    RL_Byte *type = rl_map_tile(map, coords);
+    RL_Byte *type = rl_map_tile(map, coords.x, coords.y);
     assert(type);
     if (*type == RL_TileRoom)     return '.';
 #if(NCURSES_WIDECHAR)
-    if (*type == RL_TileCorridor && rl_fov_is_visible(level->fov, coords)) return L'░';
+    if (*type == RL_TileCorridor && rl_fov_is_visible(level->fov, coords.x, coords.y)) return L'░';
 #else
     if (*type == RL_TileCorridor) return '#';
 #endif
     if (*type == RL_TileDoor)     return '+';
-    if (*type == RL_TileRock && rl_map_is_wall(map, coords))
+    if (*type == RL_TileDoorOpen) return '=';
+    if (*type == RL_TileRock && rl_map_is_wall(map, coords.x, coords.y))
     {
         // show different char depending on side of wall
         // TODO take into account FOV to make this look nicer for connections we can't see
 #if(NCURSES_WIDECHAR)
-        int connections = rl_map_wall(map, coords);
+        int connections = rl_map_wall(map, coords.x, coords.y);
         if (connections & RL_WallToEast && connections & RL_WallToWest && connections & RL_WallToNorth && connections & RL_WallToSouth)
             return L'┼';
         if (connections & RL_WallToEast && connections & RL_WallToWest && connections & RL_WallToSouth)
@@ -358,7 +359,7 @@ SYMBOL get_symbol(Level *level, RL_Point coords)
         else if (connections & RL_WallToNorth || connections & RL_WallToSouth)
             return L'│';
 #else
-        int connections = rl_map_room_wall(map, coords);
+        int connections = rl_map_room_wall(map, coords.x, coords.y);
         if (connections & RL_WallToEast || connections & RL_WallToWest)
             return '-';
         else if (connections & RL_WallToNorth || connections & RL_WallToSouth)
@@ -373,7 +374,7 @@ SYMBOL get_symbol(Level *level, RL_Point coords)
 
 int get_color(Level *level, RL_Point coords)
 {
-    if (!rl_map_in_bounds(level->map, coords)) return COLOR_PAIR_DEFAULT;
+    if (!rl_map_in_bounds(level->map, coords.x, coords.y)) return COLOR_PAIR_DEFAULT;
 
     /**
      * Item colors
@@ -412,7 +413,12 @@ int get_color(Level *level, RL_Point coords)
             return COLOR_PAIR_YELLOW;
         case 'r':
         case '+':
-            if (rl_fov_is_visible(level->fov, coords))
+            if (rl_fov_is_visible(level->fov, coords.x, coords.y))
+                return COLOR_PAIR_BROWN;
+            else
+               return COLOR_PAIR_DEFAULT;
+        case '=':
+            if (rl_fov_is_visible(level->fov, coords.x, coords.y))
                 return COLOR_PAIR_BROWN;
             else
                 return COLOR_PAIR_DEFAULT;
@@ -432,7 +438,7 @@ DrawTile get_tile(Level *level, RL_Point coords)
     t.symbol = get_symbol(level, coords);
     t.colorPair = get_color(level, coords);
 
-    if (t.colorPair != COLOR_PAIR_BROWN && rl_fov_is_visible(level->fov, coords)) {
+    if (t.colorPair != COLOR_PAIR_BROWN && rl_fov_is_visible(level->fov, coords.x, coords.y)) {
         t.attr = A_BOLD;
     }
 
